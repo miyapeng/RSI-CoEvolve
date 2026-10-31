@@ -1,7 +1,7 @@
 {
   "dataset": "self-hpo/Self-HPO-RL-Data",
   "dataset_revision": "321decd5b4bf3fd7fedfd3110d0b12071064af9f",
-  "raw_path": "/user/miyapeng/rsi_evolve/harness-policy-coevolution/datasets/training/self-hpo/321decd5b4bf3fd7fedfd3110d0b12071064af9f/raw/train.jsonl",
+  "raw_path": "data/training/self-hpo/321decd5b4bf3fd7fedfd3110d0b12071064af9f/raw/train.jsonl",
   "raw_sha256": "77638f74cf55b43b60af92eb042e40b13b350412836fad93b3c6bcee60e742e0",
   "seed": 42,
   "requested_fractions": {

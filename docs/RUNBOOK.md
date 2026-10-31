@@ -15,9 +15,9 @@ bash scripts/baseline/test_cpu.sh
 python -m baseline preflight --output runs/preflight-local
 ```
 
-This dedicated environment was cloned from the existing `harness-policy` Conda environment. The old environment remains separate. Mini-SWE-agent is editable from **this worktree**, Orchard from `../references/Orchard-Agentic/orchard_env`. It is a CPU environment, not a ready GPU image. Preflight writes missing prerequisites without printing secrets. `--execute` commands stop when prerequisites are missing; bare commands only save plans.
+This dedicated environment was cloned from the existing `harness-policy` Conda environment. The old environment remains separate. Mini-SWE-agent is editable from **this worktree**; Tencent transport uses pinned `e2b==2.62.0`. Orchard is not required by the active baseline. It is a CPU environment, not a ready GPU image. Preflight writes missing prerequisites without printing secrets. `--execute` commands stop when prerequisites are missing; bare commands only save plans.
 
-For a **new machine only**, with dependencies checked out at [UPSTREAM.md](UPSTREAM.md) pins and the asset links restored:
+For a **new machine only**, with the asset links restored, first run `python scripts/baseline/fetch_dependencies.py --ssh --with-final-eval` for missing pinned source dependencies:
 
 ```bash
 conda env create -f environment-baseline.yml
@@ -28,7 +28,7 @@ python -m pip check
 
 Do not run the CPU-wheel command in a GPU environment. There is no venv/uv workflow in this baseline. Full installed package versions from the actual local validation are in `runs/validation/packages.json`; the YAML pins the direct CPU dependencies, not a universal CUDA lockfile.
 
-`data` and `models` are ignored symlinks to the existing prototype's asset directories. The 9B link ultimately resolves to `/user/lumingcong/models/Qwen3.5-9B`. Never write to that shared source. The split manifest uses the existing absolute raw-file path; if relocating data, regenerate with the same raw SHA/seed and compare IDs/roles before starting a new experiment.
+`data` and `models` are ignored symlinks to the existing prototype's asset directories. The 9B link ultimately resolves to `/user/lumingcong/models/Qwen3.5-9B`. Never write to that shared source. The split manifest uses a repository-relative `data/...` path and validates the original raw SHA. Asset paths can therefore change through symlinks without changing task membership.
 
 ```bash
 python -m baseline split --output runs/splits-check.json
@@ -38,15 +38,15 @@ python -m baseline p-step --output runs/p-plan-local --limit 16
 
 ## 2. Real execution prerequisites
 
-Current allocation has **zero visible GPUs**, CPU-only torch, no Docker/Kubernetes client, no configured Orchard endpoint/key and no configured external proposer. No real rollout or update was performed. Tencent E2B credentials are not an Orchard endpoint/key. The old prototype's Tencent adapter remains available there, but this baseline does not silently switch sandbox/reward implementations.
+Current allocation has **zero visible GPUs**, CPU-only torch, no Docker/Kubernetes client, no configured Tencent template/domain/key or image mappings and no configured external proposer. No real rollout or update was performed. The active baseline explicitly uses Tencent AGS/E2B for every task and grader. The original Orchard API is no longer a runtime prerequisite. See [Tencent setup](TENCENT_SANDBOX.md).
 
 Use an authorized GPU allocation with pinned Slime's compatible stack. The existing `v5-miles` environment was inspected but is missing SGLang and is not a verified Slime environment. Do not upgrade it in place.
 
 The authoritative image recipe is `../references/slime/docker/Dockerfile` **at the pinned Slime commit**, not a floating `latest` image. Its defaults include SGLang `v0.5.15.post1-cu129`, Megatron commit `4b4acac9a1d28ea6829c8d4f566d75698a21249d`, Transformer Engine 2.18.0 and NCCL 2.30.7 plus Slime's patches. Build/obtain this compatible image on an authorized builder, register its digest, and use a dedicated Conda GPU environment. This recipe/image was not built here. A different CUDA generation or existing enterprise image requires the actual GPU smoke; package presence alone is insufficient.
 
-Install the local mini/Orchard dependencies and baseline into that environment, preserving the image's Torch/CUDA/Slime stack and `swebench==4.1.0`. Ensure `ray`, `sglang`, `megatron-core`, `transformer-engine`, `tensorboard`, `transformers` and `safetensors` import successfully. Native Slime must import from `../references/slime`; the launcher sets its path explicitly and verifies its clean commit.
+Install the local mini-SWE-agent and pinned E2B dependencies and baseline into that environment, preserving the image's Torch/CUDA/Slime stack and `swebench==4.1.0`. Ensure `ray`, `sglang`, `megatron-core`, `transformer-engine`, `tensorboard`, `transformers` and `safetensors` import successfully. Native Slime must import from `../references/slime`; the launcher sets its path explicitly and verifies its clean commit.
 
-Set `SANDBOX_BASE_URL` and `SANDBOX_API_KEY` securely in the job environment. Orchard must support the per-task images, restricted network controls, exec/upload/delete and enough CPU/memory. Check actual task-image compatibility with `setpriv`, the unprivileged test environment and source-specific setup commands. Final images must also be available/prewarmed on that service; no images were downloaded or transferred by this work.
+Export `E2B_API_KEY`, `E2B_DOMAIN`, `E2B_TEMPLATE` securely in the job environment. In proxy mode also export the configured proxy variable (default `http_proxy`); for a dedicated link select `connection: direct`. Prepare `configs/tencent_images.local.yaml` with exact source image / mirrored Tencent tag / expected digest mappings. Do not put registry credentials in this file. Host `skopeo` verifies each tag before creation. Agent and grader use fresh, separate sandboxes. Template network enforcement and actual task-image compatibility still need live validation. Inventory generation, smoke prerequisites and cleanup details are in [TENCENT_SANDBOX.md](TENCENT_SANDBOX.md).
 
 For the default HPO-style proposer set `PROPOSER_MODEL` to the LLMCenter **accessId** and inject `LLM_CENTER_API_KEY` securely. No key is in project files. API base URL is configurable. `proposer_mode: self` uses the currently served policy and must be named as a Self-HPO-style experiment. Neither mode trains a separate API model.
 
@@ -104,7 +104,7 @@ Choose audit-holdout checkpoints/times **before** inspecting its outcomes. Put t
 
 ## 5. Separate final evaluation preparation
 
-These plans were validated offline against existing local dataset hashes: Verified 500, Multilingual 300, **Pro V2 642**. No benchmark execution or score has occurred. The adapters use the same agent generation function, Self-HPO's existing Orchard verifiers and pinned official Pro V2 tests. They are outside the H/P loop.
+These plans were validated offline against existing local dataset hashes: Verified 500, Multilingual 300, **Pro V2 642**. No benchmark execution or score has occurred. The adapters use the same agent generation function, Self-HPO's existing verifiers with an explicit Tencent environment injection, plus pinned official Pro V2 tests. They are outside the H/P loop.
 
 ```bash
 python -m baseline.final_eval --benchmark verified --output runs/final-verified-plan
@@ -112,7 +112,7 @@ python -m baseline.final_eval --benchmark multilingual --output runs/final-multi
 python -m baseline.final_eval --benchmark pro-v2 --output runs/final-pro-v2-plan
 ```
 
-Only after the baseline is reliable and the selected policy/harness are frozen, use the final config and a **new output directory** with `--execute`. Do not repeatedly run these benchmarks to tune the searcher. Dataset commits, task counts, prompt specialization, time budgets and Pro V2 verifier commit are saved in each plan; image digests are currently unknown, not invented. Live verifier/image compatibility remains unverified.
+Only after the baseline is reliable and the selected policy/harness are frozen, use the final config and a **new output directory** with `--execute`. Do not repeatedly run these benchmarks to tune the searcher. Dataset commits, task counts, prompt specialization, time budgets and Pro V2 verifier commit are saved in each plan; source-to-Tencent image mappings and expected registry digests are frozen in the resolved config; actual provider runtime digests remain unknown, not invented. Live verifier/image compatibility remains unverified.
 
 ## 6. Evidence and expected files
 

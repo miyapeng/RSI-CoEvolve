@@ -1,55 +1,36 @@
-# Baseline verification — 2026-10-31
+# Current baseline verification — Tencent adaptation
 
-**CPU contracts verified; the real H/P baseline is not yet experimentally validated.** The current allocation exposes no GPUs and has no configured Orchard endpoint/key or external proposer configuration. No real task reward, GPU update, served checkpoint reload, API proposal or final benchmark result is reported.
+**CPU contracts verified; real task execution and H/P learning remain NOT RUN.** The active task/grade transport is Tencent AGS/E2B. The current process has no E2B key/template/domain or image mappings, no visible GPU, and no configured external proposer. No sandbox, paid API call or GPU job was launched.
 
-## Implemented phases and actual evidence
+## Implemented and checked
 
-| Phase | Input → output | Actual status |
-|---|---|---|
-| 0: audit | Existing repositories/assets → independent Self-HPO worktree and Conda environment | DONE. Old prototype and references preserved; only missing Orchard source cloned. |
-| 1: data/environment/reward | Existing 2,484-row raw JSONL → frozen 1,987 / 249 / 248 split, source-specific test specs, Orchard execution/grading adapters | CPU validation passed for all 2,484 specs and split checks. Actual image launch, patch and test execution NOT_RUN. |
-| 2: fixed-H P-step | Dense 9B source + seed + optimization data → native Slime launch plan, export/reload validation code | Plan prepared; no MoE arguments or final eval data. Actual GRPO/save/export/reload/rollout NOT_RUN. |
-| 3: fixed-policy H-step | Training-side traces → original diagnosis, proposal, parent/fire gates and paired selection | CPU integration passed with explicit scripted model/sandbox/score fixtures. Actual API proposals/candidates NOT_RUN. |
-| 4: two rounds / recovery | Accepted pair → two persisted rounds and correct next-round inputs | Two-round interruption/resume and policy/harness binding passed in test-only fixtures. Two real rounds NOT_RUN. |
-| 5: diagnostics / switches | Same loop → Base/H-only/P-only/HPO plus paired dev records and report | CPU mode/cross-pair contracts passed. Real cross-evaluation NOT_RUN. |
-| 6: final evaluation preparation | Existing local Verified/Multi/Pro V2 data → pinned independent plans and verifier imports | Offline hashes/counts and all three verifier imports passed. All benchmark execution NOT_RUN. |
+- Single actual mini-SWE-agent for search, RL, dev and final generation; native Slime dense 9B GRPO remains unchanged.
+- Tencent proxy/direct routing, class-level envd reconnect, bounded commands, cleanup, non-root task preparation, fresh graders, explicit image mappings and registry digest checks.
+- All three original final verifiers accept an explicit Tencent environment factory. Tests exercise those original functions without rewriting their grading logic or using final-benchmark tasks as smoke data.
+- Frozen training split remains 1,987 optimization / 249 dev / 248 audit. Only the raw file reference changed to a repository-relative path; task memberships and fingerprints did not change.
+- Public checkout support: pinned dependency bootstrap, portable manifest, README, credential-free examples, ignored raw data/models/runs/local configuration. Existing old prototype and assets remain intact.
 
-## Tests actually run
+## Actual test results
 
-- `bash scripts/baseline/test_cpu.sh` in Conda `self-hpo-baseline`: **8 passed (24.34 s)**. Tests cover fixed data roles, no gold in model requests, full mini hooks on search/train/eval, rejected candidate retention, upstream experience/gate/selection, fixed dense training plan, auxiliary-only export, score-parser fixtures, two-round interruption/resume, baseline switches, native Slime HTTP/token/logprob/mask alignment, and production rejection of injected simulated operations. Assertions were not weakened to pass.
-- Same script runs unmodified pinned Slime `tests/test_agent/test_adapters.py` and `test_trajectory_manager_branching.py`: **49 passed, 1 skipped (1.29 s)**. The skip needs the unavailable SGLang tool parser. Passing scripted parser/capture tests does not validate Qwen on a real SGLang GPU server.
-- `pip check`, Ruff and `compileall` passed. Complete latest output: `runs/validation/cpu-tests.log`.
-- Actual local 9B tokenizer loaded without network or model tensors; multi-turn tool-call/tool-response rendering passed (324 tokens, EOS 248046). `runs/validation/tokenizer.json`. GPU forward/parser NOT_RUN.
-- Orchard upstream timeout/network tests: **26 passed, 10 failed (1.10 s)**. The 10 failures are in `TestSandboxManagerNetwork`: their mock targets import old `orchestrator.sandbox_manager`, while the installed package is `orchard_env.orchestrator`, producing `ModuleNotFoundError: orchestrator`. These are still failed upstream tests. SDK source/tests were not edited; no blanket "all upstream tests pass" claim. Observed summary: `runs/validation/orchard-upstream-observed.json`.
+- Baseline tests: **14 passed**. Eight original tests cover data/loop/checkpoint/hook/token contracts; six added cases cover Tencent routing, exit status, cleanup, image drift and the three original verifier callbacks. SDK/score fixtures are labeled test-only; they are not real Tencent rewards.
+- Pinned Slime regression: **49 passed, 1 skipped**. The skipped case needs the unavailable SGLang tool parser. No upstream assertions were weakened.
+- `pip check`, Ruff, bytecode compilation and Git diff checks passed. Latest log: `runs/tencent-adaptation/cpu-tests.log` (ignored, local evidence).
+- Dependency bootstrap `--check --with-final-eval` passed against existing clean pins without cloning or upgrading them.
+- An inventory of eight optimization task images and an actual blocked preflight were generated under `runs/tencent-adaptation/`. No images were transferred and no sandbox was created.
+- Earlier CPU tokenizer rendering passed for the local 9B model (324 tokens, EOS 248046); it is not evidence of GPU inference.
 
-Reproduce the Orchard check independently (it is expected to expose that upstream failure):
-
-```bash
-cd /user/miyapeng/rsi_evolve/references/Orchard-Agentic/orchard_env
-PYTHONNOUSERSITE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
-  /user/miyapeng/miniconda3/envs/self-hpo-baseline/bin/python -m pytest \
-  -p pytest_asyncio.plugin tests/test_exec_timeout.py tests/test_network_control.py -q
-```
-
-The old Agent Lightning/veRL prototype was not modified or substituted as a second training backend. No unexecuted tests from that project are claimed here.
-
-## Prepared artifacts and cost accounting
-
-- `runs/validation/preflight/preflight.json`: actual missing-resource report, model sparse fingerprint, installed package and repository versions.
-- `runs/p-plan-dense/`: 16 selected optimization tasks, immutable harness, real native Slime command and checkpoint destination; **status NOT_RUN**.
-- `runs/final-plans/{verified,multilingual,pro-v2}/plan.json`: 500 / 300 / 642 tasks, exact dataset commits and grading metadata; **status NOT_RUN**.
-- `runs/validation/packages.json`: actual CPU package versions; `environment-baseline.yml`: direct dependency setup.
-- Real task executions: **0**. GPU training steps: **0**. External proposer calls / evaluated live candidates: **0**. Allocated GPUs used: **none**. No paid job or API call was submitted. Scores, loss, real token cost, GPU runtime and monetary expenditure are not measured experiment results; they remain absent rather than synthetic zeros in metrics. CPU test times above are observed test durations, not training costs.
+Historical Orchard audit: 26 upstream tests passed and 10 failed because their mock import target used `orchestrator.sandbox_manager` rather than `orchard_env.orchestrator`. Those results remain in Git history and local audit records. Orchard is now an inactive reference, not a prerequisite for the Tencent baseline.
 
 ## Baseline Ready Checklist
 
-| Requirement | Real verification | Available evidence |
+| Requirement | Real status | Software evidence |
 |---|---|---|
-| Real task scoring, empty/failed/successful patches | **NOT_RUN** | Original grading builders/parsers + CPU fixtures; no live sandbox |
-| Real GRPO parameter update | **NOT_RUN** | Native dense command and token/mask capture contracts |
-| Save → export → reload → serve → rollout | **NOT_RUN** | Auxiliary export unit test and model/tokenizer structure checks; live chain required |
-| Harness evolution with actual proposer/gate/reward | **NOT_RUN** | Original components exercised under scripted transports |
-| Two actual H/P cycles with updated policy | **NOT_RUN** | Two-cycle state/recovery test only |
-| Actual four-cell cross-evaluation | **NOT_RUN** | Pair binding and same-task/seed implementation verified in CPU tests |
+| Actual Tencent task and scoring | NOT RUN | Transport and original-grader callback fixtures pass |
+| Real GRPO update | NOT RUN | Native dense launch/token/mask contracts pass |
+| Save/export/reload/serve/rollout | NOT RUN | Dense export and source model/tokenizer checks pass |
+| Actual proposer-driven Harness evolution | NOT RUN | Original gate/selection components pass CPU tests |
+| Two real H/P rounds | NOT RUN | Interruption/resume and pair binding pass test-only two-round flow |
+| Real four-cell cross-evaluation | NOT RUN | Same-task/seed and pair identity contracts pass |
+| Verified / Multilingual / Pro V2 scores | NOT RUN | Separate adapters, pinned manifests and explicit Tencent callbacks |
 
-Necessary next engineering work is bounded: obtain a compatible GPU allocation/image and Orchard endpoint/image access; run the optimization-only oracle/task smoke; resolve any image permission/parser/parallelism compatibility revealed there; then execute one GRPO export/reload and the two-round live run. The small Orchard upstream test import-path issue also remains recorded. No new research algorithms are prerequisites for these steps. Exact commands: [RUNBOOK.md](RUNBOOK.md).
+Next required inputs are the approved Tencent template/domain/key, mirrored task images and host registry access, then a compatible GPU allocation for Qwen/Slime and proposer configuration for H-step. Start with one optimization-task oracle and one agent rollout before GRPO. See [Tencent setup](TENCENT_SANDBOX.md) and [RUNBOOK.md](RUNBOOK.md). No new research algorithms are required for these checks.

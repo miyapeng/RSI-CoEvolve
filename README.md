@@ -1,166 +1,66 @@
-# Self-HPO: Self-Evolving Coding Agents via Harness-Policy Optimization
+# RSI-CoEvolve
 
-> **本地 9B baseline 工作树**：新增入口为 `python -m baseline`，使用 Conda、固定 H/P 调度、同一 mini-SWE-agent 执行实现和官方 Slime Dense 9B GRPO。请先读 [实际审计](docs/IMPLEMENTATION_AUDIT.md)、[运行手册](docs/RUNBOOK.md)、[验证状态](docs/STATUS.md)。下方保留的上游 README 主要描述原作者的 35B / 8×B200 实验，不是本地已复现结果；不要用其安装脚本覆盖已有环境。旧 `../harness-policy-coevolution` 保留独立。
+A fixed-budget Harness–Policy Co-Evolution coding baseline adapted from [Self-HPO](https://github.com/MSR-Orchard/Self-HPO). Default policy: **Qwen3.5-9B**. Default proposer: a frozen external API model.
 
-[![arXiv](https://img.shields.io/badge/arXiv-2610.22791-b31b1b.svg)](https://arxiv.org/abs/2610.22791)
-[![Hugging Face](https://img.shields.io/badge/🤗-Checkpoints-yellow)](https://huggingface.co/self-hpo)
-[![Blog](https://img.shields.io/badge/Blog-Self--HPO-blue)](https://weizhepei.com/blog/self-hpo/)
-[![X](https://img.shields.io/badge/-Thread-black?logo=x)](https://x.com/weizhepei/status/2112260175000461453)
+The execution path is **mini-SWE-agent → Tencent AGS/E2B task sandbox**, with **native Slime GRPO** on the GPU allocation. Model inference/training stays on the GPU host; shell commands, repository edits and trusted tests run in separate remote sandboxes. Search, training and evaluation invoke the same agent implementation.
 
-Self-HPO co-evolves the **harness** and the **policy** of an LLM coding agent. Each round alternates two steps:
+This repository is an implementation baseline, not a claim of reproduced RL gains. CPU integration tests pass; real Tencent task execution, GPU updates and two live H/P rounds remain **NOT RUN**. See [verification status](docs/STATUS.md).
 
-1. **H-step**: the current policy analyzes its own failures and proposes harness revisions. The best candidate becomes the harness for the next P-step.
-2. **P-step**: RL updates the policy under the harness from the preceding H-step. The tasks it never solves become the search set of the next H-step.
+## Start with existing assets
 
-<p align="center"><img src="assets/teaser.png" width="100%"></p>
-
----
-
-## Released policies and harnesses
-
-We release the policies and harnesses below, with their resolve rates (%) on SWE-Bench Verified, SWE-Bench Multilingual, and SWE-Bench Pro. Both HPO and Self-HPO alternate H-steps and P-steps. In the H-step, HPO uses Claude Opus 4.8 to propose harness revisions, while Self-HPO uses the current policy itself.
-
-| Setting | Policy | Harness | SWE-Verified | SWE-Multi | SWE-Pro | Avg. |
-|---|---|---|---|---|---|---|
-| Base | [`Qwen3.5-35B-A3B`](https://huggingface.co/Qwen/Qwen3.5-35B-A3B) | [`seed`](https://github.com/MSR-Orchard/Self-HPO/tree/main/harnesses/seed) | 61.0 | 54.2 | 58.3 | 57.8 |
-| HPO | [`HPO-Qwen3.5-35B-A3B`](https://huggingface.co/self-hpo/HPO-Qwen3.5-35B-A3B) | [`hpo`](https://github.com/MSR-Orchard/Self-HPO/tree/main/harnesses/hpo) | 71.6 | 61.4 | 66.0 | 66.3 |
-| Self-HPO | [`Self-HPO-Qwen3.5-35B-A3B`](https://huggingface.co/self-hpo/Self-HPO-Qwen3.5-35B-A3B) | [`self-hpo`](https://github.com/MSR-Orchard/Self-HPO/tree/main/harnesses/self-hpo) | 69.5 | 59.7 | 65.2 | 64.8 |
-
----
-
-## Installation
-
-- **GPUs.** We used 8 B200 GPUs for both evaluation and training.
-- **Virtual environment.** We use Python 3.12 and [uv](https://github.com/astral-sh/uv). The commands below create the environments. `setup.sh all` also downloads the RL training data and the SWE-bench Pro test scripts.
-
-  ```bash
-  source scripts/env.sh
-  bash scripts/eval/setup.sh all
-  ```
-- **Sandbox service.** Each task runs in a remote container managed by [Orchard](https://github.com/microsoft/Orchard-Agentic/tree/main/orchard_env). Export its endpoint and API key before use:
-
-  ```bash
-  export SANDBOX_BASE_URL=http://<orchard-endpoint>
-  export SANDBOX_API_KEY=<key>
-  ```
-
----
-
-## Quick start for evaluation
-
-1. **Serve a policy.** This starts one SGLang replica per GPU and prints `SERVE_READY` when every replica answers. Keep it running in a separate terminal or tmux.
-
-   ```bash
-   bash scripts/eval/serve_model.sh --model self-hpo/Self-HPO-Qwen3.5-35B-A3B --ngpu 8
-   ```
-2. **Generate trajectories.** `--benchmark` is `sbv`, `multi`, or `sbp`, and `--harness` should match the served policy. Each run creates a new directory under `work/eval/<method>/<benchmark>/`.
-
-   ```bash
-   bash scripts/eval/gen_traj.sh --method Self-HPO --benchmark sbv --harness self-hpo --ngpu 8
-   ```
-3. **Score.** `score_traj.sh` grades one run, and `results.py` lists the resolved rate of every run and their average.
-
-   ```bash
-   bash scripts/eval/score_traj.sh --run work/eval/Self-HPO/SWE_Bench_Verified/<run>
-   python3 scripts/eval/results.py -m Self-HPO
-   ```
-
----
-
-## Running Self-HPO
-
-<p align="center"><img src="assets/method.png" width="95%"></p>
-
-Each round `R` runs an H-step and then a P-step. Round 1 starts from `Qwen/Qwen3.5-35B-A3B` and `harnesses/seed`. Later rounds start from the previous round's `work/p_step_$((R-1))/policy` and `work/harness_$((R-1))`.
-
-### H-step: harness optimization
-
-1. **Serve the policy.** The served policy runs the search-set evaluation. In Self-HPO it also proposes the harness revisions. In HPO an API model proposes them. Serve it on the default port 8000, which the H-step scripts expect.
-
-   ```bash
-   bash scripts/h_step/setup.sh
-
-   # Round 1: serves the base policy
-   bash scripts/eval/serve_model.sh --model Qwen/Qwen3.5-35B-A3B --ngpu 8
-
-   # Round R > 1: serves the previous round's policy
-   bash scripts/eval/serve_model.sh --model work/p_step_$((R-1))/policy --ngpu 8
-
-   # Optional: use an API model as the proposer (HPO)
-   export PROPOSER=api ANTHROPIC_API_KEY=<key> PROPOSER_MODEL=claude-opus-4-8
-   ```
-2. **Build the search set.**
-
-   ```bash
-   # Round 1: samples 300 training tasks
-   bash scripts/h_step/build_search_set.sh random --sample 300 \
-       --train work/rl/data/train.jsonl --out work/search_set_1
-
-   # Round R > 1: uses the tasks the previous P-step never solved
-   bash scripts/h_step/build_search_set.sh hard --rollouts work/p_step_$((R-1))/trajectories \
-       --train work/rl/data/train.jsonl --out work/search_set_$R
-   ```
-3. **Run the search.** The search saves the best harness to `work/harness_$R`.
-
-   ```bash
-   # Round 1: starts from the seed harness
-   bash scripts/h_step/init.sh work/h_step_1 harnesses/seed work/search_set_1
-
-   # Round R > 1: starts from the previous round's harness
-   bash scripts/h_step/init.sh work/h_step_$R work/harness_$((R-1)) work/search_set_$R
-
-   # Search harness candidates and save the best one
-   bash scripts/h_step/run_h_step.sh work/h_step_$R work/harness_$R
-   ```
-
-### P-step: policy optimization
-
-1. **Set up the container.** The P-step runs in the `slimerl/slime:v0.3.0` container on one 8-GPU node.
-
-   ```bash
-   # Start the container
-   docker run --rm -it --gpus all --ipc=host \
-       --shm-size=16g --ulimit memlock=-1 --ulimit stack=67108864 \
-       -v $PWD:/workspace/Self-HPO -w /workspace/Self-HPO \
-       -e SELFHPO_WORK=/workspace/Self-HPO/work -e SANDBOX_BASE_URL -e SANDBOX_API_KEY \
-       slimerl/slime:v0.3.0 bash
-
-   # Inside the container: install the P-step dependencies
-   bash scripts/p_step/setup_container.sh
-   ```
-2. **Train the policy.** RL trains the policy under the harness from the H-step, and `export_policy.sh` saves the trained policy to `work/p_step_$R/policy`.
-
-   ```bash
-   # Round 1: starts from the base policy
-   bash scripts/p_step/run_p_step.sh --policy Qwen/Qwen3.5-35B-A3B --harness work/harness_1 --out work/p_step_1
-
-   # Round R > 1: starts from the previous round's policy
-   bash scripts/p_step/run_p_step.sh --policy work/p_step_$((R-1))/policy --harness work/harness_$R --out work/p_step_$R
-
-   # Export the trained policy
-   bash scripts/p_step/export_policy.sh work/p_step_$R
-   ```
-
----
-
-## Bugs or Questions?
-
-If you have any questions related to the code or the paper, feel free to email Zhepei (zhepei.wei@virginia.edu). If you encounter any problems when using the code, or want to report a bug, feel free to open an issue! Please try to specify the problem with details so we can help you better and quicker!
-
-## Citation
-
-If you find this codebase useful, please consider citing:
-
-```bibtex
-@article{wei2026selfhpo,
-  title   = {Self-Evolving Coding Agents via Harness-Policy Optimization},
-  author  = {Wei, Zhepei and Yao, Wenlin and Peng, Baolin and Wang, Danqing and Wu, Qianhui and Cheng, Hao and Meng, Yu and Gao, Jianfeng},
-  journal = {arXiv preprint arXiv:2610.22791},
-  year    = {2026},
-  url     = {https://arxiv.org/abs/2610.22791}
-}
+```bash
+git clone git@github.com:miyapeng/RSI-CoEvolve.git
+cd RSI-CoEvolve
+python scripts/baseline/fetch_dependencies.py --ssh --with-final-eval
+conda env create -f environment-baseline.yml
+conda activate self-hpo-baseline
+# CPU environment only; keep the GPU image's CUDA Torch unchanged.
+python -m pip install torch==2.9.1+cpu --index-url https://download.pytorch.org/whl/cpu
 ```
 
-## License
+Dependencies are pinned and placed in the adjacent `../references/` directory. Existing checkouts are verified and never overwritten. No model, dataset or container image is downloaded by that script.
 
-The code in this repository is released under the [MIT License](LICENSE) © Microsoft Corporation. The bundled [mini-swe-agent](mini-swe-agent/LICENSE.md) and [slime](slime/LICENSE) keep their own licenses.
+Link an existing asset directory to `data` and the existing Qwen checkpoint to `models/Qwen3.5-9B`. Required training layout:
+
+```text
+data/training/self-hpo/321decd5b4bf3fd7fedfd3110d0b12071064af9f/raw/train.jsonl
+models/Qwen3.5-9B/{config.json,tokenizer.json,model.safetensors.index.json,...}
+```
+
+The frozen manifest contains public task IDs and fingerprints, not gold patches. The 2,484 tasks are split into optimization 1,987 / dev 249 / audit 248. Existing local worktrees already have the asset links; do not recreate them. Weights, raw data, runs, credentials and machine-local settings are Git-ignored.
+
+## Configure Tencent sandboxes
+
+Export `E2B_API_KEY`, `E2B_DOMAIN`, `E2B_TEMPLATE` in your shell/job environment. Proxy mode reads `http_proxy`; dedicated-link mode uses `connection: direct`. Fill exact source-image → mirrored Tencent registry tag/digest mappings in ignored `configs/tencent_images.local.yaml`:
+
+```bash
+python -m baseline.sandbox_inventory --split all-training --output configs/tencent_images.local.yaml
+# Fill image/digest entries after mirroring/prewarming; inventory does not transfer images.
+python -m baseline preflight --output runs/preflight
+```
+
+A generic code-interpreter template cannot replace the task's repository image. Registry digests are checked with host `skopeo` before creation. Agent sandboxes request disabled internet, run unprivileged commands and never receive model/provider credentials. Actual provider enforcement still requires live validation. [Tencent setup and limitations](docs/TENCENT_SANDBOX.md).
+
+## Run
+
+```bash
+bash scripts/baseline/test_cpu.sh
+python -m baseline rollout --limit 1 --output runs/task-001 --execute
+python -m baseline p-step --limit 16 --output runs/p-001 --execute
+python -m baseline h-step --limit 8 --output runs/h-001 --execute
+python -m baseline run --mode hpo --output runs/hpo-001 --execute
+python -m baseline resume --mode hpo --output runs/hpo-001 --execute
+```
+
+Without `--execute`, execution commands save plans. Live commands require the real GPU stack, sandbox images and credentials; they fail explicitly when prerequisites are absent. `--mode base`, `h-only`, `p-only`, `hpo` use the same outer loop. Four-cell dev evaluation is configurable. Verified / Multilingual / **Pro V2** have a separate final-evaluation entrypoint and never select H/P candidates.
+
+- [Runbook: GPU setup, all commands, cross-eval and final evaluation](docs/RUNBOOK.md)
+- [Architecture and information boundaries](docs/ARCHITECTURE.md)
+- [Measured status and remaining blockers](docs/STATUS.md)
+- [Source pins, modifications and licenses](docs/UPSTREAM.md)
+
+Local development worktree: `self-hpo-baseline`, branch `research/baseline-9b`. It keeps Self-HPO as remote `origin` and publishes to remote `rsi`, using `git push rsi HEAD:main`. A fresh clone of this GitHub repository uses normal `origin/main` and `git push`.
+
+## Attribution
+
+Original Self-HPO source history and licenses are retained. The original 35B/B200 instructions and reported paper results are preserved in [the upstream README](docs/upstream/Self-HPO_README.md); they are not results of this 9B adaptation. See [LICENSE](LICENSE) and [third-party notices](THIRD_PARTY_NOTICES.md). No research manuscript has been rewritten.

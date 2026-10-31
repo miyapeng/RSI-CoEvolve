@@ -5,7 +5,7 @@ import json
 import random
 from pathlib import Path
 
-from .records import digest, read, sha, write
+from .records import ROOT, digest, read, sha, write
 
 ROLES = ("optimization_pool", "dev_eval", "audit_holdout")
 DATASET = "self-hpo/Self-HPO-RL-Data"
@@ -55,7 +55,7 @@ def load_raw(path):
 
 
 def split(raw, output, seed=42):
-    raw = Path(raw).resolve()
+    raw = Path(raw).absolute()
     rows = load_raw(raw)
     # Whole repositories stay together; identical patches across forks also stay together.
     parent = list(range(len(rows)))
@@ -124,7 +124,7 @@ def split(raw, output, seed=42):
     manifest = {
         "dataset": DATASET,
         "dataset_revision": REVISION,
-        "raw_path": str(raw),
+        "raw_path": str(raw.relative_to(ROOT)) if raw.is_relative_to(ROOT) else str(raw),
         "raw_sha256": sha(raw),
         "seed": seed,
         "requested_fractions": fractions,
@@ -142,11 +142,12 @@ def tasks(manifest_path, role, limit=None):
     if role not in ROLES:
         raise ValueError("Only training-source splits are supported here")
     manifest = read(manifest_path)
-    if manifest["dataset"] != DATASET or sha(manifest["raw_path"]) != manifest["raw_sha256"]:
+    raw_path = ROOT / manifest["raw_path"]
+    if manifest["dataset"] != DATASET or sha(raw_path) != manifest["raw_sha256"]:
         raise ValueError("Training source changed or is not Self-HPO-RL-Data")
     entries = {e["task_id"]: e for e in manifest["tasks"] if e["split"] == role}
     result = []
-    for row in load_raw(manifest["raw_path"]):
+    for row in load_raw(raw_path):
         entry = entries.get(row["metadata"]["instance_id"])
         if entry:
             if digest(row) != entry["row_sha256"]:

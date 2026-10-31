@@ -1,5 +1,7 @@
 # Implementation audit — 2026-10-31
 
+**Current update:** the user's deployment uses Tencent AGS/E2B. Task and grader transport now use Tencent, including explicit factory injection into the three original final graders. The initial Orchard audit below is historical evidence, not the current deployment requirement. Agent and Slime trainer are retained. See [Tencent setup](TENCENT_SANDBOX.md) and [current validation](STATUS.md).
+
 Baseline is an independent **Self-HPO Git worktree**, branch `research/baseline-9b`, at `../self-hpo-baseline`. Existing `../harness-policy-coevolution` (937b5e8) stays intact; its Item/trigger/target-selection loop is not imported. All inspected repositories were clean. Manuscript and historical runs remain unchanged.
 
 | Asset | Observed | Decision |
