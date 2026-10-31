@@ -99,19 +99,28 @@ The initial probes used image Python. Subsequent work prepared the isolated
   IDs, before an optimizer update. The adapter now requires top_p=1 consistently
   and applies unchanged native GRPO normalization to complete trajectories.
   The retained 80 segments / 17,253 trainable tokens pass native conversion.
+- Job **1427817**: four fresh 9B trajectories produced one resolved task and three
+  failures. The successful submission passed 43 original tests; one other
+  submission was not a valid patch, and two runs reached the step cap. Native
+  GRPO preparation passed, but reference logprob softmax exceeded GPU memory
+  before optimization. This attempt is not a successful training update.
+  The bounded A100 config now uses native chunked logprobs, native loss
+  recomputation and TP4/DP1; no optimizer/loss implementation was replaced.
 
 Raw evidence is under `runs/train-smoke-20261031/`; compact public records:
 [cluster oracle](validation/cluster_oracle_20261031.json),
-[first native trajectories](validation/first_native_rollouts_20261031.json).
+[first native trajectories](validation/first_native_rollouts_20261031.json),
+[first mixed-reward training attempt](validation/grpo_attempt_1427817.json).
 No old negative trajectories are silently reused as fresh on-policy samples.
 
 ## Software checks
 
-- CPU baseline: **22 passed, 1 skipped**. The extra native BatchBuilder test
+- CPU baseline: **23 passed, 1 skipped**. The extra native BatchBuilder test
   requires Ray and runs separately in the GPU Conda prefix without a GPU.
 - GPU Conda native adapter/group normalization: **2 passed**.
 - Unmodified Slime agent regressions: **49 passed, 1 skipped**.
 - Unmodified Slime DP scheduling / HF checkpoint saver tests: **15 passed**.
+- Unmodified Slime logprob/entropy/gradient consistency tests: **22 passed**.
 - CPU `pip check`, Ruff, compilation, shell syntax and Git diff checks pass.
   GPU image package metadata discrepancies remain documented in GPU_CONDA.md;
   its `pip check` is not claimed clean.
@@ -121,7 +130,7 @@ No old negative trajectories are silently reused as fresh on-policy samples.
 | Requirement | Status |
 |---|---|
 | Actual Tencent task image and original scoring | VERIFIED on one optimization task |
-| Agent tool loop, patch and separate scoring | VERIFIED with API models; 4 real 9B trajectories scored 0 at step limit |
+| Agent tool loop, patch and separate scoring | VERIFIED with API models; VERIFIED with real 9B submissions and scoring (job 1427817: 1/4 resolved) |
 | Qwen3.5-9B GPU load and tool-call parser | VERIFIED on A100 80GB, job 1427589 |
 | GPU kernels and pinned Slime/Megatron imports | VERIFIED, job 1427598; full training remains unverified |
 | Strong external proposer API/protocol | VERIFIED; full H-step candidate search NOT RUN |

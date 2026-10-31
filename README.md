@@ -4,7 +4,7 @@ A fixed-budget Harness–Policy Co-Evolution coding baseline adapted from [Self-
 
 The execution path is **mini-SWE-agent → Tencent AGS/E2B task sandbox**, with **native Slime GRPO** on the GPU allocation. Model inference/training stays on the GPU host; shell commands, repository edits and trusted tests run in separate remote sandboxes. Search, training and evaluation invoke the same agent implementation.
 
-This repository is an implementation baseline, not a claim of reproduced RL gains. Real API/Tencent coding smoke, a Scale-SWE source-grader oracle, and **Qwen3.5-9B GPU serving/tool calls on A100 80GB** have run. GPU updates and two live H/P rounds remain **NOT RUN**. Start with the [small live test](docs/LIVE_SMOKE.md), [GPU environment checks](docs/GPU_ENVIRONMENT.md), and [verification status](docs/STATUS.md).
+This repository is an implementation baseline, not a claim of reproduced RL gains. Real API/Tencent coding smoke, a Scale-SWE source-grader oracle, and **Qwen3.5-9B GPU serving/tool calls on A100 80GB** have run. Fresh 9B/Tencent rollouts have produced positive and negative rewards; native training has reached reference forward but a verified optimizer update and two live H/P rounds are still pending. Start with the [small live test](docs/LIVE_SMOKE.md), [GPU environment checks](docs/GPU_ENVIRONMENT.md), and [verification status](docs/STATUS.md).
 
 ## Start with existing assets
 
@@ -54,6 +54,7 @@ python -m baseline resume --mode hpo --output runs/hpo-001 --execute
 
 Without `--execute`, execution commands save plans. Live commands require the real GPU stack, sandbox images and credentials; they fail explicitly when prerequisites are absent. `--mode base`, `h-only`, `p-only`, `hpo` use the same outer loop. Four-cell dev evaluation is configurable. Verified / Multilingual / **Pro V2** have a separate final-evaluation entrypoint and never select H/P candidates.
 
+- [Bounded real training submission and resume](docs/TRAINING_SMOKE.md)
 - [Runbook: GPU setup, all commands, cross-eval and final evaluation](docs/RUNBOOK.md)
 - [Existing Cybertron image, Conda boundary, measured GPU checks and submission commands](docs/GPU_ENVIRONMENT.md)
 - [Small live API/Tencent test, reused mirrors and exact prerequisites](docs/LIVE_SMOKE.md)
