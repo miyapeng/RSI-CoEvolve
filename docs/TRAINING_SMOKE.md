@@ -7,7 +7,8 @@ is needed on this workspace.
 
 `configs/smoke_a100.yaml` fixes the small engineering budget: one optimization
 task, one independent dev task, 4 trajectories per GRPO group, one native Slime
-update per P-step, 4 A100 80GB GPUs (TP2 / DP2), 40 agent steps and 32K context.
+update per P-step, 4 A100 80GB GPUs (TP4 / DP1), 40 agent steps and 32K context.
+Native logprob chunks of 512 and loss recomputation bound training memory.
 All H/P/eval sampling uses top_p=1 because the pinned native Agent Adapter does
 not capture the nucleus support required for top_p<1 training. Larger studies
 must choose their budget before observing results; this smoke is not a benchmark.

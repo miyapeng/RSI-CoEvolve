@@ -82,6 +82,7 @@ def command(request):
         "--recompute-method": "uniform",
         "--recompute-num-layers": 1,
         "--max-tokens-per-gpu": t["max_tokens_per_gpu"],
+        "--log-probs-chunk-size": t.get("log_probs_chunk_size", 512),
         "--advantage-estimator": "grpo",
         "--kl-loss-coef": 0.0,
         "--kl-loss-type": "low_var_kl",
@@ -120,6 +121,8 @@ def command(request):
     ]
     if not t.get("gradient_accumulation_fusion", True):
         flags.append("--no-gradient-accumulation-fusion")
+    if t.get("recompute_loss", False):
+        flags.append("--recompute-loss-function")
     return [
         sys.executable,
         str(root / "train.py"),
