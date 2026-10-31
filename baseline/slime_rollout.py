@@ -4,7 +4,9 @@ import asyncio
 import json
 import os
 import uuid
+from collections import defaultdict
 from pathlib import Path
+from types import SimpleNamespace
 
 from .credentials import load_credentials
 from .data import tasks
@@ -39,6 +41,36 @@ class CaptureService:
 
 
 _service = None
+
+
+def post_process_rewards(args, samples):
+    """Run Slime's unchanged GRPO normalization once per trajectory, per task.
+
+    Chat-template rewrites split a trajectory into training segments. Counting
+    those segments as independent reward samples biases the group statistics.
+    Broadcast the native trajectory advantage back to every sibling segment.
+    """
+    from slime.data.batch_builder import BatchBuilder
+
+    groups = defaultdict(dict)
+    for sample in samples:
+        if sample.group_index is None or sample.rollout_id is None:
+            raise ValueError("Native agent segments require task group and rollout identity")
+        previous = groups[sample.group_index].setdefault(sample.rollout_id, sample)
+        if previous.reward != sample.reward:
+            raise ValueError("Sibling segments disagree on trajectory reward")
+    normalized = {}
+    native = SimpleNamespace(args=args, custom_reward_post_process_func=None)
+    for group, trajectories in groups.items():
+        representatives = list(trajectories.values())
+        if len(representatives) != args.n_samples_per_prompt:
+            raise ValueError("Incomplete task reward group")
+        _, rewards = BatchBuilder._post_process_rewards(native, representatives)
+        normalized.update({(group, s.rollout_id): r for s, r in zip(representatives, rewards, strict=True)})
+    return (
+        [s.get_reward_value(args) for s in samples],
+        [normalized[s.group_index, s.rollout_id] for s in samples],
+    )
 
 
 def generate_rollout(args, rollout_id, data_source, evaluation=False):

@@ -32,7 +32,7 @@ runtime:
   max_tokens: 4096
   max_context_tokens: 16384
   temperature: 0.95
-  top_p: 0.95
+  top_p: 1.0  # Native agent adapter does not capture nucleus support IDs required by pinned Slime.
   grading_timeout: 900
   sandbox:
     backend: tencent_e2b

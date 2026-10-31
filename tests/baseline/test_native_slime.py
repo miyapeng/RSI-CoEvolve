@@ -5,12 +5,45 @@ import importlib.util
 import sys
 from types import SimpleNamespace as NS
 
+import pytest
 from test_baseline import candidate
 
 from baseline.config import load_config
 from baseline.data import public_task, tasks
 from baseline.records import ROOT, read
 from baseline.training import prepare
+
+
+def test_native_grpo_group_normalization_ignores_segment_count():
+    pytest.importorskip("ray", reason="Native BatchBuilder check uses the GPU Conda dependencies, no GPU required")
+    sys.path.insert(0, str(ROOT.parent / "references/slime"))
+    from slime.data.batch_builder import BatchBuilder
+    from slime.utils.types import Sample
+
+    from baseline.slime_rollout import post_process_rewards
+
+    args = NS(
+        advantage_estimator="grpo",
+        rewards_normalization=True,
+        grpo_std_normalization=True,
+        n_samples_per_prompt=4,
+        rollout_batch_size=2,
+        reward_key=None,
+    )
+    groups = [
+        [Sample(index=i, rollout_id=i, group_index=0, reward=r) for i, r in enumerate([-1, -1, 1, 1])],
+        [Sample(index=i + 4, rollout_id=i + 4, group_index=1, reward=-1) for i in range(4)],
+    ]
+    segments = [s for g in groups for i, s in enumerate(g) for _ in range(i + 1)]
+    raw, actual = post_process_rewards(args, segments)
+    native = NS(args=args, custom_reward_post_process_func=None)
+    expected = [
+        v for g in groups for i, v in enumerate(BatchBuilder._post_process_rewards(native, g)[1]) for _ in range(i + 1)
+    ]
+    assert actual == expected and raw == [s.reward for s in segments]
+    assert actual[-10:] == [0.0] * 10  # A separate all-failure task must not borrow another task's advantage.
+    with pytest.raises(ValueError, match="Incomplete"):
+        post_process_rewards(args, groups[0][:3])
 
 
 def test_native_adapter_executes_the_real_harness_hooks(monkeypatch, tmp_path):

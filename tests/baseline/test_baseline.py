@@ -215,6 +215,10 @@ def test_training_plan_dense_no_final_benchmark_and_freeze(tmp_path):
     text = Path(request["train"]).read_text()
     assert '"patch"' not in text and '"test_patch"' not in text
     assert json.loads(text.splitlines()[0])["prompt"] == [{"role": "user", "content": rows[0]["problem_statement"]}]
+    c["runtime"]["top_p"] = 0.95
+    with pytest.raises(ValueError, match="nucleus support"):
+        command(request)
+    c["runtime"]["top_p"] = 1.0
     (Path(request["harness"]["path"]) / "config.yaml").write_text("changed")
     with pytest.raises(ValueError, match="changed"):
         command(request)

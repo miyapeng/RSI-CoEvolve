@@ -107,3 +107,19 @@ Slime's declared `straw-queue` dependency is installed as package **0.1.2**,
 MIT, with repository metadata https://github.com/zhuzilin/straw. It is used
 unchanged as an environment dependency; no source was copied into this project
 and no Git commit is inferred from the wheel version.
+
+## Agent trajectory training adaptation
+
+Pinned Slime `slime/data/batch_builder.py` requires nucleus support token IDs
+when `rollout_top_p < 1`, but its native OpenAI Agent Adapter captures sampled
+token logprobs only. The baseline therefore uses `top_p: 1.0` consistently for
+H/P/eval and rejects incompatible P-step configurations before launch. No native
+assertion or loss was removed. This differs from Self-HPO's original 0.95 setting.
+
+`baseline.slime_rollout.post_process_rewards` delegates to the unchanged native
+`BatchBuilder._post_process_rewards` once per task group with one representative
+per complete trajectory, then broadcasts to its chat-template segments. This
+preserves GRPO trajectory group semantics when trajectories have different
+segment counts; it is a data adapter, not a new loss. Native loss aggregation
+already uses `rollout_id`. Tests compare against native normalization and verify
+that an all-failure task never borrows advantage from another task.

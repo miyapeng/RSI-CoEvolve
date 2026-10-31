@@ -24,6 +24,11 @@ def check_slime(root):
 def command(request):
     config, out = request["config"], Path(request["output"])
     t, r, root = config["training"], config["runtime"], Path(config["slime_root"])
+    if r["top_p"] != 1.0:
+        raise ValueError(
+            "Native agent capture has sampled-token logprobs, not nucleus support IDs. "
+            "Pinned Slime requires those IDs for top_p<1; set runtime.top_p=1.0 for all H/P/eval phases."
+        )
     check_slime(root)
     if (
         revision(request["harness"]["path"]) != request["harness"]["revision"]
@@ -59,6 +64,7 @@ def command(request):
         "--metadata-key": "metadata",
         "--rollout-function-path": "baseline.slime_rollout.generate_rollout",
         "--custom-generate-function-path": "baseline.slime_rollout.generate",
+        "--custom-reward-post-process-path": "baseline.slime_rollout.post_process_rewards",
         "--num-rollout": config["p_training_steps"],
         "--rollout-batch-size": batch,
         "--n-samples-per-prompt": samples,
@@ -184,7 +190,7 @@ def collect_statistics(output):
     tokens = 0
     for path in (output / "rollout_provenance").glob("*.json"):
         row = read(path)
-        groups[row["group_index"]].append(row["reward"])
+        groups[row.get("policy_update_iteration"), row["group_index"]].append(row["reward"])
         tokens += row["trainable_tokens"]
     return {
         "training_metrics": metrics,

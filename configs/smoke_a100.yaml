@@ -1,0 +1,64 @@
+seed: 42
+n_outer_rounds: 2
+h_enabled: true
+p_enabled: true
+h_proposals_per_round: 2
+h_task_sample_size: 1
+dev_task_sample_size: 1
+eval_repetitions: 1
+cross_eval: true
+p_training_steps: 1
+p_task_sample_size: 1
+promote_margin_percent: 1.0
+model_checkpoint: models/Qwen3.5-9B
+harness_path: harnesses/seed
+dataset_split_manifest: configs/split_manifest.json
+slime_root: ../references/slime
+proposer_mode: api
+proposer:
+  base_url: https://llm-center.modelbest.co/v1
+  protocol: anthropic_messages
+  trust_env: false
+  timeout: 120
+  model_env: PROPOSER_MODEL
+  key_env: LLM_CENTER_API_KEY
+  max_tokens: 8192
+  max_trace_chars: 16000
+runtime:
+  max_steps: 40
+  max_seconds: 900
+  command_timeout: 60
+  max_tokens: 2048
+  max_context_tokens: 32768
+  temperature: 0.95
+  top_p: 1.0
+  grading_timeout: 900
+  sandbox:
+    backend: tencent_e2b
+    key_env: E2B_API_KEY
+    template_env: E2B_TEMPLATE
+    domain_env: E2B_DOMAIN
+    proxy_env: http_proxy
+    connection: direct
+    image_manifest: configs/tencent_images.example.yaml
+    cpu: 2
+    memory: 4Gi
+    setup_timeout: 300
+    sandbox_timeout: 1800
+    request_timeout: 120
+serving:
+  port: 18409
+  tensor_parallel: 1
+  attention_backend: flashinfer
+  mem_fraction_static: 0.65
+  startup_timeout: 900
+training:
+  gpus: 4
+  tensor_parallel: 2
+  rollout_gpus_per_engine: 2
+  rollout_batch_size: 1
+  samples_per_prompt: 4
+  max_tokens_per_gpu: 16384
+  learning_rate: 1.0e-06
+  checkpoint_root: checkpoints/smoke-a100
+  gradient_accumulation_fusion: false
