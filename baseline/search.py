@@ -79,6 +79,12 @@ def propose(config, client, checkpoint, parent, diagnostics, optimization, trace
         "Override step() (or execute_actions); RL training calls only these two.",
         "Override step() (or execute_actions); train and eval execute the identical full mini loop.",
     )
+    prompt = prompt.replace(
+        "raising a new `Submitted` carrying a string makes that string the submission",
+        'raise Submitted({"role": "exit", "content": patch, '
+        '"extra": {"exit_status": "Submitted", "submission": patch}}); '
+        "Submitted(string) is invalid in this mini agent version",
+    )
     prompt += """
 API integration: you cannot read or write this host. All evidence is supplied below.
 Return ONE JSON object: agent_py (complete code), marker, act_marker, purpose, notes.
@@ -137,6 +143,7 @@ def runtime_contract():
     import inspect
 
     from minisweagent.agents.default import DefaultAgent
+    from minisweagent.environments.docker import DockerEnvironment
     from minisweagent.exceptions import Submitted
 
     from .harness import validate_code
@@ -145,6 +152,8 @@ def runtime_contract():
         "validator": inspect.getsource(validate_code),
         "step": inspect.getsource(DefaultAgent.step),
         "execute_actions": inspect.getsource(DefaultAgent.execute_actions),
+        "run": inspect.getsource(DefaultAgent.run),
+        "finish_check": inspect.getsource(DockerEnvironment._check_finished),
         "submission": inspect.getsource(Submitted.__bases__[0]) + inspect.getsource(Submitted),
     }
 

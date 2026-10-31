@@ -19,6 +19,7 @@ def rollout(client, row, checkpoint, harness, config, output, seed):
     try:
         with open_task(row, c["sandbox"]) as sandbox:
             sandbox_id = sandbox.sandbox.sandbox_id
+            write(output / "sandbox.json", {"sandbox_id": sandbox_id, "task_id": row["metadata"]["instance_id"]})
             result = run_agent(client, sandbox, public_task(row), harness, checkpoint, c, output)
         reward = grade(row, result["patch"], c, output / "grading")
         result["score"] = reward["score"]

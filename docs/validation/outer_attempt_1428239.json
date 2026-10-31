@@ -1,0 +1,17 @@
+{
+  "job_id": 1428239,
+  "status": "PREEMPTED",
+  "simulated": false,
+  "platform_reason": "Preempted by higher priority task Preemption",
+  "stopped_at": "2026-10-31T14:35:26.809627Z",
+  "next_round": 0,
+  "accepted_checkpoint": "/user/miyapeng/rsi_evolve/self-hpo-baseline/checkpoints/train-smoke-20261031/job-1427911-4b380e178895/policy-0",
+  "harness_revision": "d335e0c842ce55e5c3ace4f6dbaeab2e8a6f65dac1710481d5bb3b172228597e",
+  "candidate_rejection": "Incomplete proposer response: max_tokens",
+  "completed_optimizer_steps": 0,
+  "completed_trajectory_rewards": [
+    -1.0
+  ],
+  "orphan_sandboxes_cleaned": 3,
+  "scope": "Interrupted during fresh rollout collection, no learning update claimed"
+}

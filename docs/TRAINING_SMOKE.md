@@ -26,7 +26,7 @@ env -u http_proxy -u https_proxy -u all_proxy \
   cctl job create \
     --project myp-test-2 --billing-account-id N00002 \
     --cluster langfang_train --resource-pool ocr-train \
-    --image ptdbench-slime-v0.3.2-cu129 --priority PREEMPTABLE \
+    --image ptdbench-slime-v0.3.2-cu129 --priority NORMAL \
     --gpu 4 --gpu-model a100 --cpu 16 --memory 384 \
     --entry 'bash /user/miyapeng/rsi_evolve/self-hpo-baseline/scripts/baseline/run_training_smoke.sh' \
     --env BASELINE_PHASE=p-step \
@@ -39,6 +39,13 @@ env -u http_proxy -u https_proxy -u all_proxy \
     --env E2B_TEMPLATE=code-agent-cfs2-new \
     --env NO_PROXY=modelbest.tencentcloudcr.com,.tencentags.com
 ```
+
+Normal priority here uses the user's verified membership of `ocr-train`.
+Job 1428239 was actually preempted under PREEMPTABLE priority during rollout
+collection; its incomplete trajectories are not reused for training. Borrowed
+pools still require PREEMPTABLE under the supplied platform rules. A sandbox ID
+is now recorded before agent/grader execution, and provider metadata includes
+the task and job ID, to support scoped cleanup after an abrupt termination.
 
 On an already allocated compatible GPU job, activate `self-hpo-gpu` and use
 `python -m baseline p-step --config configs/smoke_a100.yaml --output runs/p-new --execute`.

@@ -219,6 +219,42 @@ def test_upstream_experience_gate_and_accept_reject(tmp_path):
     assert (tmp_path / "experience/current_parent.txt").read_text().strip() == "c1"
 
 
+def test_submission_rewrite_uses_actual_mini_exit_message(tmp_path):
+    """Regression for a live proposal using obsolete Submitted(string) semantics."""
+    config = load_config(ROOT / "configs/baseline_9b.yaml")
+    row = tasks(config["dataset_split_manifest"], "optimization_pool", 1)[0]
+    h = tmp_path / "candidate"
+    snapshot(ROOT / "harnesses/seed", h)
+    code = '''from minisweagent.run.benchmarks.swebench import ProgressTrackingAgent
+from minisweagent.exceptions import Submitted
+class AgentHarness(ProgressTrackingAgent):
+    def step(self):
+        try:
+            return super().step()
+        except Submitted:
+            self.mark("WIRED")
+            patch = self.repo_diff()
+            self.mark("ACTED")
+            raise Submitted({"role": "exit", "content": patch, "extra": {"exit_status": "Submitted", "submission": patch}})
+'''
+    (h / "agent.py").write_text(code)
+    client = NS(chat=NS(completions=NS(create=lambda **kw: completion("submit"))))
+
+    def execute(action, **kw):
+        text = "COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT\ninvalid fixture patch" if action["command"] == "submit" else "fixture diff"
+        return {"output": text, "returncode": 0}
+
+    sandbox = NS(task=public_task(row), sandbox=NS(sandbox_id="fixture"), execute=execute)
+    settings = {**config["runtime"], "sampling_seed": 42}
+    for phase in ("search", "train", "eval"):
+        result = run_agent(client, sandbox, public_task(row), h, "fixture", settings, tmp_path / phase)
+        assert result["termination_reason"] == "Submitted" and result["patch"] == "fixture diff"
+        assert {m["token"] for m in read(result["trajectory"])["info"]["harness_marks"]} == {"WIRED", "ACTED"}
+    (h / "agent.py").write_text(code.replace('Submitted({"role": "exit", "content": patch, "extra": {"exit_status": "Submitted", "submission": patch}})', 'Submitted(patch)'))
+    with pytest.raises(AttributeError, match="get"):
+        run_agent(client, sandbox, public_task(row), h, "fixture", settings, tmp_path / "obsolete")
+
+
 def test_training_plan_dense_no_final_benchmark_and_freeze(tmp_path):
     c = load_config(ROOT / "configs/baseline_9b.yaml")
     c["training"]["gradient_accumulation_fusion"] = False

@@ -129,3 +129,7 @@ adds the actual local hook validator plus mini agent step/submission signatures
 as runtime contract evidence. Frozen sampling values are rendered from config.
 Invalid JSON/schema or forbidden code is a recorded rejection, not an implicit
 retry or a weakened gate. Gateway/transport failures remain fatal and explicit.
+The old prompt's `Submitted(string)` statement is corrected during API prompt
+rendering to the exit-message dictionary required by `DefaultAgent.run`.
+The upstream prompt file itself remains retained. The producer and consumer
+source snippets are supplied together to avoid guessing this protocol.

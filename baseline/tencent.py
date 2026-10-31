@@ -133,7 +133,12 @@ class TencentSandbox:
             timeout=cfg["sandbox_timeout"],
             secure=True,
             allow_internet_access=self.grader,
-            metadata={"x-custom-config": json.dumps(custom), "purpose": self.task["split"]},
+            metadata={
+                "x-custom-config": json.dumps(custom),
+                "purpose": self.task["split"],
+                "task_id": self.task["task_id"],
+                "job_id": os.environ.get("JOB_ID", "local"),
+            },
             **options,
         )
         try:

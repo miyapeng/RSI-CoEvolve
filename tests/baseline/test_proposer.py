@@ -159,3 +159,5 @@ def test_proposer_receives_actual_runtime_contract():
     assert "def step" in contract["step"]
     assert "def execute_actions" in contract["execute_actions"]
     assert "class Submitted" in contract["submission"]
+    assert "self.add_messages(*e.messages)" in contract["run"]
+    assert '"submission":' in contract["finish_check"]

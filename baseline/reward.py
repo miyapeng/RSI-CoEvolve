@@ -24,6 +24,7 @@ def grade(row, patch, config, output, *, sandbox_factory=open_task):
         return result
     spec = specification(row)
     with sandbox_factory(row, config["sandbox"], grader=True) as env:
+        write(output / "sandbox.json", {"sandbox_id": env.sandbox.sandbox_id, "task_id": spec.instance_id})
         env.upload("/tmp/patch.diff", patch)
         applied = False
         # Preserve the Self-HPO P-step application ladder and source-specific test construction.

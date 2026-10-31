@@ -152,9 +152,26 @@ proposer receives the actual validator and step/submission signatures; parsing
 and execution restrictions were not relaxed. A changed-code experiment must
 start separately rather than bypassing the old run's resume hash.
 
+Job **1428239** exercised that rejection branch: the proposer exhausted its 8K
+combined thinking/output budget, so the parent harness stayed selected. The old
+dev cells both scored 0. Four fresh training trajectories started, but Cybertron
+terminated the PREEMPTABLE job with `Preempted by higher priority task` before
+optimization. One completed reward (-1) and partial traces remain archived;
+three orphan sandboxes were explicitly cleaned up. No checkpoint was promoted.
+[Interruption record](validation/outer_attempt_1428239.json).
+
+A separate bounded API diagnostic found another concrete interface mismatch:
+the old Self-HPO prose describes `Submitted(string)`, while this mini agent's
+full loop consumes exit-message dictionaries. The API adaptation now supplies
+the correct dictionary shape and actual consumer code. A live generated proposal
+then passed the CPU behavior contract (not a real reward). The configured
+proposer budget is now 16,384 tokens / 300 seconds for subsequent experiments.
+Opus 5.5 counts thinking and final text against the same output cap; see its
+[official migration guide](https://platform.claude.com/docs/en/models/opus-5-5/migration-guide).
+
 ## Software checks
 
-- CPU baseline: **25 passed, 1 skipped**. The extra native BatchBuilder test
+- CPU baseline: **26 passed, 1 skipped**. The extra native BatchBuilder test
   requires Ray and runs separately in the GPU Conda prefix without a GPU.
 - GPU Conda native adapter/group normalization: **2 passed**.
 - Unmodified Slime agent regressions: **49 passed, 1 skipped**.

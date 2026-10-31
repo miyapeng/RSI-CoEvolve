@@ -76,6 +76,7 @@ def test_tencent_task_transport_isolation_exit_status_and_cleanup(sdk, connectio
         assert box.execution_image == "registry.example/swe/task:fixed"
     create = sdk.calls[0][1]
     assert create["allow_internet_access"] is False and create["secure"]
+    assert create["metadata"]["task_id"] == "fixture-task" and "job_id" in create["metadata"]
     assert "envs" not in create and "volume_mounts" not in create
     if connection == "direct":
         assert "proxy" not in create

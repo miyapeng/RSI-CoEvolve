@@ -19,10 +19,10 @@ proposer:
   base_url: https://llm-center.modelbest.co/v1
   protocol: anthropic_messages
   trust_env: false
-  timeout: 120
+  timeout: 300
   model_env: PROPOSER_MODEL
   key_env: LLM_CENTER_API_KEY
-  max_tokens: 8192
+  max_tokens: 16384
   max_trace_chars: 16000
 runtime:
   max_steps: 40
