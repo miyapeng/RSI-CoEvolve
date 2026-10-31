@@ -1,8 +1,9 @@
 # Actual verification — 2026-10-31
 
-**One real Scale-SWE optimization task completed and scored successfully through
-Tencent, using an explicitly selected API execution model. No 9B GPU inference,
-GRPO update, harness search or two-round H/P experiment has run.**
+**One real Scale-SWE optimization task completed and scored through Tencent with
+an API execution model. Separately, Qwen3.5-9B loaded on A100 80GB and passed a
+real tool-call request. GRPO, 9B task scoring, harness search and two-round H/P
+execution remain NOT RUN.**
 
 ## Live results
 
@@ -22,8 +23,9 @@ validate transport/formatting, not proposer-driven harness evolution.
 
 Results are single-task engineering checks, not estimates of model success rate
 or RL improvement. Neither failed attempt was discarded. Reported token usage is
-not a currency cost estimate; monetary cost was not retrieved. No GPU job, bulk
-mirror operation or final benchmark evaluation was launched.
+not a currency cost estimate; monetary cost was not retrieved. No bulk mirror
+operation or final benchmark evaluation was launched. GPU checks are recorded
+separately below.
 
 Evidence: [compact measured record](validation/live_smoke_20261031.json), local
 `runs/live-smoke-20261031/` (raw requests/responses, tool events, patches, grading
@@ -48,12 +50,44 @@ memory; they are absent from these files and the repository.
   injected credentials were checked in the synthetic agent. Full provider egress
   isolation and running-image digest attestation remain unverified.
 
+## GPU checks
+
+The enterprise image `ptdbench-slime-v0.3.2-cu129` was already synchronized to
+Langfang. The jobs used the authorized `ocr-train` pool, one A100 80GB at a time,
+and PREEMPTABLE priority. Existing model weights were read without copying.
+
+- Job **1427569**: real Torch, Transformer Engine, FlashAttention and FLA/Qwen
+  delta-rule backpropagation passed; SGLang RMSNorm matched its reference;
+  all four local 9B shards/tokenizer were readable. The job correctly **failed**
+  its aggregate check because `megatron.training` was absent from the image's
+  default Python import path. Measured probe runtime: 118.910 seconds.
+- Job **1427589**: **Succeeded**. Real SGLang 0.5.15.post1 loaded Qwen3.5-9B on
+  A100 80GB with TP=1, context=4096, memory fraction=0.65. The shared server
+  returned `bash({"command":"printf baseline_tool_smoke"})`, finish reason
+  `tool_calls`, 297 prompt + 61 completion tokens. Runtime including startup
+  and cleanup: 97.754 seconds. The command was parsed, not executed on the host.
+- Observed GPU driver 535.129.03; image Python 3.12.3, Torch 2.11.0+cu129,
+  Transformer Engine 2.16.1, FLA 0.4.2, NCCL 2.28.9. These are measured versions,
+  not the complete pinned Slime reference stack.
+- Job **1427598**: **Succeeded**, all eight checks passed after explicitly adding
+  the pinned full Megatron source and original Slime patches to the Python path.
+  This includes imports of the fixed Slime Megatron arguments and Qwen3.5 model
+  implementation. Runtime: 138.826 seconds. Existing operator versions were
+  retained; no image rebuild or package upgrade was needed for these checks.
+
+Details and reproduction: [GPU_ENVIRONMENT.md](GPU_ENVIRONMENT.md). Raw logs,
+job requests and reports live under ignored `runs/gpu-smoke-20261031/`.
+Public compact evidence: [gpu_smoke_20261031.json](validation/gpu_smoke_20261031.json).
+The CPU Conda environment remains unchanged. GPU image Python was used for this
+compatibility audit; no new GPU Conda environment or RL checkpoint is claimed.
+
 ## Software checks
 
-- Baseline CPU tests: **19 passed** after the native Messages and JSON-fence fixes.
+- Baseline CPU tests: **20 passed** after extracting the shared serving entry and
+  adding a parser/entry consistency check (19 before the GPU work).
 - Pinned Slime regression: **49 passed, 1 skipped** (unavailable SGLang parser).
 - `pip check`, Ruff, compilation, shell syntax and Git diff checks pass.
-- Latest evidence: `runs/live-smoke-20261031/cpu-tests-release.log`.
+- Latest evidence: `runs/gpu-smoke-20261031/test-cpu-release.log`.
 - Historical Orchard/mock import failures remain recorded in history; Orchard is
   not an active runtime prerequisite. Upstream test assertions were not weakened.
 
@@ -62,14 +96,16 @@ memory; they are absent from these files and the repository.
 | Requirement | Status |
 |---|---|
 | Actual Tencent task image and original scoring | VERIFIED on one optimization task |
-| Agent tool loop, patch and separate scoring | VERIFIED with API models; 9B NOT RUN |
+| Agent tool loop, patch and separate scoring | VERIFIED with API models; 9B task rollout NOT RUN |
+| Qwen3.5-9B GPU load and tool-call parser | VERIFIED on A100 80GB, job 1427589 |
+| GPU kernels and pinned Slime/Megatron imports | VERIFIED, job 1427598; full training remains unverified |
 | Strong external proposer API/protocol | VERIFIED; full H-step candidate search NOT RUN |
-| Real Qwen3.5-9B GRPO update | NOT RUN — no visible GPU / compatible training stack |
+| Real Qwen3.5-9B GRPO update | NOT RUN — full training environment still needs validation |
 | Checkpoint save/export/reload/serve | NOT RUN on a trained checkpoint |
 | Actual harness evolution and P-step hook acceptance | NOT RUN; CPU compatibility tests pass |
 | Two real H/P rounds / four-cell evaluation | NOT RUN |
 | Verified / Multilingual / Pro V2 scores | NOT RUN; adapters remain independent of training |
 
-Next: obtain a Slime-compatible GPU allocation, run 9B serving/tool smoke and one
-real GRPO update, then H-step and the two-round baseline. Additional task image
+Next: finish the Slime training environment and run one real GRPO update,
+then H-step and the two-round baseline. Additional task image
 mappings must be inspected/pinned as the chosen search/dev budget grows.

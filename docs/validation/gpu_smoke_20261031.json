@@ -1,0 +1,338 @@
+{
+  "date_utc": "2026-10-31",
+  "simulated": false,
+  "cluster": "langfang_train",
+  "pool": "ocr-train",
+  "image": {
+    "registered_id": 25607131,
+    "name": "ptdbench-slime-v0.3.2-cu129",
+    "canonical_name": "share-dev/ngc-docker/ptdbench-slime:dev-96bfe26-cb-55f572c7",
+    "runtime_digest": null,
+    "digest_note": "Not provided by job/summary-only diagnostic API; tag and measured packages recorded."
+  },
+  "source_pins": {
+    "slime": "0b0c277d5b4cc66efc3b6db269e2e5184e8f3b1e",
+    "megatron": "4b4acac9a1d28ea6829c8d4f566d75698a21249d"
+  },
+  "jobs": [
+    {
+      "id": 1427569,
+      "status": "Failed",
+      "errorMessage": "容器 main 失败（Error），退出码 1",
+      "createTime": "2026-10-31T11:09:01.663431Z",
+      "updateTime": "2026-10-31T11:17:40.665807Z",
+      "image": "share-dev/ngc-docker/ptdbench-slime:dev-96bfe26-cb-55f572c7",
+      "resourcesPerNode": {
+        "cpu": 4,
+        "gpuCount": 1,
+        "memory": "32Gi"
+      },
+      "priority": "PREEMPTABLE"
+    },
+    {
+      "id": 1427589,
+      "status": "Succeeded",
+      "errorMessage": null,
+      "createTime": "2026-10-31T11:17:34.664628Z",
+      "updateTime": "2026-10-31T11:20:05.860952Z",
+      "image": "share-dev/ngc-docker/ptdbench-slime:dev-96bfe26-cb-55f572c7",
+      "resourcesPerNode": {
+        "cpu": 4,
+        "gpuCount": 1,
+        "memory": "64Gi"
+      },
+      "priority": "PREEMPTABLE"
+    },
+    {
+      "id": 1427598,
+      "status": "Succeeded",
+      "errorMessage": null,
+      "createTime": "2026-10-31T11:20:47.868572Z",
+      "updateTime": "2026-10-31T11:24:26.682174Z",
+      "image": "share-dev/ngc-docker/ptdbench-slime:dev-96bfe26-cb-55f572c7",
+      "resourcesPerNode": {
+        "cpu": 4,
+        "gpuCount": 1,
+        "memory": "32Gi"
+      },
+      "priority": "PREEMPTABLE"
+    }
+  ],
+  "reports": {
+    "1427569": {
+      "job_id": "1427569",
+      "simulated": false,
+      "grpo_update": "NOT_RUN",
+      "checks": {
+        "versions": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 0.114,
+          "result": {
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/usr/bin/python",
+            "packages": {
+              "torch": "2.11.0+cu129",
+              "transformers": "5.12.1",
+              "sglang": "0.5.15.post1",
+              "sgl-kernel": null,
+              "megatron-core": "0.16.0rc0",
+              "transformer-engine": "2.16.1",
+              "flash-attn": "2.8.3",
+              "flash-linear-attention": "0.4.2",
+              "ray": "2.58.0",
+              "slime": "0.3.1",
+              "e2b": "2.46.0",
+              "swebench": null,
+              "mini-swe-agent": null
+            }
+          }
+        },
+        "torch_backward": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 2.267,
+          "result": {
+            "torch": "2.11.0+cu129",
+            "cuda": "12.9",
+            "gpu": "NVIDIA A100-SXM4-80GB",
+            "capability": [
+              8,
+              0
+            ],
+            "memory_bytes": 84987740160,
+            "visible_gpus": 1,
+            "nccl": [
+              2,
+              28,
+              9
+            ]
+          }
+        },
+        "model_files_and_tokenizer": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 8.024,
+          "result": {
+            "model_path": "/user/lumingcong/models/Qwen3.5-9B",
+            "model_type": "qwen3_5",
+            "shards_readable": 4,
+            "template_chars": 1209
+          }
+        },
+        "transformer_engine_backward": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 3.769,
+          "result": {
+            "finite_forward_backward": true
+          }
+        },
+        "flash_attention_backward": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 2.818,
+          "result": {
+            "finite_forward_backward": true
+          }
+        },
+        "qwen_delta_backward": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 96.177,
+          "result": {
+            "finite_forward_backward": true
+          }
+        },
+        "sgl_kernel": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 4.069,
+          "result": {
+            "matches_reference": true
+          }
+        },
+        "slime_qwen_imports": {
+          "passed": false,
+          "returncode": 1,
+          "seconds": 1.666
+        }
+      },
+      "seconds": 118.91,
+      "passed": false
+    },
+    "1427589": {
+      "simulated": false,
+      "job_id": "1427589",
+      "config_sha256": "ffa32beea624c8d207dfdf78a3ba376b20d29ab0bb8f07e8ded3bc5e1b3549ae",
+      "policy_checkpoint": "/user/lumingcong/models/Qwen3.5-9B",
+      "grpo_update": "NOT_RUN",
+      "task_rollout": "NOT_RUN",
+      "status": "PASSED",
+      "python": "/usr/bin/python",
+      "torch": "2.11.0+cu129",
+      "cuda": "12.9",
+      "image_sources": {
+        "/root/Megatron-LM": {
+          "commit": "1dcf0dafa884ad52ffb243625717a3471643e087",
+          "megatron_training_exists": true
+        },
+        "/root/slime": {
+          "commit": "a3f500977f33b82de6ac0414c0c43abfe656c3e0",
+          "megatron_training_exists": false
+        }
+      },
+      "gpus": [
+        "NVIDIA A100-SXM4-80GB"
+      ],
+      "driver": [
+        "NVIDIA A100-SXM4-80GB, 535.129.03, 81920 MiB"
+      ],
+      "seconds": 97.754
+    },
+    "1427598": {
+      "job_id": "1427598",
+      "simulated": false,
+      "grpo_update": "NOT_RUN",
+      "checks": {
+        "versions": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 0.114,
+          "result": {
+            "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
+            "executable": "/usr/bin/python",
+            "packages": {
+              "torch": "2.11.0+cu129",
+              "transformers": "5.12.1",
+              "sglang": "0.5.15.post1",
+              "sgl-kernel": null,
+              "megatron-core": "0.16.0rc0",
+              "transformer-engine": "2.16.1",
+              "flash-attn": "2.8.3",
+              "flash-linear-attention": "0.4.2",
+              "ray": "2.58.0",
+              "slime": "0.3.1",
+              "e2b": "2.46.0",
+              "swebench": null,
+              "mini-swe-agent": null
+            }
+          }
+        },
+        "torch_backward": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 2.317,
+          "result": {
+            "torch": "2.11.0+cu129",
+            "cuda": "12.9",
+            "gpu": "NVIDIA A100-SXM4-80GB",
+            "capability": [
+              8,
+              0
+            ],
+            "memory_bytes": 84987740160,
+            "visible_gpus": 1,
+            "nccl": [
+              2,
+              28,
+              9
+            ]
+          }
+        },
+        "model_files_and_tokenizer": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 8.023,
+          "result": {
+            "model_path": "/user/lumingcong/models/Qwen3.5-9B",
+            "model_type": "qwen3_5",
+            "shards_readable": 4,
+            "template_chars": 1209
+          }
+        },
+        "transformer_engine_backward": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 3.969,
+          "result": {
+            "finite_forward_backward": true
+          }
+        },
+        "flash_attention_backward": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 2.917,
+          "result": {
+            "finite_forward_backward": true
+          }
+        },
+        "qwen_delta_backward": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 94.622,
+          "result": {
+            "finite_forward_backward": true
+          }
+        },
+        "sgl_kernel": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 4.269,
+          "result": {
+            "matches_reference": true
+          }
+        },
+        "slime_qwen_imports": {
+          "passed": true,
+          "returncode": 0,
+          "seconds": 22.59,
+          "result": {
+            "slime": "/user/miyapeng/rsi_evolve/references/slime/slime/__init__.py",
+            "slime.backends.megatron_utils.arguments": "/user/miyapeng/rsi_evolve/references/slime/slime/backends/megatron_utils/arguments.py",
+            "slime_plugins.models.qwen3_5": "/user/miyapeng/rsi_evolve/references/slime/slime_plugins/models/qwen3_5.py",
+            "sglang.srt.models.qwen3_5": "/sgl-workspace/sglang/python/sglang/srt/models/qwen3_5.py"
+          }
+        }
+      },
+      "seconds": 138.826,
+      "passed": true
+    }
+  },
+  "serving_response": {
+    "usage": {
+      "completion_tokens": 61,
+      "prompt_tokens": 297,
+      "total_tokens": 358,
+      "completion_tokens_details": null,
+      "prompt_tokens_details": null,
+      "reasoning_tokens": 30
+    },
+    "finish_reason": "tool_calls",
+    "tool_calls": [
+      {
+        "id": "call_24246b03e4ab4cd798c32562",
+        "function": {
+          "arguments": "{\"command\": \"printf baseline_tool_smoke\"}",
+          "name": "bash"
+        },
+        "type": "function",
+        "index": 0
+      }
+    ]
+  },
+  "script_runtime_seconds": 355.49,
+  "monetary_cost": null,
+  "not_run": [
+    "GRPO update",
+    "trained checkpoint export/reload",
+    "9B Tencent task rollout",
+    "NCCL multi-GPU collective",
+    "GPU Conda environment setup"
+  ],
+  "software_validation": {
+    "baseline_cpu_passed": 20,
+    "upstream_slime_passed": 49,
+    "upstream_slime_skipped": 1
+  }
+}

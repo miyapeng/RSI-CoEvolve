@@ -70,6 +70,29 @@ def completion(command):
     )
 
 
+def test_shared_gpu_serving_and_tool_parser(tmp_path):
+    from baseline import execution, serving
+
+    assert execution.serve is serving.serve
+    assert execution.serve_command is serving.serve_command
+    requests = []
+
+    def create(**kwargs):
+        requests.append(kwargs)
+        return completion("printf baseline_tool_smoke")
+
+    client = NS(chat=NS(completions=NS(create=create)))
+    serving.tool_smoke(client, "/fixed/checkpoint", tmp_path / "response.json")
+    assert requests[0]["model"] == "/fixed/checkpoint"
+    assert requests[0]["timeout"] == 60
+    assert read(tmp_path / "response.json")["choices"][0]["finish_reason"] == "tool_calls"
+    invalid = completion("unused")
+    invalid.choices[0].message.tool_calls[0].function.arguments = '{"command": 123}'
+    client.chat.completions.create = lambda **kw: invalid
+    with pytest.raises(RuntimeError, match="Malformed tool-call"):
+        serving.tool_smoke(client, "/fixed/checkpoint", tmp_path / "malformed.json")
+
+
 def test_full_local_dataset_split_and_grader_construction(tmp_path):
     raw = next((ROOT / "data/training/self-hpo").glob("*/raw/train.jsonl"))
     first = split(raw, tmp_path / "a.json", seed=42)
