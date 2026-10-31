@@ -2,7 +2,7 @@
 import os
 import sys, ast, re
 name = sys.argv[1]
-base = os.path.join(os.path.dirname(os.path.abspath(__file__)), "agents")
+base = os.path.join(os.environ.get("BASELINE_WORKDIR", os.path.dirname(os.path.abspath(__file__))), "agents")
 try:
     parent = open(f"{base}/{name}/parent").read().strip()
 except Exception:

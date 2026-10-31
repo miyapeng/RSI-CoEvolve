@@ -5,8 +5,8 @@ Also writes experience/last_candidate.json and experience/current_parent.txt.
 import glob, json, os, statistics, sys
 from math import comb
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-PROMOTE_MARGIN = 1.0
+HERE = os.environ.get("BASELINE_WORKDIR", os.path.dirname(os.path.abspath(__file__)))
+PROMOTE_MARGIN = float(os.environ.get("BASELINE_PROMOTE_MARGIN", "1.0"))
 name = sys.argv[1]
 
 

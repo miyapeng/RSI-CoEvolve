@@ -10,7 +10,7 @@ Writes:
 """
 import json, os, glob, re, collections
 
-B = os.path.dirname(os.path.abspath(__file__))
+B = os.environ.get("BASELINE_WORKDIR", os.path.dirname(os.path.abspath(__file__)))
 GOLD = f"{B}/data/gold_patches.jsonl"
 SEEDS = sorted(glob.glob(f"{B}/runs/parent_seed_r[0-9]*"))
 EXP = f"{B}/experience"

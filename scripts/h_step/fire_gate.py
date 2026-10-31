@@ -4,10 +4,10 @@
 Prints FIRED=yes ... (exit 0), or FIRED=no REASON=<...> (exit 1). Exit 3 means the server or the
 sandbox service failed, not the candidate.
 """
-import sys, json, glob, re
+import sys, json, glob, re, os
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
+HERE = Path(os.environ.get("BASELINE_WORKDIR", Path(__file__).resolve().parent))
 sys.path.insert(0, str(HERE))
 
 def fail(reason):
@@ -48,17 +48,23 @@ if bad and not uses_env:
          "No subprocess, no patch.txt, no local Path.")
 
 # ---- run on 3 tasks ----
-import search_eval
-ids = json.load(open(HERE / "data" / "check_ids.json"))
-try:
-    (cand / ".hook_fired").unlink()
-except Exception:
-    pass
-out = search_eval.evaluate(name, "firegate", ids, n_pass=1, workers=3, log=lambda *a: None)["out_dir"]
+if os.environ.get("BASELINE_GATE_TRACES"):
+    out = os.environ["BASELINE_GATE_TRACES"]
+else:
+    import search_eval
+    ids = json.load(open(HERE / "data" / "check_ids.json"))
+    try:
+        (cand / ".hook_fired").unlink()
+    except FileNotFoundError:
+        pass
+    out = search_eval.evaluate(name, "firegate", ids, n_pass=1, workers=3, log=lambda *a: None)["out_dir"]
 
 hf = cand / ".hook_fired"
 hookval = hf.read_text().strip() if hf.exists() else "(absent)"
 trajs = glob.glob(f"{out}/*/*/*.traj.json")
+if os.environ.get("BASELINE_GATE_TRACES"):
+    loaded = [json.load(open(f)).get("info", {}).get("config", {}).get("agent_type", "") for f in trajs]
+    hookval = "AgentHarness" if loaded and all(t.endswith(".AgentHarness") for t in loaded) else "(not loaded)"
 submitted = 0; fired = 0
 for f in trajs:
     try: j = json.load(open(f))

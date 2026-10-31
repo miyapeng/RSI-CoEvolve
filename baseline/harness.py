@@ -84,7 +84,6 @@ def validate_code(text):
         "replace",
         "lower",
         "upper",
-        "format",
         "search",
         "findall",
         "sub",
@@ -116,7 +115,7 @@ def validate_code(text):
                 if fn.args.defaults or fn.args.kw_defaults or any(a.annotation for a in fn.args.args):
                     raise ValueError("No evaluated defaults or annotations in candidate methods")
     for n in ast.walk(tree):
-        if isinstance(n, (ast.Global, ast.Nonlocal, ast.With, ast.AsyncFunctionDef, ast.Lambda)):
+        if isinstance(n, (ast.Global, ast.Nonlocal, ast.With, ast.AsyncFunctionDef, ast.Lambda, ast.While)):
             raise ValueError("Unsupported host-side construct")
         if isinstance(n, ast.Name) and n.id.startswith("__"):
             raise ValueError("Host introspection is not allowed")
@@ -131,6 +130,8 @@ def validate_code(text):
                     raise ValueError("Core agent state is immutable to hook assignment")
             elif n.attr.startswith("_"):
                 raise ValueError("Private host attributes are not allowed")
+            elif n.attr not in safe_methods | {"execute", "step", "execute_actions"}:
+                raise ValueError("Hook attribute access is limited to the public data/tool API")
         if isinstance(n, ast.Call):
             if isinstance(n.func, ast.Name) and n.func.id not in safe_names:
                 raise ValueError(f"Unsupported host call: {n.func.id}")
@@ -147,6 +148,13 @@ def validate_code(text):
                 if not ok:
                     raise ValueError(f"Unsupported host method: {ast.unparse(f)}")
     return tree
+
+
+def check_diagnostic_leak(code, rows):
+    """Reject direct memorization; this is not a proof against semantic contamination."""
+    for row in rows:
+        if row["metadata"]["instance_id"] in code or (row["patch"].strip() and row["patch"].strip() in code):
+            raise ValueError("Candidate embeds training task IDs or a reference patch")
 
 
 def load(path, expected=None):

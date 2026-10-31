@@ -75,19 +75,19 @@ class Model:
 
 class Environment:
     def __init__(self, sandbox, trace, deadline, settings):
-        self.sandbox, self.trace, self.deadline, self.settings = sandbox, trace, deadline, settings
+        self._sandbox, self._trace, self._deadline, self._settings = sandbox, trace, deadline, settings
         self.config = SimpleNamespace(cwd=sandbox.task["cwd"])
         self.calls = 0
 
     def execute(self, action, cwd="", timeout=None):
-        remaining = int(self.deadline - time.monotonic())
+        remaining = int(self._deadline - time.monotonic())
         if remaining <= 0:
             raise LimitsExceeded({"role": "exit", "content": "wall timeout", "extra": {"exit_status": "TimeoutError"}})
-        result = self.sandbox.execute(
-            action, cwd=cwd, timeout=min(timeout or self.settings["command_timeout"], remaining)
+        result = self._sandbox.execute(
+            action, cwd=cwd, timeout=min(timeout or self._settings["command_timeout"], remaining)
         )
         self.calls += 1
-        append(self.trace, {"event": "tool", "action": action, "result": result})
+        append(self._trace, {"event": "tool", "action": action, "result": result})
         DockerEnvironment._check_finished(self, result)
         return result
 
@@ -95,7 +95,7 @@ class Environment:
         return {"cwd": self.config.cwd}
 
     def serialize(self):
-        return {"info": {"sandbox_image": self.sandbox.task["image"], "cwd": self.config.cwd}}
+        return {"info": {"sandbox_image": self._sandbox.task["image"], "cwd": self.config.cwd}}
 
 
 def run_agent(client, sandbox, task, harness, checkpoint, config, output):
