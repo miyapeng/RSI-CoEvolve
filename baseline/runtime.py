@@ -1,6 +1,7 @@
 """One full mini agent for search, dev, RL and final-test generation."""
 
 import copy
+import re
 import time
 from pathlib import Path
 from types import SimpleNamespace
@@ -13,6 +14,7 @@ from minisweagent.models.utils.actions_toolcall import (
     parse_toolcall_actions,
 )
 from minisweagent.run.benchmarks.utils.runner_common import _NoopProgressManager
+from openai import BadRequestError
 
 from .harness import load, revision
 from .records import append, write
@@ -38,14 +40,63 @@ class Model:
             "seed": self.settings["sampling_seed"],
         }
         append(self.trace, {"event": "model_input", "request": request})
-        response = self.client.chat.completions.create(
-            **request, timeout=max(0.01, min(120, self.deadline - time.monotonic()))
-        )
+        try:
+            response = self.client.chat.completions.create(
+                **request, timeout=max(0.01, min(120, self.deadline - time.monotonic()))
+            )
+        except BadRequestError as exc:
+            body = exc.body if isinstance(exc.body, dict) else {}
+            message = body.get("message", "")
+            if (
+                not isinstance(message, str)
+                or "Requested token count exceeds the model's maximum context length" not in message
+            ):
+                raise
+            counts = re.search(
+                r"maximum context length of (\d+) tokens.*?(\d+) tokens from the input messages", message
+            )
+            if not counts:
+                raise
+            remaining = int(counts[1]) - int(counts[2])
+            append(
+                self.trace, {"event": "context_limit", "http_status": 400, "message": message, "remaining": remaining}
+            )
+            if remaining <= 0:
+                raise LimitsExceeded(
+                    {
+                        "role": "exit",
+                        "content": "Context budget exhausted",
+                        "extra": {"exit_status": "ContextLimitExceeded", "submission": ""},
+                    }
+                ) from exc
+            if remaining >= request["max_tokens"]:
+                raise
+            # Match native Slime's exact remaining-context cap. The rejected
+            # request generated no tokens; only this specific cap is retried once.
+            request["max_tokens"] = remaining
+            append(self.trace, {"event": "model_input", "request": request})
+            response = self.client.chat.completions.create(
+                **request, timeout=max(0.01, min(120, self.deadline - time.monotonic()))
+            )
         append(self.trace, {"event": "model_output", "response": response.model_dump(mode="json")})
         if response.usage is None:
             self.usage_available = False
         else:
             self.tokens += response.usage.total_tokens
+        if (
+            response.choices[0].finish_reason == "length"
+            and response.usage is not None
+            and response.usage.completion_tokens == 0
+            and response.usage.prompt_tokens >= self.settings["max_context_tokens"]
+        ):
+            # Native Slime returns this empty turn when its context budget is exhausted.
+            raise LimitsExceeded(
+                {
+                    "role": "exit",
+                    "content": "Context budget exhausted",
+                    "extra": {"exit_status": "ContextLimitExceeded", "submission": ""},
+                }
+            )
         m = response.choices[0].message.model_dump(exclude_none=True)
         m["extra"] = {
             "actions": parse_toolcall_actions(

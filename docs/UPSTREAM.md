@@ -137,3 +137,10 @@ source snippets are supplied together to avoid guessing this protocol.
 The baseline's `export_gate_runs` gathers every gate repetition into its expected
 trace layout. A one-task smoke explicitly uses three seeds; standard searches
 use three tasks. The original gate assertion was not weakened for the smoke.
+
+Pinned Slime `slime/agent/adapters/common.py::call_sglang_generate` caps output
+to remaining context and returns an empty length-limited turn at exhaustion.
+`baseline.runtime.Model` aligns direct SGLang evaluation with that behavior:
+on its exact context-limit 400 diagnostic it uses the reported input count to
+cap one request, without truncating visible history; exhaustion ends the task.
+All other API failures propagate. The native adapter itself remains unmodified.

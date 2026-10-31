@@ -1,0 +1,11 @@
+{
+  "job_id": 1428701,
+  "status": "FAILED",
+  "simulated": false,
+  "stage": "search_rollout",
+  "error_type": "BadRequestError",
+  "reason": "SGLang rejected 31061 prompt tokens + 2048 requested output tokens against 32768 context. No proposer or P-step ran.",
+  "next_round": 0,
+  "accepted_checkpoint": "/user/miyapeng/rsi_evolve/self-hpo-baseline/checkpoints/train-smoke-20261031/job-1427911-4b380e178895/policy-0",
+  "completed_optimizer_steps": 0
+}

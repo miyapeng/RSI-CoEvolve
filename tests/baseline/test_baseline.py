@@ -5,7 +5,9 @@ import json
 from pathlib import Path
 from types import SimpleNamespace as NS
 
+import httpx
 import pytest
+from openai import BadRequestError
 from openai.types.chat import ChatCompletion
 
 from baseline.config import load_config
@@ -93,6 +95,85 @@ def test_shared_gpu_serving_and_tool_parser(tmp_path):
         serving.tool_smoke(client, "/fixed/checkpoint", tmp_path / "malformed.json")
 
 
+def test_context_budget_is_task_termination_but_other_api_errors_propagate(tmp_path):
+    config = load_config(ROOT / "configs/baseline_9b.yaml")
+    row = tasks(config["dataset_split_manifest"], "optimization_pool", 1)[0]
+    sandbox = NS(task=public_task(row), sandbox=NS(sandbox_id="fixture"))
+    response = httpx.Response(400, request=httpx.Request("POST", "http://fixture/v1/chat/completions"))
+
+    def rejected(**kw):
+        raise BadRequestError(
+            "context",
+            response=response,
+            body={
+                "message": "Requested token count exceeds the model's maximum context length of 32768 tokens. You requested a total of 35048 tokens: 33000 tokens from the input messages and 2048 tokens for the completion."
+            },
+        )
+
+    client = NS(chat=NS(completions=NS(create=rejected)))
+    result = run_agent(
+        client,
+        sandbox,
+        public_task(row),
+        config["harness_path"],
+        "fixture",
+        {**config["runtime"], "sampling_seed": 42},
+        tmp_path / "context",
+    )
+    assert result["termination_reason"] == "ContextLimitExceeded" and result["patch"] == ""
+    assert '"event": "context_limit"' in (tmp_path / "context/events.jsonl").read_text()
+
+    requests = []
+
+    def cap_once(**kw):
+        requests.append(kw["max_tokens"])
+        if len(requests) == 1:
+            raise BadRequestError(
+                "context",
+                response=response,
+                body={
+                    "message": "Requested token count exceeds the model's maximum context length of 32768 tokens. You requested a total of 33109 tokens: 31061 tokens from the input messages and 2048 tokens for the completion."
+                },
+            )
+        return completion("submit")
+
+    client.chat.completions.create = cap_once
+    sandbox.execute = lambda *a, **kw: {
+        "output": "COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT\nfixture patch",
+        "returncode": 0,
+    }
+    settings = {**config["runtime"], "sampling_seed": 42, "max_tokens": 2048, "max_context_tokens": 32768}
+    capped = run_agent(
+        client, sandbox, public_task(row), config["harness_path"], "fixture", settings, tmp_path / "capped"
+    )
+    assert capped["termination_reason"] == "Submitted" and requests == [2048, 1707]
+
+    empty = completion("unused")
+    empty.choices[0].finish_reason = "length"
+    empty.choices[0].message.tool_calls = None
+    empty.usage.prompt_tokens, empty.usage.completion_tokens, empty.usage.total_tokens = 32768, 0, 32768
+    client.chat.completions.create = lambda **kw: empty
+    exhausted = run_agent(
+        client, sandbox, public_task(row), config["harness_path"], "fixture", settings, tmp_path / "native_empty"
+    )
+    assert exhausted["termination_reason"] == "ContextLimitExceeded" and exhausted["patch"] == ""
+
+    def invalid_protocol(**kw):
+        raise BadRequestError("invalid tool protocol", response=response, body={"message": "invalid tool protocol"})
+
+    client.chat.completions.create = invalid_protocol
+    with pytest.raises(BadRequestError, match="invalid tool"):
+        run_agent(
+            client,
+            sandbox,
+            public_task(row),
+            config["harness_path"],
+            "fixture",
+            {**config["runtime"], "sampling_seed": 42},
+            tmp_path / "other",
+        )
+
+
 def test_full_local_dataset_split_and_grader_construction(tmp_path):
     raw = next((ROOT / "data/training/self-hpo").glob("*/raw/train.jsonl"))
     first = split(raw, tmp_path / "a.json", seed=42)
@@ -136,7 +217,10 @@ def test_configured_small_tasks_cannot_cross_splits():
 
 
 def test_candidate_cannot_embed_offline_gold_path_or_answer():
-    row = {"metadata": {"instance_id": "fixture-only-id"}, "patch": "--- a/pkg/private_fix.py\n+++ b/pkg/private_fix.py\n@@ -1 +1 @@\n-old\n+answer\n"}
+    row = {
+        "metadata": {"instance_id": "fixture-only-id"},
+        "patch": "--- a/pkg/private_fix.py\n+++ b/pkg/private_fix.py\n@@ -1 +1 @@\n-old\n+answer\n",
+    }
     for code in ("fixture-only-id", row["patch"], 'hint = "git diff -- pkg/private_fix.py > patch.txt"'):
         with pytest.raises(ValueError):
             check_diagnostic_leak(code, [row])
@@ -248,7 +332,7 @@ def test_submission_rewrite_uses_actual_mini_exit_message(tmp_path):
     row = tasks(config["dataset_split_manifest"], "optimization_pool", 1)[0]
     h = tmp_path / "candidate"
     snapshot(ROOT / "harnesses/seed", h)
-    code = '''from minisweagent.run.benchmarks.swebench import ProgressTrackingAgent
+    code = """from minisweagent.run.benchmarks.swebench import ProgressTrackingAgent
 from minisweagent.exceptions import Submitted
 class AgentHarness(ProgressTrackingAgent):
     def step(self):
@@ -259,12 +343,16 @@ class AgentHarness(ProgressTrackingAgent):
             patch = self.repo_diff()
             self.mark("ACTED")
             raise Submitted({"role": "exit", "content": patch, "extra": {"exit_status": "Submitted", "submission": patch}})
-'''
+"""
     (h / "agent.py").write_text(code)
     client = NS(chat=NS(completions=NS(create=lambda **kw: completion("submit"))))
 
     def execute(action, **kw):
-        text = "COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT\ninvalid fixture patch" if action["command"] == "submit" else "fixture diff"
+        text = (
+            "COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT\ninvalid fixture patch"
+            if action["command"] == "submit"
+            else "fixture diff"
+        )
         return {"output": text, "returncode": 0}
 
     sandbox = NS(task=public_task(row), sandbox=NS(sandbox_id="fixture"), execute=execute)
@@ -273,7 +361,12 @@ class AgentHarness(ProgressTrackingAgent):
         result = run_agent(client, sandbox, public_task(row), h, "fixture", settings, tmp_path / phase)
         assert result["termination_reason"] == "Submitted" and result["patch"] == "fixture diff"
         assert {m["token"] for m in read(result["trajectory"])["info"]["harness_marks"]} == {"WIRED", "ACTED"}
-    (h / "agent.py").write_text(code.replace('Submitted({"role": "exit", "content": patch, "extra": {"exit_status": "Submitted", "submission": patch}})', 'Submitted(patch)'))
+    (h / "agent.py").write_text(
+        code.replace(
+            'Submitted({"role": "exit", "content": patch, "extra": {"exit_status": "Submitted", "submission": patch}})',
+            "Submitted(patch)",
+        )
+    )
     with pytest.raises(AttributeError, match="get"):
         run_agent(client, sandbox, public_task(row), h, "fixture", settings, tmp_path / "obsolete")
 

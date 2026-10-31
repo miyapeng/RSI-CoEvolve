@@ -187,9 +187,18 @@ that observed defect; it is not a proof against semantic contamination. The
 single active sandbox was cleaned up by exact job metadata. These stopped
 attempts and their original candidate code remain local research records.
 
+Job **1428701** encountered a real search-context boundary before proposing:
+31,061 input tokens plus 2,048 requested output tokens exceeded its 32,768 cap.
+The direct serving endpoint rejected the request, unlike native Slime's
+remaining-context generation cap. The common runtime now handles that exact
+SGLang diagnostic: one capped request using the server-reported input count,
+or `ContextLimitExceeded` with an empty submission if no context remains.
+Native Slime's empty length-limited response terminates the same way. Other API
+errors still propagate. No budget, reward, or optimizer assertion was weakened.
+
 ## Software checks
 
-- CPU baseline: **27 passed, 1 skipped**. The extra native BatchBuilder test
+- CPU baseline: **28 passed, 1 skipped**. The extra native BatchBuilder test
   requires Ray and runs separately in the GPU Conda prefix without a GPU.
 - GPU Conda native adapter/group normalization: **2 passed**.
 - Unmodified Slime agent regressions: **49 passed, 1 skipped**.
