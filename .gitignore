@@ -5,3 +5,10 @@ scripts/env.local.sh
 work/
 .hook_fired
 *.egg-info/
+
+# Local baseline assets and experiment records
+/runs/
+/data/
+/models/
+.pytest_cache/
+.ruff_cache/
