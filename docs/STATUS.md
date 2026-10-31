@@ -136,9 +136,24 @@ Checkpoint: `checkpoints/train-smoke-20261031/job-1427911-4b380e178895/policy-0`
 The single reload task uses a different sampling seed from the training group;
 these observations **do not establish a paired learning gain or benchmark gain**.
 
+## Outer-loop integration
+
+Job **1428024** started from the verified one-update checkpoint above, not the
+original pretrained model. Its optimization rollout scored 1; its dev rollout
+reached the 40-turn limit and scored 0. The external proposer returned a JSON
+fence followed by prose and code outside the permitted hook surface. Strict
+parsing failed before candidate execution or training; the accepted pair stayed
+unchanged. Raw evidence is retained in `runs/two-round-smoke-20261031/`.
+
+Invalid proposal syntax/schema now produces a recorded candidate rejection and
+keeps the parent harness. API/transport failures still abort explicitly. The
+proposer receives the actual validator and step/submission signatures; parsing
+and execution restrictions were not relaxed. A changed-code experiment must
+start separately rather than bypassing the old run's resume hash.
+
 ## Software checks
 
-- CPU baseline: **23 passed, 1 skipped**. The extra native BatchBuilder test
+- CPU baseline: **25 passed, 1 skipped**. The extra native BatchBuilder test
   requires Ray and runs separately in the GPU Conda prefix without a GPU.
 - GPU Conda native adapter/group normalization: **2 passed**.
 - Unmodified Slime agent regressions: **49 passed, 1 skipped**.

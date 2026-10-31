@@ -74,6 +74,7 @@ def propose(config, client, checkpoint, parent, diagnostics, optimization, trace
     for key, value in subs.items():
         prompt = prompt.replace("{" + key + "}", str(value))
     prompt = prompt.replace("250", str(config["runtime"]["max_steps"]))
+    prompt = prompt.replace("temperature 0.95 / top_p 0.95", f"temperature {config['runtime']['temperature']} / top_p {config['runtime']['top_p']}")
     prompt = prompt.replace(
         "Override step() (or execute_actions); RL training calls only these two.",
         "Override step() (or execute_actions); train and eval execute the identical full mini loop.",
@@ -81,6 +82,8 @@ def propose(config, client, checkpoint, parent, diagnostics, optimization, trace
     prompt += """
 API integration: you cannot read or write this host. All evidence is supplied below.
 Return ONE JSON object: agent_py (complete code), marker, act_marker, purpose, notes.
+Return no Markdown fence or surrounding prose. Put all explanations in notes.
+Encode agent_py as a JSON string ONCE: after JSON decoding it must be ordinary executable Python.
 config.yaml is frozen. The parent retention check still applies. Do not embed task-specific answers.
 Use a literal AgentHarness(ProgressTrackingAgent) class with step/execute_actions and _hook_* helpers.
 No run/query overrides, decorators, imports except the existing ProgressTrackingAgent, Submitted, re, json.
@@ -89,6 +92,10 @@ Instance state must use self._hook_* names. No self.model/config access, host I/
 Use only normal dict/list/string operations and bounded loops. Candidate methods may call super().step()
 or super().execute_actions(message). Search and training invoke the identical full mini agent.
 The gold patches below are OFFLINE diagnosis only; never include their contents or task IDs in agent code.
+The host validator below is authoritative for this API adaptation. Do not work around it.
+The class body contains ONLY methods: no class docstring, class constants, __init__, or module-level helpers.
+For a one-time action, a condition on self.n_calls or a search of self.messages avoids uninitialized state.
+The real step and submission implementations are included below; use their actual signatures.
 """
     # Include a bounded, deterministic success/failure contrast, with gold only from optimization tasks.
     by_id = {r["metadata"]["instance_id"]: r for r in optimization}
@@ -96,6 +103,7 @@ The gold patches below are OFFLINE diagnosis only; never include their contents 
     evidence = {
         "diagnostics": diagnostics,
         "parent_code": (Path(parent) / "agent.py").read_text(),
+        "runtime_contract": runtime_contract(),
         "history": history,
         "examples": [
             {
@@ -124,6 +132,23 @@ The gold patches below are OFFLINE diagnosis only; never include their contents 
     return parse_json(content)
 
 
+def runtime_contract():
+    """Expose code signatures, never host credentials or task answers, to the proposer."""
+    import inspect
+
+    from minisweagent.agents.default import DefaultAgent
+    from minisweagent.exceptions import Submitted
+
+    from .harness import validate_code
+
+    return {
+        "validator": inspect.getsource(validate_code),
+        "step": inspect.getsource(DefaultAgent.step),
+        "execute_actions": inspect.getsource(DefaultAgent.execute_actions),
+        "submission": inspect.getsource(Submitted.__bases__[0]) + inspect.getsource(Submitted),
+    }
+
+
 def h_step(client, checkpoint, harness, optimization, dev, config, output):
     output = Path(output)
     work = output / "search"
@@ -138,11 +163,6 @@ def h_step(client, checkpoint, harness, optimization, dev, config, output):
     for index in range(config["h_proposals_per_round"]):
         name = f"candidate_{index:03d}"
         parent, cand = work / "agents" / current, work / "agents" / name
-        proposal = propose(
-            config, client, checkpoint, parent, diagnostics, optimization, source_rows, history, output / name
-        )
-        snapshot(parent, cand)
-        (cand / "parent").write_text(current)
         record = {
             "candidate": name,
             "policy_checkpoint": checkpoint,
@@ -151,6 +171,13 @@ def h_step(client, checkpoint, harness, optimization, dev, config, output):
             "candidate_revision": None,
         }
         try:
+            proposal = propose(
+                config, client, checkpoint, parent, diagnostics, optimization, source_rows, history, output / name
+            )
+            if not isinstance(proposal, dict):
+                raise ValueError("Proposal must be one JSON object")
+            snapshot(parent, cand)
+            (cand / "parent").write_text(current)
             for field, filename in [
                 ("agent_py", "agent.py"),
                 ("marker", "MARKER.txt"),
@@ -176,6 +203,7 @@ def h_step(client, checkpoint, harness, optimization, dev, config, output):
             if parent_check["exit_code"]:
                 raise ValueError("Parent retention check failed")
         except (ValueError, SyntaxError, KeyError) as exc:
+            record["error_type"] = type(exc).__name__
             record["rejection"] = str(exc)
             append(output / "candidate_history.jsonl", record)
             history.append(record)

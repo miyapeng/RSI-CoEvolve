@@ -123,3 +123,9 @@ preserves GRPO trajectory group semantics when trajectories have different
 segment counts; it is a data adapter, not a new loss. Native loss aggregation
 already uses `rollout_id`. Tests compare against native normalization and verify
 that an all-failure task never borrows advantage from another task.
+
+The API proposer adaptation retains `scripts/h_step/propose_prompt.tmpl` and
+adds the actual local hook validator plus mini agent step/submission signatures
+as runtime contract evidence. Frozen sampling values are rendered from config.
+Invalid JSON/schema or forbidden code is a recorded rejection, not an implicit
+retry or a weakened gate. Gateway/transport failures remain fatal and explicit.

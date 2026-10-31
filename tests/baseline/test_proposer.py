@@ -108,3 +108,54 @@ def test_native_messages_json_fence_is_explicitly_unwrapped():
         parse_json('Some prose before\n```json\n{"ok":true}\n```')
     with pytest.raises(json.JSONDecodeError):
         parse_json('```json\n{"ok":true}\n```\nadditional instructions')
+
+
+def test_invalid_proposals_keep_parent_and_do_not_abort_h_step(tmp_path, monkeypatch):
+    from baseline import search
+    from baseline.harness import revision
+
+    config = load_config(ROOT / "configs/baseline_9b.yaml")
+    config["h_proposals_per_round"] = 2
+    evaluated = []
+
+    def evaluate(*args):
+        evaluated.append(args[3])
+        return [{"score": 0.0}]
+
+    calls = []
+
+    def propose(*args):
+        calls.append(args)
+        if len(calls) == 1:
+            return parse_json('```json\n{}\n```\nextra prose')
+        return []
+
+    monkeypatch.setattr(search, "evaluate", evaluate)
+    monkeypatch.setattr(search, "experience", lambda *a: {})
+    monkeypatch.setattr(search, "export_runs", lambda *a: None)
+    monkeypatch.setattr(search, "propose", propose)
+    parent = ROOT / "harnesses/seed"
+    result, history = search.h_step(None, "frozen-policy", parent, [], [], config, tmp_path)
+    assert result["revision"] == revision(parent)
+    assert len(history) == len(calls) == 2 and len(evaluated) == 2
+    assert all(not r["accepted"] and r["policy_checkpoint"] == "frozen-policy" for r in history)
+    assert history[0]["error_type"] == "JSONDecodeError"
+    assert history[1]["rejection"] == "Proposal must be one JSON object"
+    assert len((tmp_path / "candidate_history.jsonl").read_text().splitlines()) == 2
+
+    def api_failure(*args):
+        raise RuntimeError("Proposer Messages API returned HTTP 401")
+
+    monkeypatch.setattr(search, "propose", api_failure)
+    with pytest.raises(RuntimeError, match="HTTP 401"):
+        search.h_step(None, "frozen-policy", parent, [], [], config, tmp_path / "api_failure")
+
+
+def test_proposer_receives_actual_runtime_contract():
+    from baseline.search import runtime_contract
+
+    contract = runtime_contract()
+    assert "def validate_code" in contract["validator"]
+    assert "def step" in contract["step"]
+    assert "def execute_actions" in contract["execute_actions"]
+    assert "class Submitted" in contract["submission"]
