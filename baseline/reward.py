@@ -7,7 +7,7 @@ from swebench.harness.constants import END_TEST_OUTPUT, START_TEST_OUTPUT
 from .data import source
 from .grading_report import get_eval_report
 from .grading_spec import make_test_spec_scaleswe, make_test_spec_swerebench_v2
-from .records import write
+from .records import append, write
 from .sandbox import open_task
 
 
@@ -33,6 +33,7 @@ def grade(row, patch, config, output, *, sandbox_factory=open_task):
             "patch --batch --fuzz=5 -p1 -i /tmp/patch.diff",
         ]:
             apply = env.raw(command)
+            append(output / "patch_application.jsonl", {"command": command, **apply})
             if apply["returncode"] == 0:
                 applied = True
                 break
