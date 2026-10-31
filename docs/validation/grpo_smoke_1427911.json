@@ -1,0 +1,222 @@
+{
+  "job_id": 1427911,
+  "status": "PASSED",
+  "simulated": false,
+  "model": "Qwen3.5-9B",
+  "gpus": [
+    {
+      "name": "NVIDIA A100-SXM4-80GB",
+      "memory_bytes": 84987740160
+    },
+    {
+      "name": "NVIDIA A100-SXM4-80GB",
+      "memory_bytes": 84987740160
+    },
+    {
+      "name": "NVIDIA A100-SXM4-80GB",
+      "memory_bytes": 84987740160
+    },
+    {
+      "name": "NVIDIA A100-SXM4-80GB",
+      "memory_bytes": 84987740160
+    }
+  ],
+  "repositories": {
+    "baseline": {
+      "commit": "220ccc31c6d320382689fe439f090fd20545d874",
+      "dirty": false
+    },
+    "slime": {
+      "commit": "0b0c277d5b4cc66efc3b6db269e2e5184e8f3b1e",
+      "dirty": false
+    }
+  },
+  "packages": {
+    "torch": "2.11.0+cu129",
+    "ray": "2.58.0",
+    "sglang": "0.5.15.post1",
+    "megatron-core": "0.19.2+4b4acac",
+    "transformer-engine": "2.16.1",
+    "transformers": "5.12.1",
+    "mini-swe-agent": "2.2.6+selfhpo",
+    "swebench": "4.1.0",
+    "e2b": "2.62.0",
+    "tensorboard": "2.21.0",
+    "straw-queue": "0.1.2"
+  },
+  "config_sha256": "eb00e8ebfe5bf7a40a91c08595e7322d40cda219f902dc7d6b4d5ff6e8d502f6",
+  "task_ids": [
+    "open-feature_python-sdk_pr329"
+  ],
+  "rollouts": [
+    {
+      "task_id": "open-feature_python-sdk_pr329",
+      "split": "optimization_pool",
+      "dataset_source": "Scale-SWE",
+      "policy_checkpoint": "/user/lumingcong/models/Qwen3.5-9B",
+      "harness_revision": "d335e0c842ce55e5c3ace4f6dbaeab2e8a6f65dac1710481d5bb3b172228597e",
+      "sampling_seed": 45,
+      "score": 0.0,
+      "training_reward": -1.0,
+      "termination_reason": "Submitted",
+      "tool_calls": 29,
+      "tokens": 378905,
+      "latency_seconds": 58.01838809531182
+    },
+    {
+      "task_id": "open-feature_python-sdk_pr329",
+      "split": "optimization_pool",
+      "dataset_source": "Scale-SWE",
+      "policy_checkpoint": "/user/lumingcong/models/Qwen3.5-9B",
+      "harness_revision": "d335e0c842ce55e5c3ace4f6dbaeab2e8a6f65dac1710481d5bb3b172228597e",
+      "sampling_seed": 43,
+      "score": 0.0,
+      "training_reward": -1.0,
+      "termination_reason": "LimitsExceeded",
+      "tool_calls": 39,
+      "tokens": 723001,
+      "latency_seconds": 267.71791642997414
+    },
+    {
+      "task_id": "open-feature_python-sdk_pr329",
+      "split": "optimization_pool",
+      "dataset_source": "Scale-SWE",
+      "policy_checkpoint": "/user/lumingcong/models/Qwen3.5-9B",
+      "harness_revision": "d335e0c842ce55e5c3ace4f6dbaeab2e8a6f65dac1710481d5bb3b172228597e",
+      "sampling_seed": 44,
+      "score": 1.0,
+      "training_reward": 1.0,
+      "termination_reason": "Submitted",
+      "tool_calls": 29,
+      "tokens": 344406,
+      "latency_seconds": 93.46654466632754
+    },
+    {
+      "task_id": "open-feature_python-sdk_pr329",
+      "split": "optimization_pool",
+      "dataset_source": "Scale-SWE",
+      "policy_checkpoint": "/user/lumingcong/models/Qwen3.5-9B",
+      "harness_revision": "d335e0c842ce55e5c3ace4f6dbaeab2e8a6f65dac1710481d5bb3b172228597e",
+      "sampling_seed": 42,
+      "score": 0.0,
+      "training_reward": -1.0,
+      "termination_reason": "LimitsExceeded",
+      "tool_calls": 39,
+      "tokens": 557088,
+      "latency_seconds": 290.91810417268425
+    }
+  ],
+  "statistics": {
+    "training_metrics": {
+      "train/loss": [
+        {
+          "step": 0,
+          "value": 2.444721758365631e-09
+        }
+      ],
+      "train/pg_loss": [
+        {
+          "step": 0,
+          "value": 2.444721758365631e-09
+        }
+      ],
+      "train/entropy_loss": [
+        {
+          "step": 0,
+          "value": 0.21398650109767914
+        }
+      ],
+      "train/pg_clipfrac": [
+        {
+          "step": 0,
+          "value": 0.0
+        }
+      ],
+      "train/ppo_kl": [
+        {
+          "step": 0,
+          "value": 0.0
+        }
+      ],
+      "train/train_rollout_logprob_abs_diff": [
+        {
+          "step": 0,
+          "value": 0.01145308930426836
+        }
+      ],
+      "train/kl_loss": [
+        {
+          "step": 0,
+          "value": 0.0
+        }
+      ],
+      "train/grad_norm": [
+        {
+          "step": 0,
+          "value": 0.9157018661499023
+        }
+      ],
+      "train/lr-pg_0": [
+        {
+          "step": 0,
+          "value": 9.999999974752427e-07
+        }
+      ],
+      "train/lr-pg_1": [
+        {
+          "step": 0,
+          "value": 9.999999974752427e-07
+        }
+      ],
+      "train/global_batch_size": [
+        {
+          "step": 0,
+          "value": 4.0
+        }
+      ]
+    },
+    "observed_finite_nonzero_gradient_steps": 1,
+    "effective_loss_tokens": 46764,
+    "reward_groups": 1,
+    "mixed_reward_group_fraction": 1.0,
+    "changed_tensor_probes": 342
+  },
+  "native_timing": {
+    "perf/sleep_time": 6.28394341468811,
+    "perf/update_weights_time": 2.9034931659698486,
+    "perf/wake_up_time": 4.814318895339966,
+    "perf/data_preprocess_time": 0.0841059684753418,
+    "perf/train_wait_time": 311.2005937099457,
+    "perf/ref_log_probs_time": 417.971670627594,
+    "perf/actor_train_time": 848.3969297409058,
+    "perf/train_time": 1267.641833782196,
+    "perf/ref_log_probs_tflops": 22.811479309694658,
+    "perf/actor_train_tflops": 33.714945619163146,
+    "perf/actor_train_tok_per_s": 2322.504868802092,
+    "perf/step_time": 1578.8424274921417,
+    "perf/wait_time_ratio": 0.19710680957837043
+  },
+  "artifact_elapsed_seconds": 2197.811,
+  "checkpoint": "/user/miyapeng/rsi_evolve/self-hpo-baseline/checkpoints/train-smoke-20261031/job-1427911-4b380e178895/policy-0",
+  "checkpoint_probe_sha256": "dd3fd944aa0f6764b33d9d52231b9db8974e5c8c74928057af43e6cb061ce3a9",
+  "harness_revision": "d335e0c842ce55e5c3ace4f6dbaeab2e8a6f65dac1710481d5bb3b172228597e",
+  "export_completion": {
+    "frozen_auxiliary_tensors_copied": 348,
+    "source_checkpoint": "/user/lumingcong/models/Qwen3.5-9B"
+  },
+  "reload_verified": true,
+  "reload_rollout": [
+    {
+      "task_id": "open-feature_python-sdk_pr329",
+      "policy_checkpoint": "/user/miyapeng/rsi_evolve/self-hpo-baseline/checkpoints/train-smoke-20261031/job-1427911-4b380e178895/policy-0",
+      "harness_revision": "d335e0c842ce55e5c3ace4f6dbaeab2e8a6f65dac1710481d5bb3b172228597e",
+      "score": 1.0,
+      "tool_calls": 23,
+      "tokens": 243184,
+      "latency_seconds": 167.35717501305044,
+      "sampling_seed": 1767154192
+    }
+  ],
+  "interpretation": "One real native GRPO update and export/reload engineering validation. Single-task outcomes do not establish paired learning gain or benchmark improvement.",
+  "monetary_cost": null
+}

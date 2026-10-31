@@ -4,7 +4,11 @@ A fixed-budget Harness–Policy Co-Evolution coding baseline adapted from [Self-
 
 The execution path is **mini-SWE-agent → Tencent AGS/E2B task sandbox**, with **native Slime GRPO** on the GPU allocation. Model inference/training stays on the GPU host; shell commands, repository edits and trusted tests run in separate remote sandboxes. Search, training and evaluation invoke the same agent implementation.
 
-This repository is an implementation baseline, not a claim of reproduced RL gains. Real API/Tencent coding smoke, a Scale-SWE source-grader oracle, and **Qwen3.5-9B GPU serving/tool calls on A100 80GB** have run. Fresh 9B/Tencent rollouts have produced positive and negative rewards; native training has reached reference forward but a verified optimizer update and two live H/P rounds are still pending. Start with the [small live test](docs/LIVE_SMOKE.md), [GPU environment checks](docs/GPU_ENVIRONMENT.md), and [verification status](docs/STATUS.md).
+This repository is an implementation baseline, not a claim of reproduced RL gains.
+**One real Qwen3.5-9B GRPO update has passed on 4 A100 80GB GPUs**, followed by
+dense checkpoint export, fresh-server reload and a successful Tencent task rollout.
+Two live H/P rounds remain under validation. See the [measured status](docs/STATUS.md),
+[training smoke commands](docs/TRAINING_SMOKE.md), and [GPU Conda setup](docs/GPU_CONDA.md).
 
 ## Start with existing assets
 

@@ -1,10 +1,8 @@
 # Actual verification — 2026-10-31
 
-**One real Scale-SWE optimization task completed and scored through Tencent with
-an API execution model. Separately, Qwen3.5-9B loaded on A100 80GB and passed a
-real tool-call request. Native Slime then collected four real 9B/Tencent
-trajectories and scores, but that attempt failed before the optimizer. A
-verified GRPO update, harness search and two-round H/P execution are still pending.**
+**A real Qwen3.5-9B GRPO update, dense checkpoint export, fresh-server reload
+and a successful Tencent task rollout are now VERIFIED (job 1427911).**
+The two-round H/P validation is a separate run and is not yet claimed complete.
 
 ## Live results
 
@@ -113,6 +111,31 @@ Raw evidence is under `runs/train-smoke-20261031/`; compact public records:
 [first mixed-reward training attempt](validation/grpo_attempt_1427817.json).
 No old negative trajectories are silently reused as fresh on-policy samples.
 
+## Successful real GRPO smoke
+
+Job **1427911**, 4 A100-SXM4-80GB, TP4/DP1, native Slime GRPO:
+
+- 4 fresh on-policy trajectories on one optimization task; rewards -1/-1/-1/+1.
+- 137 captured segments, **46,764 loss-mask tokens**, one real optimizer update.
+- Finite nonzero gradient norm **0.9157018661**; learning rate 1e-6.
+- Native PG loss **2.4447e-9**. Its near-zero batch mean does not mean zero
+  gradient: the normalized group advantages cancel in the initial mean loss.
+- Native dense HF export and Megatron checkpoint saved. **342 language-model
+  tensor probes changed**; this is a sparse change check, not a per-tensor
+  attribution of what was learned.
+- A new SGLang process loaded the exported policy, passed tool-call validation,
+  then completed a real task in 23 tool calls with score **1.0**.
+- Artifact wall-clock duration **2,197.811 seconds** (about 36.6 minutes),
+  excluding scheduling. Native rollout wait 311.2 s; reference forward 417.97 s;
+  actor training 848.40 s. Monetary cost was not retrieved.
+
+[Machine-readable evidence](validation/grpo_smoke_1427911.json),
+[exact submission and resume commands](TRAINING_SMOKE.md).
+Raw files: `runs/train-smoke-20261031/job-1427911/artifacts/`.
+Checkpoint: `checkpoints/train-smoke-20261031/job-1427911-4b380e178895/policy-0`.
+The single reload task uses a different sampling seed from the training group;
+these observations **do not establish a paired learning gain or benchmark gain**.
+
 ## Software checks
 
 - CPU baseline: **23 passed, 1 skipped**. The extra native BatchBuilder test
@@ -130,16 +153,15 @@ No old negative trajectories are silently reused as fresh on-policy samples.
 | Requirement | Status |
 |---|---|
 | Actual Tencent task image and original scoring | VERIFIED on one optimization task |
-| Agent tool loop, patch and separate scoring | VERIFIED with API models; VERIFIED with real 9B submissions and scoring (job 1427817: 1/4 resolved) |
+| Agent tool loop, patch and separate scoring | VERIFIED with API models and real 9B submissions/scoring |
 | Qwen3.5-9B GPU load and tool-call parser | VERIFIED on A100 80GB, job 1427589 |
-| GPU kernels and pinned Slime/Megatron imports | VERIFIED, job 1427598; full training remains unverified |
+| GPU kernels and pinned Slime/Megatron imports | VERIFIED, followed by real training in job 1427911 |
 | Strong external proposer API/protocol | VERIFIED; full H-step candidate search NOT RUN |
-| Real Qwen3.5-9B GRPO update | ATTEMPTED; failed before optimizer, fixes under validation |
-| Checkpoint save/export/reload/serve | NOT RUN on a trained checkpoint |
+| Real Qwen3.5-9B GRPO update | VERIFIED, job 1427911: one real update |
+| Checkpoint save/export/reload/serve | VERIFIED, including a fresh real rollout |
 | Actual harness evolution and P-step hook acceptance | NOT RUN; CPU compatibility tests pass |
 | Two real H/P rounds / four-cell evaluation | NOT RUN |
 | Verified / Multilingual / Pro V2 scores | NOT RUN; adapters remain independent of training |
 
-Next: finish the Slime training environment and run one real GRPO update,
-then H-step and the two-round baseline. Additional task image
+Next: finish H-step and two-round baseline validation from the verified checkpoint. Additional task image
 mappings must be inspected/pinned as the chosen search/dev budget grows.
