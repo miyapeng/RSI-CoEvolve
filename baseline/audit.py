@@ -27,6 +27,7 @@ def environment(config):
         "swebench",
         "e2b",
         "tensorboard",
+        "straw-queue",
     ):
         try:
             packages[name] = importlib.metadata.version(name)
@@ -75,7 +76,7 @@ def preflight(config, *, phase="run", images=None):
     if phase != "oracle" and report["packages"]["sglang"] is None:
         blockers.append("SGLang is not installed in this Conda environment")
     if phase in ("run", "p-step") and config["p_enabled"]:
-        for name in ("ray", "megatron-core", "transformer-engine", "tensorboard"):
+        for name in ("ray", "megatron-core", "transformer-engine", "tensorboard", "straw-queue"):
             if report["packages"][name] is None:
                 blockers.append(f"Training dependency missing: {name}")
         if len(report["gpus"]) < config["training"]["gpus"]:

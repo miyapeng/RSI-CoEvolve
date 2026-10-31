@@ -1,0 +1,8 @@
+# Install after importing the validated CUDA image packages, with --no-deps.
+# Slime v0.4.0's declared queue dependency (also imported by synchronous training).
+straw-queue==0.1.2
+# Match the image's build tools and its system-Python dependencies absent from
+# /usr/local/lib/python3.12/dist-packages (the image import source).
+setuptools==81.0.0
+cryptography==41.0.7
+pyparsing==3.1.1

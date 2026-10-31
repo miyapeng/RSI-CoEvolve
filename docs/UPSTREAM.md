@@ -102,3 +102,8 @@ its upstream license retained. This is an environment dependency, not another
 vendored agent/runtime. Image package provenance is recorded by
 `scripts/baseline/import_image_environment.py`; local Slime and Megatron editables
 override the image's versions. No upstream training loss was changed.
+
+Slime's declared `straw-queue` dependency is installed as package **0.1.2**,
+MIT, with repository metadata https://github.com/zhuzilin/straw. It is used
+unchanged as an environment dependency; no source was copied into this project
+and no Git commit is inferred from the wheel version.

@@ -9,4 +9,5 @@ variables:
 dependencies:
   - python=3.12
   - pip
+  - setuptools=81.0.0
   - skopeo=1.24.1
