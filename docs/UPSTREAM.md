@@ -133,3 +133,7 @@ The old prompt's `Submitted(string)` statement is corrected during API prompt
 rendering to the exit-message dictionary required by `DefaultAgent.run`.
 The upstream prompt file itself remains retained. The producer and consumer
 source snippets are supplied together to avoid guessing this protocol.
+`fire_gate.py` retains its original minimum of two submitted trajectories.
+The baseline's `export_gate_runs` gathers every gate repetition into its expected
+trace layout. A one-task smoke explicitly uses three seeds; standard searches
+use three tasks. The original gate assertion was not weakened for the smoke.

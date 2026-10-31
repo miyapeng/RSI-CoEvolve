@@ -23,6 +23,7 @@ def rollout_environment(config):
     c = config["runtime"]["sandbox"]
     keys = [
         "BASELINE_TRAIN_REQUEST",
+        "JOB_ID",
         "BASELINE_SECRET_ENV_FILE",
         "TENSORBOARD_DIR",
         "PYTHONPATH",

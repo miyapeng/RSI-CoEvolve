@@ -43,6 +43,19 @@ def export_runs(work, name, rows):
     return work / "runs" / f"{name}_r1"
 
 
+def export_gate_runs(output, rows):
+    """Keep every sampled repetition visible to the upstream two-submission gate."""
+    output = Path(output)
+    if len(rows) < 3 or any(r["score"] is None for r in rows):
+        raise ValueError("Fire gate requires at least three completed real trajectories")
+    for row in rows:
+        iid = row["task_id"]
+        target = output / f"r{row['repetition']}" / iid / f"{iid}.traj.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(row["trajectory"], target)
+    return output
+
+
 def experience(work, optimization, rows):
     work = Path(work)
     if any(r["split"] != "optimization_pool" for r in optimization + rows):
@@ -218,8 +231,11 @@ def h_step(client, checkpoint, harness, optimization, dev, config, output):
             history.append(record)
             continue
         # A small REAL execution gate, before dev evaluation. No mock success marker.
-        gate_rows = evaluate(client, optimization[:3], checkpoint, cand, config, output / name / "gate_rollouts")
-        gate_path = export_runs(work, f"{name}_firegate", gate_rows)
+        gate_config = {**config, "eval_repetitions": config.get("h_gate_repetitions", 1)}
+        if len(optimization[:3]) * gate_config["eval_repetitions"] < 3:
+            raise ValueError("Gate budget needs three trajectories; set h_gate_repetitions=3 for a one-task smoke")
+        gate_rows = evaluate(client, optimization[:3], checkpoint, cand, gate_config, output / name / "gate_rollouts")
+        gate_path = export_gate_runs(output / name / "gate_traces", gate_rows)
         gate = script("fire_gate.py", work, name, extra_env={"BASELINE_GATE_TRACES": str(gate_path.resolve())})
         record["fire_gate"] = gate
         if gate["exit_code"] == 0:

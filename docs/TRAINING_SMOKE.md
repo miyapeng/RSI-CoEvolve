@@ -8,6 +8,11 @@ is needed on this workspace.
 `configs/smoke_a100.yaml` fixes the small engineering budget: one optimization
 task, one independent dev task, 4 trajectories per GRPO group, one native Slime
 update per P-step, 4 A100 80GB GPUs (TP4 / DP1), 40 agent steps and 32K context.
+The fire gate uses `h_gate_repetitions: 3`: three seeds on the same optimization
+task. This preserves upstream's at-least-two-submissions requirement without
+pretending that one task represents three different tasks. Normal multi-task
+search uses three tasks with one repetition. All gate repetitions are exported
+together, not only the first repetition.
 Native logprob chunks of 512 and loss recomputation bound training memory.
 All H/P/eval sampling uses top_p=1 because the pinned native Agent Adapter does
 not capture the nucleus support required for top_p<1 training. Larger studies

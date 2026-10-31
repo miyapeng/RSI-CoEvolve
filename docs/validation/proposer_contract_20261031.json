@@ -1,0 +1,49 @@
+{
+  "checks": [
+    {
+      "local_artifacts": "runs/proposer-budget-check-20261031",
+      "api_static_check": {
+        "passed": true,
+        "simulated": false,
+        "budget": 16384,
+        "elapsed_seconds": 199.3275036290288,
+        "purpose": "model submits raw file content instead of git diff patch -> on Submitted intercept, replace submission with self.repo_diff() when it contains a valid git diff",
+        "scope": "API/static contract only; not candidate execution or acceptance"
+      },
+      "cpu_behavior_check": {
+        "test_only": true,
+        "passed": false,
+        "error_type": "AttributeError",
+        "reason": "'str' object has no attribute 'get'",
+        "scope": "CPU behavior contract, not real task reward"
+      }
+    },
+    {
+      "local_artifacts": "runs/proposer-contract-check-20261031",
+      "api_static_check": {
+        "passed": true,
+        "simulated": false,
+        "budget": 16384,
+        "elapsed_seconds": 62.729246034286916,
+        "purpose": "Model creates correct file edits but submits raw file content instead of a git diff (submission_loss 100%) -> catch every Submitted, recover actual working-tree diff via repo_diff(), and resubmit it as a proper patch when diff --git is present.",
+        "scope": "API/static contract only; not candidate execution or acceptance"
+      },
+      "cpu_behavior_check": {
+        "test_only": true,
+        "passed": true,
+        "marks": [
+          {
+            "token": "PATCH_RECOVER_ENTER",
+            "at_message": 3
+          },
+          {
+            "token": "PATCH_RECOVER_ACT",
+            "at_message": 3
+          }
+        ],
+        "scope": "CPU behavior contract, not real task reward"
+      }
+    }
+  ],
+  "interpretation": "Real API calls with CPU scripted behavior contracts. No candidate rollout reward or promotion is claimed."
+}

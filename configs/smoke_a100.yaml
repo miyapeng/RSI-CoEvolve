@@ -4,6 +4,7 @@ h_enabled: true
 p_enabled: true
 h_proposals_per_round: 1
 h_task_sample_size: 1
+h_gate_repetitions: 3
 dev_task_sample_size: 1
 eval_repetitions: 1
 cross_eval: true

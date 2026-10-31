@@ -15,7 +15,7 @@ from baseline.outer_loop import run
 from baseline.records import ROOT, read, write
 from baseline.reward import grade, specification
 from baseline.runtime import run_agent
-from baseline.search import experience, export_runs, script
+from baseline.search import experience, export_gate_runs, export_runs, script
 from baseline.training import command, prepare
 
 HOOK = """from minisweagent.run.benchmarks.swebench import ProgressTrackingAgent
@@ -208,6 +208,21 @@ def test_upstream_experience_gate_and_accept_reject(tmp_path):
     assert script("parent_check.py", tmp_path, "c1")["exit_code"] == 0
     gate = script("fire_gate.py", tmp_path, "c1", extra_env={"BASELINE_GATE_TRACES": str(gated)})
     assert gate["exit_code"] == 0, gate
+    # One task must not be passed to the unchanged upstream two-submission gate.
+    with pytest.raises(ValueError, match="three"):
+        export_gate_runs(tmp_path / "too_small", records[:1])
+    repeats = [{**records[0], "repetition": i} for i in range(3)]
+    repeated_gate = export_gate_runs(tmp_path / "repeated_gate", repeats)
+    assert len(list(repeated_gate.glob("*/*/*.traj.json"))) == 3
+    repeated = script("fire_gate.py", tmp_path, "c1", extra_env={"BASELINE_GATE_TRACES": str(repeated_gate)})
+    assert repeated["exit_code"] == 0, repeated
+    for repeat in (1, 2):
+        trace = next((repeated_gate / f"r{repeat}").glob("*/*.traj.json"))
+        content = read(trace)
+        content["info"]["exit_status"] = "LimitsExceeded"
+        write(trace, content)
+    rejected = script("fire_gate.py", tmp_path, "c1", extra_env={"BASELINE_GATE_TRACES": str(repeated_gate)})
+    assert rejected["exit_code"] == 1 and "only 1/3" in rejected["stdout"]
     write(tmp_path / "experience/frontier.json", [{"name": "parent", "kept": True, "avg": 0.0}])
     export_runs(tmp_path, "c1", [{**r, "score": 1.0} for r in records])
     assert script("record_result.py", tmp_path, "c1")["exit_code"] == 0

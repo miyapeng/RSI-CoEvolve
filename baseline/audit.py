@@ -94,6 +94,9 @@ def preflight(config, *, phase="run", images=None):
         images = [r["metadata"]["image_url"] for r in selected]
     sandbox = sandbox_preflight(config["runtime"]["sandbox"], images)
     blockers.extend(sandbox["blockers"])
+    if phase == "h-step" or (phase == "run" and config["h_enabled"]):
+        if min(3, config["h_task_sample_size"]) * config.get("h_gate_repetitions", 1) < 3:
+            blockers.append("Upstream fire gate needs three trajectories; use h_gate_repetitions=3 for one task")
     if phase in ("run", "h-step") and config["h_enabled"] and config["proposer_mode"] == "api":
         for key in ("key_env", "model_env"):
             if not os.environ.get(config["proposer"][key]):

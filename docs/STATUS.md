@@ -169,6 +169,16 @@ proposer budget is now 16,384 tokens / 300 seconds for subsequent experiments.
 Opus 5.5 counts thinking and final text against the same output cap; see its
 [official migration guide](https://platform.claude.com/docs/en/models/opus-5-5/migration-guide).
 
+Job **1428458** ran a real generated candidate: an initial public pytest
+collection hint. Its gate rollout scored 1 with 31 tool calls and both marker
+types recorded. The adapter nevertheless rejected it because only one trajectory
+was supplied to the upstream gate, which requires two submissions. This is an
+adapter budget bug, not evidence that the mechanism prevented submission. The
+job was deliberately stopped before training. One active sandbox was cleaned
+up by exact job metadata. Smoke gates now explicitly run three distinct seeds
+on the one optimization task and export all repetitions to the unchanged gate.
+The regression test still rejects a gate with only one submission out of three.
+
 ## Software checks
 
 - CPU baseline: **26 passed, 1 skipped**. The extra native BatchBuilder test
