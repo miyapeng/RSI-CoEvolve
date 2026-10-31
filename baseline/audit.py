@@ -9,7 +9,7 @@ import subprocess
 from pathlib import Path
 
 from .checkpoint import inspect
-from .data import tasks
+from .data import configured_tasks
 from .records import ROOT, SLIME_COMMIT, sha
 from .tencent import preflight as sandbox_preflight
 
@@ -82,15 +82,15 @@ def preflight(config, *, phase="run", images=None):
         if len(report["gpus"]) < config["training"]["gpus"]:
             blockers.append("Allocation has fewer GPUs than the configured training budget")
     if images is None:
-        selected = tasks(
-            config["dataset_split_manifest"],
+        selected = configured_tasks(
+            config,
             "optimization_pool",
             max(config["h_task_sample_size"], config["p_task_sample_size"]),
         )
         if phase in ("run", "h-step", "cross-eval"):
-            selected += tasks(config["dataset_split_manifest"], "dev_eval", config["dev_task_sample_size"])
+            selected += configured_tasks(config, "dev_eval", config["dev_task_sample_size"])
         elif phase == "audit-holdout":
-            selected = tasks(config["dataset_split_manifest"], "audit_holdout", config["dev_task_sample_size"])
+            selected = configured_tasks(config, "audit_holdout", config["dev_task_sample_size"])
         images = [r["metadata"]["image_url"] for r in selected]
     sandbox = sandbox_preflight(config["runtime"]["sandbox"], images)
     blockers.extend(sandbox["blockers"])

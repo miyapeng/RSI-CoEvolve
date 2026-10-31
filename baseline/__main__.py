@@ -6,7 +6,7 @@ from pathlib import Path
 from .audit import preflight
 from .config import load_config
 from .credentials import load_credentials
-from .data import split, tasks
+from .data import configured_tasks, split, tasks
 from .execution import evaluate, serve, serve_command
 from .outer_loop import cross_eval, run
 from .records import ROOT, write
@@ -86,7 +86,7 @@ def main():
     if a.command == "preflight":
         print(json.dumps({"status": report["status"], "blockers": report["blockers"]}, indent=2))
         return
-    rows = selected or tasks(c["dataset_split_manifest"], "optimization_pool", a.limit or c["p_task_sample_size"])
+    rows = selected or configured_tasks(c, "optimization_pool", a.limit or c["p_task_sample_size"])
     if a.command == "p-step" and not a.execute:
         prepare(c["model_checkpoint"], c["harness_path"], rows, c, a.output)
     else:
@@ -121,12 +121,12 @@ def main():
     else:
         with serve(policy, c, a.output / "serve") as client:
             if a.command == "h-step":
-                opt = tasks(c["dataset_split_manifest"], "optimization_pool", c["h_task_sample_size"])
-                dev = tasks(c["dataset_split_manifest"], "dev_eval", c["dev_task_sample_size"])
+                opt = configured_tasks(c, "optimization_pool", c["h_task_sample_size"])
+                dev = configured_tasks(c, "dev_eval", c["dev_task_sample_size"])
                 h_step(client, policy, harness, opt, dev, c, a.output)
             else:
                 if a.command == "audit-holdout":
-                    rows = tasks(c["dataset_split_manifest"], "audit_holdout", a.limit or c["dev_task_sample_size"])
+                    rows = configured_tasks(c, "audit_holdout", a.limit or c["dev_task_sample_size"])
                 evaluate(client, rows, policy, harness, c, a.output / "rollouts")
 
 

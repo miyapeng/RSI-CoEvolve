@@ -9,7 +9,7 @@ import pytest
 from openai.types.chat import ChatCompletion
 
 from baseline.config import load_config
-from baseline.data import ROLES, public_task, split, tasks
+from baseline.data import ROLES, configured_tasks, public_task, split, tasks
 from baseline.harness import load, revision, snapshot, validate_code
 from baseline.outer_loop import run
 from baseline.records import ROOT, read, write
@@ -116,6 +116,23 @@ def test_full_local_dataset_split_and_grader_construction(tmp_path):
         spec = specification(row)
         assert spec.FAIL_TO_PASS and spec.image_name == row["metadata"]["image_url"]
         assert spec.eval_script
+
+
+def test_configured_small_tasks_cannot_cross_splits():
+    c = load_config(ROOT / "configs/baseline_9b.yaml")
+    opt = tasks(c["dataset_split_manifest"], "optimization_pool", 2)
+    ids = [r["metadata"]["instance_id"] for r in reversed(opt)]
+    c["task_ids"] = {"optimization_pool": ids}
+    assert configured_tasks(c, "optimization_pool", 1) == [opt[1]]
+    assert configured_tasks(c, "optimization_pool", 2) == list(reversed(opt))
+    with pytest.raises(ValueError, match="outside"):
+        configured_tasks(c, "optimization_pool", 3)
+    c["task_ids"]["dev_eval"] = ids
+    with pytest.raises(ValueError, match="outside"):
+        configured_tasks(c, "dev_eval", 1)
+    c["task_ids"]["optimization_pool"] = [ids[0], ids[0]]
+    with pytest.raises(ValueError, match="unique"):
+        configured_tasks(c, "optimization_pool", 1)
 
 
 def test_same_full_agent_hooks_and_frozen_snapshot(tmp_path):

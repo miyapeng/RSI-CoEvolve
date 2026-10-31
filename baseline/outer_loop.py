@@ -7,7 +7,7 @@ import yaml
 from . import execution, search, training
 from .audit import environment
 from .checkpoint import inspect
-from .data import tasks
+from .data import configured_tasks
 from .harness import revision, snapshot
 from .records import ROOT, digest, read, sha, write
 
@@ -98,10 +98,9 @@ def run(config, output, *, resume=False, operations=None, test_only=False):
     state = (
         check_state(config, output, test_only=test_only) if resume else initialize(config, output, test_only=test_only)
     )
-    manifest = config["dataset_split_manifest"]
-    optimization = tasks(manifest, "optimization_pool", config["h_task_sample_size"])
-    train_rows = tasks(manifest, "optimization_pool", config["p_task_sample_size"])
-    dev = tasks(manifest, "dev_eval", config["dev_task_sample_size"])
+    optimization = configured_tasks(config, "optimization_pool", config["h_task_sample_size"])
+    train_rows = configured_tasks(config, "optimization_pool", config["p_task_sample_size"])
+    dev = configured_tasks(config, "dev_eval", config["dev_task_sample_size"])
     # audit_holdout is deliberately never loaded by this loop.
     while state["next_round"] < config["n_outer_rounds"]:
         t = state["next_round"]
@@ -235,7 +234,7 @@ def run(config, output, *, resume=False, operations=None, test_only=False):
 
 
 def cross_eval(config, output, old_policy, new_policy, old_harness, new_harness):
-    rows = tasks(config["dataset_split_manifest"], "dev_eval", config["dev_task_sample_size"])
+    rows = configured_tasks(config, "dev_eval", config["dev_task_sample_size"])
     output = Path(output)
     if (output / "eval_pairs.json").exists():
         raise ValueError("Cross-eval output already exists")

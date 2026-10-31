@@ -169,3 +169,16 @@ def public_task(row):
         "split": row["split"],
         "dataset_source": row["dataset_source"],
     }
+
+
+def configured_tasks(config, role, limit):
+    """Select a recorded small subset without moving tasks between frozen splits."""
+    ids = config.get("task_ids", {}).get(role)
+    if ids is None:
+        return tasks(config["dataset_split_manifest"], role, limit)
+    if not isinstance(ids, list) or not ids or len(set(ids)) != len(ids):
+        raise ValueError("task_ids must be a nonempty list of unique task IDs")
+    available = {r["metadata"]["instance_id"]: r for r in tasks(config["dataset_split_manifest"], role)}
+    if set(ids) - available.keys() or limit > len(ids):
+        raise ValueError(f"Requested task subset/budget is outside {role}")
+    return [available[i] for i in ids[:limit]]

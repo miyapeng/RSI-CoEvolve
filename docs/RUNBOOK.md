@@ -119,3 +119,14 @@ Only after the baseline is reliable and the selected policy/harness are frozen, 
 An experiment saves `config.resolved.yaml`, `environment.json`, `splits.json`, `state.json`; each round saves before/after harness snapshots and policy references, H-step candidate history/diagnostics/rollouts, P-step request/logs/token provenance/checkpoints/reload evidence, four-cell evaluations and metrics. `summaries/` contains three CSVs plus a Markdown report. Exceptions preserve their error type and the previous accepted pair; infrastructure failures carry null scores. No generated mock learning curves are used as results.
 
 Local validation evidence and exact known upstream failures: [STATUS.md](STATUS.md). A small passing CPU fixture validates a software contract, not GPU execution, parser correctness, real reward or policy learning.
+
+### Fixed small task subsets
+
+`configs/smoke_a100.yaml` uses one explicitly recorded optimization task and one
+separate dev task for bounded engineering validation, with 40 agent steps, 32K
+context and 4 A100 GPUs for one GRPO update per P-step. These tiny subsets are
+not a representative research evaluation. `task_ids.optimization_pool` and
+`task_ids.dev_eval` can select IDs already in the frozen manifest; duplicates,
+wrong-split IDs and budgets exceeding the listed subset are rejected. The same
+selection is used by preflight, H-step, P-step, cross-eval and outer-loop resume.
+Omit `task_ids` to use deterministic seeded subsets from the full training pool.
