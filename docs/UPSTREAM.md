@@ -42,3 +42,20 @@ No HarnessAdapt-RL proprietary source or prompts copied. No Meta-Harness/RRSI/AH
 - [E2B SDK](https://github.com/e2b-dev/E2B): installed distribution **2.62.0**, Apache-2.0, used as a dependency. Installed source/signatures and the [official network API](https://docs.e2b.dev/network/internet-access) were checked. No Git commit is invented for a package release. Tencent provider enforcement remains unverified.
 - `sandbox.py` retains common task preparation; `train_worker.py` forwards required Tencent environment variables to native Ray workers. No model, GRPO loss or agent-loop changes accompany this transport replacement.
 - The frozen manifest's raw path is repository-relative; memberships, IDs, content hashes and seed are unchanged. Bootstrap fetches only missing pinned Slime/Pro source. Original Self-HPO README is preserved under `docs/upstream/` and in Git history; the repository README describes the 9B adaptation.
+
+## Local asset discovery, 2026-10-31
+
+Read-only reference: `/user/miyapeng/minicpm-v5-agentic-rl/repos/handoff-20261029/R2E-Gym-e2b/src/r2egym/agenthub/runtime/swe_rebench_v2.py`,
+SHA256 `315b965d5981634638fb00974f1cc4b6e23ec20c6617766b462e97dbb3512953`.
+The enclosing handoff directory is not a Git checkout; no commit is invented.
+Its `normalize_tencent_image` convention guided discovery of existing mirrors.
+No private runtime file or prompt was copied. Also inspected the neighbouring
+prepared Scale-SWE metadata and prior image-presence reports. Reused only the
+existing remote task image, after sandbox repository/base-commit verification
+and authenticated registry digest inspection. The baseline keeps its own frozen
+Self-HPO dataset split and original source grader. No final benchmark task was
+used for this validation. See [live evidence](LIVE_SMOKE.md).
+
+`baseline/proposer.py` is an original, thin HTTP protocol adaptation, not copied
+provider code. Native Messages is needed by the observed enterprise Opus route;
+it preserves the existing Self-HPO prompt renderer and candidate validation.

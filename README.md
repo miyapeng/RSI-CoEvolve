@@ -4,7 +4,7 @@ A fixed-budget Harness–Policy Co-Evolution coding baseline adapted from [Self-
 
 The execution path is **mini-SWE-agent → Tencent AGS/E2B task sandbox**, with **native Slime GRPO** on the GPU allocation. Model inference/training stays on the GPU host; shell commands, repository edits and trusted tests run in separate remote sandboxes. Search, training and evaluation invoke the same agent implementation.
 
-This repository is an implementation baseline, not a claim of reproduced RL gains. CPU integration tests pass; real Tencent task execution, GPU updates and two live H/P rounds remain **NOT RUN**. See [verification status](docs/STATUS.md).
+This repository is an implementation baseline, not a claim of reproduced RL gains. Real API/Tencent coding smoke and a Scale-SWE source-grader oracle have run; GPU updates and two live H/P rounds remain **NOT RUN**. Start with the [small live test](docs/LIVE_SMOKE.md) and see [verification status](docs/STATUS.md).
 
 ## Start with existing assets
 
@@ -55,6 +55,7 @@ python -m baseline resume --mode hpo --output runs/hpo-001 --execute
 Without `--execute`, execution commands save plans. Live commands require the real GPU stack, sandbox images and credentials; they fail explicitly when prerequisites are absent. `--mode base`, `h-only`, `p-only`, `hpo` use the same outer loop. Four-cell dev evaluation is configurable. Verified / Multilingual / **Pro V2** have a separate final-evaluation entrypoint and never select H/P candidates.
 
 - [Runbook: GPU setup, all commands, cross-eval and final evaluation](docs/RUNBOOK.md)
+- [Small live API/Tencent test, reused mirrors and exact prerequisites](docs/LIVE_SMOKE.md)
 - [Architecture and information boundaries](docs/ARCHITECTURE.md)
 - [Measured status and remaining blockers](docs/STATUS.md)
 - [Source pins, modifications and licenses](docs/UPSTREAM.md)

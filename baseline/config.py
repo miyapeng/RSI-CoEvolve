@@ -19,6 +19,8 @@ def load_config(path):
         sandbox["images"] = yaml.safe_load(manifest.read_text())["images"] if manifest.exists() else {}
     if config["proposer_mode"] not in ("api", "self"):
         raise ValueError("proposer_mode must be api or self")
+    if config["proposer"]["protocol"] not in ("anthropic_messages", "chat_completions"):
+        raise ValueError("Unsupported proposer protocol")
     for k in (
         "n_outer_rounds",
         "h_proposals_per_round",

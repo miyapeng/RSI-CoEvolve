@@ -38,7 +38,7 @@ python -m baseline p-step --output runs/p-plan-local --limit 16
 
 ## 2. Real execution prerequisites
 
-Current allocation has **zero visible GPUs**, CPU-only torch, no Docker/Kubernetes client, no configured Tencent template/domain/key or image mappings and no configured external proposer. No real rollout or update was performed. The active baseline explicitly uses Tencent AGS/E2B for every task and grader. The original Orchard API is no longer a runtime prerequisite. See [Tencent setup](TENCENT_SANDBOX.md).
+Current allocation has **zero visible GPUs**, CPU-only torch and no Docker/Kubernetes client. Real API/Tencent smoke now works with the discovered public endpoint/template and one existing Scale-SWE mirror; keys are injected temporarily, not stored. See [the small live test](LIVE_SMOKE.md) for actual outcomes and commands. No real 9B inference/update has been performed. The active baseline explicitly uses Tencent AGS/E2B for every task and grader. The original Orchard API is no longer a runtime prerequisite.
 
 Use an authorized GPU allocation with pinned Slime's compatible stack. The existing `v5-miles` environment was inspected but is missing SGLang and is not a verified Slime environment. Do not upgrade it in place.
 
@@ -48,7 +48,7 @@ Install the local mini-SWE-agent and pinned E2B dependencies and baseline into t
 
 Export `E2B_API_KEY`, `E2B_DOMAIN`, `E2B_TEMPLATE` securely in the job environment. In proxy mode also export the configured proxy variable (default `http_proxy`); for a dedicated link select `connection: direct`. Prepare `configs/tencent_images.local.yaml` with exact source image / mirrored Tencent tag / expected digest mappings. Do not put registry credentials in this file. Host `skopeo` verifies each tag before creation. Agent and grader use fresh, separate sandboxes. Template network enforcement and actual task-image compatibility still need live validation. Inventory generation, smoke prerequisites and cleanup details are in [TENCENT_SANDBOX.md](TENCENT_SANDBOX.md).
 
-For the default HPO-style proposer set `PROPOSER_MODEL` to the LLMCenter **accessId** and inject `LLM_CENTER_API_KEY` securely. No key is in project files. API base URL is configurable. `proposer_mode: self` uses the currently served policy and must be named as a Self-HPO-style experiment. Neither mode trains a separate API model.
+For the default HPO-style proposer set `PROPOSER_MODEL` to the LLMCenter **accessId** and inject `LLM_CENTER_API_KEY` securely. No key is in project files. API base URL, protocol, timeout and proxy inheritance are configurable. The tested Opus accessId requires `anthropic_messages`; use `chat_completions` only for a model exposing that protocol. `proposer_mode: self` uses the currently served policy and must be named as a Self-HPO-style experiment. Neither mode trains a separate API model.
 
 Copy `configs/baseline_9b.yaml` to a job-specific config, adjust GPUs/TP/context/budgets once, and keep it fixed for resume. Defaults are a two-GPU debugging budget, not a measured memory guarantee. On Cybertron set `training.checkpoint_root: /data/checkpoints/self-hpo-baseline`; place run records under `/data/results`, logs under the task log mounts, and keep model/data sources read-only. No cctl task was submitted. A real submission still needs the selected project, cluster, resource pool and compatible image digest.
 

@@ -21,14 +21,22 @@ class TaskSandbox:
             self.sandbox = self._transport.sandbox
             self.execution_image = self._transport.image
             self.registry_digest = self._transport.registry_digest
-            cwd, base = shlex.quote(self.task["cwd"]), shlex.quote(self.task["base_commit"])
-            self.checked(f"git -C {cwd} -c safe.directory={cwd} reset --hard {base}", self.settings["setup_timeout"])
-            if self.pre_commands:
-                self.checked(self.pre_commands, self.settings["setup_timeout"])
-            if not self.grader:
-                # Keep the seed's git-diff submission protocol, but remove access to source history.
-                isolation = self.checked(
-                    f"""set -e
+            self.prepare()
+            return self
+        except BaseException:
+            self.__exit__()
+            raise
+
+    def prepare(self):
+        """Common preparation for a task image or an explicitly labelled coding probe."""
+        cwd, base = shlex.quote(self.task["cwd"]), shlex.quote(self.task["base_commit"])
+        self.checked(f"git -C {cwd} -c safe.directory={cwd} reset --hard {base}", self.settings["setup_timeout"])
+        if self.pre_commands:
+            self.checked(self.pre_commands, self.settings["setup_timeout"])
+        if not self.grader:
+            # Keep the seed's git-diff submission protocol, but remove access to source history.
+            isolation = self.checked(
+                f"""set -e
 mkdir -p /root/baseline-private /tmp/baseline-home
 chmod 700 /root /root/baseline-private
 mv {cwd}/.git /root/baseline-private/git
@@ -40,14 +48,10 @@ chown -R 65534:65534 {cwd} /tmp/baseline-home
 if [ -d /tests ]; then chmod 700 /tests; fi
 setpriv --reuid=65534 --regid=65534 --clear-groups --no-new-privs --bounding-set=-all id -u
 """,
-                    self.settings["setup_timeout"],
-                )
-                if isolation["output"].strip().splitlines()[-1] != "65534":
-                    raise RuntimeError("Task image did not enforce the unprivileged agent UID")
-            return self
-        except BaseException:
-            self.__exit__()
-            raise
+                self.settings["setup_timeout"],
+            )
+            if isolation["output"].strip().splitlines()[-1] != "65534":
+                raise RuntimeError("Task image did not enforce the unprivileged agent UID")
 
     def raw(self, command, timeout=120, cwd=None):
         return self._transport.raw(command, timeout, cwd)

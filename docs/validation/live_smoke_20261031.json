@@ -1,0 +1,137 @@
+{
+  "date": "2026-10-31",
+  "gpu_training": "NOT_RUN",
+  "harness_search": "NOT_RUN",
+  "final_benchmarks": "NOT_RUN",
+  "runs": [
+    {
+      "run": "coding-001",
+      "experiment_kind": "real_connectivity_smoke",
+      "simulated": false,
+      "benchmark": false,
+      "qwen_9b_validated": false,
+      "policy_training": "NOT_RUN",
+      "proposer_access_id": "CLAUDE_5puknv",
+      "policy_access_id": "QWEN_k5gzkh",
+      "sandbox_image": "modelbest.tencentcloudcr.com/all-hands-ai/runtime/oh_v0.59.0_jqx9rkkdtc8zrris_9yzpn5kns890pwg6:latest",
+      "registry_digest": null,
+      "image_reproducibility": "UNPINNED_PROBE_ONLY",
+      "status": "PASS",
+      "proposer": "PASS",
+      "coding_task": "PASS",
+      "private_checks": 6,
+      "tokens": 12327,
+      "tool_calls": 6,
+      "latency_seconds": 44.663024919107556
+    },
+    {
+      "run": "real-task-001",
+      "experiment_kind": "real_connectivity_smoke",
+      "simulated": false,
+      "benchmark": false,
+      "qwen_9b_validated": false,
+      "policy_training": "NOT_RUN",
+      "proposer_access_id": "CLAUDE_5puknv",
+      "policy_access_id": "QWEN_k5gzkh",
+      "task_id": "open-feature_python-sdk_pr329",
+      "sandbox_image": null,
+      "registry_digest": null,
+      "image_reproducibility": "UNPINNED_PROBE_ONLY",
+      "status": "FAILED",
+      "proposer": "PASS",
+      "error_type": "APITimeoutError",
+      "latency_seconds": 310.3286568177864
+    },
+    {
+      "run": "real-task-002",
+      "experiment_kind": "real_connectivity_smoke",
+      "simulated": false,
+      "benchmark": false,
+      "qwen_9b_validated": false,
+      "policy_training": "NOT_RUN",
+      "proposer_access_id": "CLAUDE_5puknv",
+      "policy_access_id": "GPT_15kraa",
+      "task_id": "open-feature_python-sdk_pr329",
+      "sandbox_image": null,
+      "registry_digest": null,
+      "image_reproducibility": "UNPINNED_PROBE_ONLY",
+      "status": "FAILED",
+      "error_type": "JSONDecodeError",
+      "latency_seconds": 2.985045506618917
+    },
+    {
+      "run": "real-task-003",
+      "experiment_kind": "real_connectivity_smoke",
+      "simulated": false,
+      "benchmark": false,
+      "qwen_9b_validated": false,
+      "policy_training": "NOT_RUN",
+      "proposer_access_id": "CLAUDE_5puknv",
+      "policy_access_id": "GPT_15kraa",
+      "task_id": "open-feature_python-sdk_pr329",
+      "sandbox_image": "modelbest.tencentcloudcr.com/aweaiteam/scaleswe:open-feature_python-sdk_pr329",
+      "registry_digest": "sha256:5bb2476cad1c647e22e267a9caedbb24efd6cf03948357b9f929177a6bf8b950",
+      "image_reproducibility": "REGISTRY_PINNED",
+      "status": "PASS",
+      "proposer": "PASS",
+      "coding_task": "EXECUTED",
+      "task_score": 1.0,
+      "tokens": 31518,
+      "tool_calls": 7,
+      "tests_executed": true,
+      "latency_seconds": 40.34752093721181
+    }
+  ],
+  "oracle": {
+    "task_id": "open-feature_python-sdk_pr329",
+    "seconds": 13.84967458061874,
+    "patches": {
+      "empty": {
+        "score": 0.0,
+        "reason": "empty_patch",
+        "executed_tests": false
+      },
+      "invalid": {
+        "score": 0.0,
+        "reason": "patch_apply_failed",
+        "executed_tests": false
+      },
+      "reference": {
+        "score": 1.0,
+        "reason": null,
+        "executed_tests": true
+      }
+    }
+  },
+  "successful_task_tests": {
+    "FAIL_TO_PASS": {
+      "success": 1,
+      "failure": 0
+    },
+    "PASS_TO_PASS": {
+      "success": 42,
+      "failure": 0
+    },
+    "FAIL_TO_FAIL": {
+      "success": 0,
+      "failure": 0
+    },
+    "PASS_TO_FAIL": {
+      "success": 0,
+      "failure": 0
+    }
+  },
+  "cleanup": {
+    "recorded_ids_checked": 9,
+    "returned_404": 9,
+    "scope": "Recorded sandbox IDs; timeout task had no ID in its error record, now fixed in code."
+  },
+  "local_assets": {
+    "local_dataset": "/user/miyapeng/minicpm-v5-agentic-rl/data/prepared/code/scaleswe.jsonl",
+    "local_rows": 2263,
+    "optimization_task_id_overlap": 103,
+    "exact_image_overlap": 103,
+    "example_id": "roniemartinez_latex2mathml_pr181"
+  },
+  "run_source": "Dirty development worktree based on 304f0e5; protocol fixes made during the recorded smoke sequence."
+}

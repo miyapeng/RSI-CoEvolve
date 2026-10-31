@@ -50,4 +50,10 @@ python -m baseline rollout --limit 1 --output runs/tencent-task --execute
 
 Then follow [RUNBOOK.md](RUNBOOK.md) for fixed-H training, search and two rounds. Validate template egress restrictions, unprivileged repository/environment access, patch/test results and cleanup on actual images.
 
-Live status: **NOT RUN**. The current process lacks E2B key/template/domain and image mappings, and has no visible GPU. An existing `http_proxy` alone is insufficient. CPU tests use explicit SDK fixtures, not real Tencent rewards or policy learning.
+Live status updated 2026-10-31: a real API/Tencent synthetic coding repair and a
+Scale-SWE optimization-task oracle have run. The working public Tencent domain,
+template, inspected mirror/digest and repeatable commands are in
+[LIVE_SMOKE.md](LIVE_SMOKE.md). The supplied credentials were held only in process
+memory. No GPU is visible; real 9B training remains NOT RUN. CPU SDK fixtures are
+still separate from these live results. Passing UID/private-file checks does not
+attest the provider's complete network isolation.

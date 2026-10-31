@@ -5,4 +5,8 @@
 #   source.registry/task/image:original-tag:
 #     image: your-registry.example/swe/task:immutable-tag
 #     digest: sha256:<64 lowercase hex characters from skopeo inspect>
-images: {}
+images:
+  # Existing mirror verified on 2026-10-31; one optimization task, not final-test data.
+  aweaiteam/scaleswe:open-feature_python-sdk_pr329:
+    image: modelbest.tencentcloudcr.com/aweaiteam/scaleswe:open-feature_python-sdk_pr329
+    digest: sha256:5bb2476cad1c647e22e267a9caedbb24efd6cf03948357b9f929177a6bf8b950

@@ -7,10 +7,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-from openai import OpenAI
-
 from .execution import evaluate, mean_score
 from .harness import check_diagnostic_leak, diff, load, revision, snapshot
+from .proposer import complete, parse_json
 from .records import ROOT, append, read, write
 
 
@@ -115,17 +114,14 @@ The gold patches below are OFFLINE diagnosis only; never include their contents 
         "response_format": {"type": "json_object"},
     }
     if config["proposer_mode"] == "api":
-        p = config["proposer"]
-        request["model"] = os.environ[p["model_env"]]
-        write(Path(output) / "proposal-input.json", request)
-        with OpenAI(base_url=p["base_url"], api_key=os.environ[p["key_env"]], max_retries=0) as proposer:
-            response = proposer.chat.completions.create(**request)
+        content = complete(config["proposer"], request, output)
     else:
         request["model"] = checkpoint
         write(Path(output) / "proposal-input.json", request)
         response = client.chat.completions.create(**request)
-    write(Path(output) / "proposal-output.json", response.model_dump(mode="json"))
-    return json.loads(response.choices[0].message.content)
+        write(Path(output) / "proposal-output.json", response.model_dump(mode="json"))
+        content = response.choices[0].message.content
+    return parse_json(content)
 
 
 def h_step(client, checkpoint, harness, optimization, dev, config, output):

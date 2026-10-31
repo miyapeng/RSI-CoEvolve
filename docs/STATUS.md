@@ -1,36 +1,75 @@
-# Current baseline verification — Tencent adaptation
+# Actual verification — 2026-10-31
 
-**CPU contracts verified; real task execution and H/P learning remain NOT RUN.** The active task/grade transport is Tencent AGS/E2B. The current process has no E2B key/template/domain or image mappings, no visible GPU, and no configured external proposer. No sandbox, paid API call or GPU job was launched.
+**One real Scale-SWE optimization task completed and scored successfully through
+Tencent, using an explicitly selected API execution model. No 9B GPU inference,
+GRPO update, harness search or two-round H/P experiment has run.**
 
-## Implemented and checked
+## Live results
 
-- Single actual mini-SWE-agent for search, RL, dev and final generation; native Slime dense 9B GRPO remains unchanged.
-- Tencent proxy/direct routing, class-level envd reconnect, bounded commands, cleanup, non-root task preparation, fresh graders, explicit image mappings and registry digest checks.
-- All three original final verifiers accept an explicit Tencent environment factory. Tests exercise those original functions without rewriting their grading logic or using final-benchmark tasks as smoke data.
-- Frozen training split remains 1,987 optimization / 249 dev / 248 audit. Only the raw file reference changed to a repository-relative path; task memberships and fingerprints did not change.
-- Public checkout support: pinned dependency bootstrap, portable manifest, README, credential-free examples, ignored raw data/models/runs/local configuration. Existing old prototype and assets remain intact.
+| Run | Actual result |
+|---|---|
+| Synthetic coding fixture | Same seed mini agent repaired a function; separate real grader passed 6 private checks. Qwen3.8-Max API, 6 tool calls, 12,327 reported tokens, 44.66 seconds. Generic unpinned image; not a benchmark task. |
+| `open-feature_python-sdk_pr329` grader oracle | Existing Tencent task image, registry digest pinned. Empty patch: 0 without test execution; invalid patch: 0 on failed application; reference patch: 1 with the original source-specific tests executed. 13.85 seconds. No reference patch sent to any policy. |
+| First real-task API rollout | Qwen3.8-Max timed out during a model request under the 300-second agent budget. `APITimeoutError`, null score; failure and trajectory retained. |
+| Next invocation | Native Opus response enclosed its JSON in a code fence. Strict bare-JSON parsing failed before any task sandbox was created. Fixed with explicit single-fence unwrapping plus a regression test; no arbitrary prose extraction. |
+| Corrected real-task API rollout | GPT-6.1-Terra gateway model, same seed agent and original source grader: **score 1.0**, 7 tool calls, 31,518 reported tokens, 40.35 seconds including API check and grading. One FAIL_TO_PASS and 42 PASS_TO_PASS tests succeeded. |
 
-## Actual test results
+The API gateway names/IDs are recorded, not claimed as independently attested
+provider checkpoints. The frozen external proposer route is gateway Opus 5.5
+(`CLAUDE_5puknv`), native Anthropic Messages. The real-task API execution model is
+`GPT_15kraa`; it is **not** the baseline's trainable Qwen3.5-9B. Short API checks
+validate transport/formatting, not proposer-driven harness evolution.
 
-- Baseline tests: **14 passed**. Eight original tests cover data/loop/checkpoint/hook/token contracts; six added cases cover Tencent routing, exit status, cleanup, image drift and the three original verifier callbacks. SDK/score fixtures are labeled test-only; they are not real Tencent rewards.
-- Pinned Slime regression: **49 passed, 1 skipped**. The skipped case needs the unavailable SGLang tool parser. No upstream assertions were weakened.
-- `pip check`, Ruff, bytecode compilation and Git diff checks passed. Latest log: `runs/tencent-adaptation/cpu-tests.log` (ignored, local evidence).
-- Dependency bootstrap `--check --with-final-eval` passed against existing clean pins without cloning or upgrading them.
-- An inventory of eight optimization task images and an actual blocked preflight were generated under `runs/tencent-adaptation/`. No images were transferred and no sandbox was created.
-- Earlier CPU tokenizer rendering passed for the local 9B model (324 tokens, EOS 248046); it is not evidence of GPU inference.
+Results are single-task engineering checks, not estimates of model success rate
+or RL improvement. Neither failed attempt was discarded. Reported token usage is
+not a currency cost estimate; monetary cost was not retrieved. No GPU job, bulk
+mirror operation or final benchmark evaluation was launched.
 
-Historical Orchard audit: 26 upstream tests passed and 10 failed because their mock import target used `orchestrator.sandbox_manager` rather than `orchard_env.orchestrator`. Those results remain in Git history and local audit records. Orchard is now an inactive reference, not a prerequisite for the Tencent baseline.
+Evidence: [compact measured record](validation/live_smoke_20261031.json), local
+`runs/live-smoke-20261031/` (raw requests/responses, tool events, patches, grading
+logs and failures; ignored by Git). Nine recorded sandbox IDs were independently
+queried and all returned 404 after cleanup. The timed-out task's context cleanup
+completed but its error record lacked the sandbox ID; error provenance now also
+captures that ID. Keys and registry authentication were held only in process
+memory; they are absent from these files and the repository.
+
+## Reused assets and remaining boundary
+
+- Existing Conda environment, frozen Self-HPO data, source graders, seed harness,
+  E2B client and neighbouring R2E mirror naming convention reused. No new trainer,
+  agent loop, model download or container image transfer.
+- The neighbouring prepared Scale-SWE file has 2,263 rows; 103 IDs/images overlap
+  the baseline optimization pool. One task mirror was independently verified;
+  the remaining mirrors are not thereby certified available.
+- The dataset split remains 1,987 optimization / 249 dev / 248 audit. No final
+  Verified, Multilingual or Pro V2 task was used for this smoke.
+- Observed working public Tencent domain/template and precise commands are in
+  [LIVE_SMOKE.md](LIVE_SMOKE.md). UID isolation, root-private files and lack of
+  injected credentials were checked in the synthetic agent. Full provider egress
+  isolation and running-image digest attestation remain unverified.
+
+## Software checks
+
+- Baseline CPU tests: **19 passed** after the native Messages and JSON-fence fixes.
+- Pinned Slime regression: **49 passed, 1 skipped** (unavailable SGLang parser).
+- `pip check`, Ruff, compilation, shell syntax and Git diff checks pass.
+- Latest evidence: `runs/live-smoke-20261031/cpu-tests-release.log`.
+- Historical Orchard/mock import failures remain recorded in history; Orchard is
+  not an active runtime prerequisite. Upstream test assertions were not weakened.
 
 ## Baseline Ready Checklist
 
-| Requirement | Real status | Software evidence |
-|---|---|---|
-| Actual Tencent task and scoring | NOT RUN | Transport and original-grader callback fixtures pass |
-| Real GRPO update | NOT RUN | Native dense launch/token/mask contracts pass |
-| Save/export/reload/serve/rollout | NOT RUN | Dense export and source model/tokenizer checks pass |
-| Actual proposer-driven Harness evolution | NOT RUN | Original gate/selection components pass CPU tests |
-| Two real H/P rounds | NOT RUN | Interruption/resume and pair binding pass test-only two-round flow |
-| Real four-cell cross-evaluation | NOT RUN | Same-task/seed and pair identity contracts pass |
-| Verified / Multilingual / Pro V2 scores | NOT RUN | Separate adapters, pinned manifests and explicit Tencent callbacks |
+| Requirement | Status |
+|---|---|
+| Actual Tencent task image and original scoring | VERIFIED on one optimization task |
+| Agent tool loop, patch and separate scoring | VERIFIED with API models; 9B NOT RUN |
+| Strong external proposer API/protocol | VERIFIED; full H-step candidate search NOT RUN |
+| Real Qwen3.5-9B GRPO update | NOT RUN — no visible GPU / compatible training stack |
+| Checkpoint save/export/reload/serve | NOT RUN on a trained checkpoint |
+| Actual harness evolution and P-step hook acceptance | NOT RUN; CPU compatibility tests pass |
+| Two real H/P rounds / four-cell evaluation | NOT RUN |
+| Verified / Multilingual / Pro V2 scores | NOT RUN; adapters remain independent of training |
 
-Next required inputs are the approved Tencent template/domain/key, mirrored task images and host registry access, then a compatible GPU allocation for Qwen/Slime and proposer configuration for H-step. Start with one optimization-task oracle and one agent rollout before GRPO. See [Tencent setup](TENCENT_SANDBOX.md) and [RUNBOOK.md](RUNBOOK.md). No new research algorithms are required for these checks.
+Next: obtain a Slime-compatible GPU allocation, run 9B serving/tool smoke and one
+real GRPO update, then H-step and the two-round baseline. Additional task image
+mappings must be inspected/pinned as the chosen search/dev budget grows.

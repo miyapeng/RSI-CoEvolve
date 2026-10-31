@@ -115,8 +115,10 @@ def serve(checkpoint, config, output):
 def rollout(client, row, checkpoint, harness, config, output, seed):
     output = Path(output)
     c = {**config["runtime"], "sampling_seed": seed}
+    sandbox_id = None
     try:
         with open_task(row, c["sandbox"]) as sandbox:
+            sandbox_id = sandbox.sandbox.sandbox_id
             result = run_agent(client, sandbox, public_task(row), harness, checkpoint, c, output)
         reward = grade(row, result["patch"], c, output / "grading")
         result["score"] = reward["score"]
@@ -134,6 +136,7 @@ def rollout(client, row, checkpoint, harness, config, output, seed):
                 "policy_checkpoint": checkpoint,
                 "harness_revision": revision(harness),
                 "error_type": type(exc).__name__,
+                "sandbox_id": sandbox_id,
                 "split": row["split"],
             },
         )

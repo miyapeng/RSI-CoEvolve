@@ -32,6 +32,9 @@ def main():
         "WANDB_MODE",
         *required_env(r["config"]["runtime"]["sandbox"]),
     ]
+    # These are paths/routing settings, not credentials in the resolved config.
+    # A registry auth file must be mounted at the same path on every worker.
+    keys += [k for k in ("REGISTRY_AUTH_FILE", "NO_PROXY", "no_proxy") if k in os.environ]
     ray.init(address="local", runtime_env={"env_vars": {k: os.environ[k] for k in keys}})
     try:
         sys.argv = cmd[1:]

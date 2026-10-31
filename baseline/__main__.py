@@ -38,6 +38,7 @@ def main():
     p.add_argument("--output", required=True, type=Path)
     p.add_argument("--execute", action="store_true")
     p.add_argument("--limit", type=int)
+    p.add_argument("--task-id", help="One optimization task for oracle/rollout, without changing the frozen split")
     p.add_argument("--mode", choices=["base", "h-only", "p-only", "hpo"])
     p.add_argument("--raw", type=Path)
     p.add_argument("--old-policy")
@@ -60,13 +61,28 @@ def main():
     if a.command == "report":
         print(summarize(a.output))
         return
-    report = preflight(c, phase="run" if a.command in ("resume", "preflight") else a.command)
+    selected = None
+    if a.task_id:
+        if a.command not in ("oracle", "rollout"):
+            p.error("--task-id is only for oracle/rollout")
+        selected = [
+            r
+            for r in tasks(c["dataset_split_manifest"], "optimization_pool")
+            if r["metadata"]["instance_id"] == a.task_id
+        ]
+        if len(selected) != 1:
+            p.error("Task ID is not in optimization_pool")
+    report = preflight(
+        c,
+        phase="run" if a.command in ("resume", "preflight") else a.command,
+        images=[r["metadata"]["image_url"] for r in selected] if selected else None,
+    )
     a.output.mkdir(parents=True, exist_ok=True)
     write(a.output / "preflight.json", report)
     if a.command == "preflight":
         print(json.dumps({"status": report["status"], "blockers": report["blockers"]}, indent=2))
         return
-    rows = tasks(c["dataset_split_manifest"], "optimization_pool", a.limit or c["p_task_sample_size"])
+    rows = selected or tasks(c["dataset_split_manifest"], "optimization_pool", a.limit or c["p_task_sample_size"])
     if a.command == "p-step" and not a.execute:
         prepare(c["model_checkpoint"], c["harness_path"], rows, c, a.output)
     else:
