@@ -134,7 +134,10 @@ def prepare(checkpoint, harness, rows, config, output):
         append(
             output / "train.jsonl",
             {
-                "prompt": row["problem_statement"],
+                # Qwen3.5 loads a multimodal Processor even for text-only tasks.
+                # Slime requires conversation form; actual model messages are
+                # still rendered by the shared agent through OpenAIAdapter.
+                "prompt": [{"role": "user", "content": row["problem_statement"]}],
                 "metadata": {"task_id": row["metadata"]["instance_id"], "split": row["split"]},
             },
         )
