@@ -10,10 +10,14 @@ dependencies:
       - -e ./mini-swe-agent
       - -e ../references/Orchard-Agentic/orchard_env
       - swebench==4.1.0
-      - pytest==8.4.2
+      - pytest==9.2.0
       - pyyaml==6.0.3
       - openai==2.54.0
-      - safetensors
-      - tensorboard
+      - transformers==5.12.1
+      - safetensors==0.8.0
+      - pytest-asyncio==1.4.1
+      - ruff==0.17.3
+# Install CPU torch explicitly after creation, as documented in RUNBOOK.md;
+# never apply a CPU wheel requirement to the GPU training environment.
 # CPU tests do not need Slime's CUDA/Megatron stack. GPU allocation uses the
 # pinned Slime image/setup from docs/RUNBOOK.md, with this same source and grader pin.

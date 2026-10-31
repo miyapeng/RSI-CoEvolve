@@ -7,8 +7,8 @@
 #                (the exported policy, written by export_policy.sh)
 #   --init-dist  torch_dist of the policy (default <out>/init_torch_dist, built by prepare_ckpt.sh)
 #   --name       run name (default p_step): W&B group/run names and the rollout subdir under trajectories/
-# Before training it evaluates the initial policy once on SWE-bench Verified (--eval-interval 100000,
-# so there is no further in-training evaluation).
+# Historical 35B launcher. Training-time final-benchmark evaluation is disabled.
+# The supported dense 9B baseline entrypoint is python -m baseline p-step.
 # Single node (8 GPUs), inside the slimerl/slime:v0.3.0 container (setup_container.sh first).
 # Required env: SELFHPO_WORK (holds rl/data from prepare_rl_data.py), SANDBOX_BASE_URL, SANDBOX_API_KEY
 # Optional env: WANDB_API_KEY (W&B logging; offline if unset), WANDB_ENTITY,
@@ -103,12 +103,6 @@ ROLLOUT_ARGS=(
    --custom-rm-path examples.mini_swe.swe_reward.reward_func
    --dynamic-sampling-filter-path slime.rollout.filter_hub.dynamic_sampling_filters.check_no_aborted_nonzero_std_and_pos_reward
 
-   --eval-prompt-data swe_val ${SELFHPO_WORK}/rl/data/swebench_verified_500.jsonl
-   --eval-interval 100000
-   --n-samples-per-eval-prompt 1
-   --eval-max-response-len 16384
-   --eval-temperature 0.95
-   --eval-top-p 0.95
    --num-rollout 50
    --over-sampling-batch-size ${OVER_SAMPLING_BATCH_SIZE}
    --rollout-batch-size ${ROLLOUT_BATCH_SIZE}

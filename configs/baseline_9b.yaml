@@ -1,0 +1,56 @@
+# One fixed-budget HPO-style baseline. Real GPU and Orchard execution is opt-in.
+seed: 42
+n_outer_rounds: 2
+h_enabled: true
+p_enabled: true
+h_proposals_per_round: 2
+h_task_sample_size: 8
+dev_task_sample_size: 8
+eval_repetitions: 1
+cross_eval: true
+p_training_steps: 1
+p_task_sample_size: 16
+promote_margin_percent: 1.0
+model_checkpoint: models/Qwen3.5-9B
+harness_path: harnesses/seed
+dataset_split_manifest: configs/split_manifest.json
+slime_root: ../references/slime
+proposer_mode: api
+proposer:
+  base_url: https://llm-center.modelbest.co/v1
+  model_env: PROPOSER_MODEL
+  key_env: LLM_CENTER_API_KEY
+  max_tokens: 8192
+  max_trace_chars: 16000
+runtime:
+  max_steps: 40
+  max_seconds: 900
+  command_timeout: 60
+  max_tokens: 4096
+  max_context_tokens: 16384
+  temperature: 0.95
+  top_p: 0.95
+  grading_timeout: 900
+  sandbox:
+    backend: orchard
+    endpoint_env: SANDBOX_BASE_URL
+    key_env: SANDBOX_API_KEY
+    cpu: 4
+    memory: 8Gi
+    setup_timeout: 600
+serving:
+  port: 8000
+  tensor_parallel: 2
+  attention_backend: flashinfer
+  mem_fraction_static: 0.7
+  startup_timeout: 900
+training:
+  gpus: 2
+  tensor_parallel: 2
+  rollout_gpus_per_engine: 2
+  rollout_batch_size: 2
+  samples_per_prompt: 4
+  max_tokens_per_gpu: 4096
+  learning_rate: 1.0e-6
+  checkpoint_root: runs/checkpoints
+  # On Cybertron GPU jobs override this to /data/checkpoints/self-hpo-baseline.
