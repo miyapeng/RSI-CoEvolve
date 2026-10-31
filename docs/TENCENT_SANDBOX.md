@@ -57,3 +57,10 @@ template, inspected mirror/digest and repeatable commands are in
 memory. No GPU is visible; real 9B training remains NOT RUN. CPU SDK fixtures are
 still separate from these live results. Passing UID/private-file checks does not
 attest the provider's complete network isolation.
+
+The later cluster oracle also passed in the GPU Conda environment (CPU-only job
+1427683): empty/invalid/reference scores 0/0/1, 43 reference tests passed.
+Langfang uses the **public endpoint directly** with class-level reconnect; its
+whitelist proxy failed TLS, and its internal endpoint timed out in the bounded
+probe. See [GPU_CONDA.md](GPU_CONDA.md). Distributed workers read credentials
+from owner-only files; only their paths are put into Ray runtime configuration.

@@ -168,9 +168,10 @@ prior evidence, but do not establish that its full Slime/Qwen chain works.
 The first image probe deliberately uses the image's Python to establish what
 the image actually supplies. This is an audit, not a switch to a venv workflow.
 
-After compatibility is established, a separate GPU Conda environment should
-preserve that Torch/CUDA/operator stack and install the baseline's small pinned
-agent/scoring dependencies. `environment-baseline.yml` is the **CPU** recipe;
+A separate `self-hpo-gpu` Conda environment now preserves that tested
+Torch/CUDA/operator stack and installs the baseline's pinned agent/scoring
+dependencies and local Slime/Megatron sources. See [GPU_CONDA.md](GPU_CONDA.md)
+for the actual preparation, package discrepancies and tested cluster routing. `environment-baseline.yml` is the **CPU** recipe;
 do not apply its CPU Torch install command to a GPU environment. If rebuilding
 an image is necessary, pin Slime and Megatron source, retain the matching
 upstream patches, record the built image digest and rerun these checks.

@@ -2,8 +2,9 @@
 
 **One real Scale-SWE optimization task completed and scored through Tencent with
 an API execution model. Separately, Qwen3.5-9B loaded on A100 80GB and passed a
-real tool-call request. GRPO, 9B task scoring, harness search and two-round H/P
-execution remain NOT RUN.**
+real tool-call request. Native Slime then collected four real 9B/Tencent
+trajectories and scores, but that attempt failed before the optimizer. A
+verified GRPO update, harness search and two-round H/P execution are still pending.**
 
 ## Live results
 
@@ -41,8 +42,8 @@ memory; they are absent from these files and the repository.
   E2B client and neighbouring R2E mirror naming convention reused. No new trainer,
   agent loop, model download or container image transfer.
 - The neighbouring prepared Scale-SWE file has 2,263 rows; 103 IDs/images overlap
-  the baseline optimization pool. One task mirror was independently verified;
-  the remaining mirrors are not thereby certified available.
+  the baseline optimization pool. Three selected task mirrors have verified registry digests;
+  only the open-feature task has passed a source-grader oracle so far.
 - The dataset split remains 1,987 optimization / 249 dev / 248 audit. No final
   Verified, Multilingual or Pro V2 task was used for this smoke.
 - Observed working public Tencent domain/template and precise commands are in
@@ -78,29 +79,53 @@ and PREEMPTABLE priority. Existing model weights were read without copying.
 Details and reproduction: [GPU_ENVIRONMENT.md](GPU_ENVIRONMENT.md). Raw logs,
 job requests and reports live under ignored `runs/gpu-smoke-20261031/`.
 Public compact evidence: [gpu_smoke_20261031.json](validation/gpu_smoke_20261031.json).
-The CPU Conda environment remains unchanged. GPU image Python was used for this
-compatibility audit; no new GPU Conda environment or RL checkpoint is claimed.
+The initial probes used image Python. Subsequent work prepared the isolated
+`self-hpo-gpu` Conda prefix; see [GPU_CONDA.md](GPU_CONDA.md).
+
+## Native training integration
+
+- Job **1427683**: cluster-side Tencent grader oracle passed (empty/invalid/reference
+  scores 0/0/1, 43 tests for the reference). Both sandboxes were cleaned up.
+- Job **1427689**: real 9B/Tencent execution reached 8 tool calls, then exceeded
+  the initial 8K context; no score or update claimed.
+- Job **1427719**: native SGLang launched; the Qwen Processor rejected string
+  dataset prompts. The adapter now emits conversation-form records and was
+  checked with the actual local Processor and native Slime Dataset.
+- Job **1427743**: missing declared `straw-queue` dependency blocked native training.
+  Pinned dependency installation and four native training imports now pass.
+- Job **1427762**: four NCCL ranks, HF actor/reference loading, weight sync and
+  **four real fresh trajectories** ran. All hit the 20-step limit and scored 0
+  (training reward -1). Batch conversion then failed on unavailable top-p support
+  IDs, before an optimizer update. The adapter now requires top_p=1 consistently
+  and applies unchanged native GRPO normalization to complete trajectories.
+  The retained 80 segments / 17,253 trainable tokens pass native conversion.
+
+Raw evidence is under `runs/train-smoke-20261031/`; compact public records:
+[cluster oracle](validation/cluster_oracle_20261031.json),
+[first native trajectories](validation/first_native_rollouts_20261031.json).
+No old negative trajectories are silently reused as fresh on-policy samples.
 
 ## Software checks
 
-- Baseline CPU tests: **20 passed** after extracting the shared serving entry and
-  adding a parser/entry consistency check (19 before the GPU work).
-- Pinned Slime regression: **49 passed, 1 skipped** (unavailable SGLang parser).
-- `pip check`, Ruff, compilation, shell syntax and Git diff checks pass.
-- Latest evidence: `runs/gpu-smoke-20261031/test-cpu-release.log`.
-- Historical Orchard/mock import failures remain recorded in history; Orchard is
-  not an active runtime prerequisite. Upstream test assertions were not weakened.
+- CPU baseline: **22 passed, 1 skipped**. The extra native BatchBuilder test
+  requires Ray and runs separately in the GPU Conda prefix without a GPU.
+- GPU Conda native adapter/group normalization: **2 passed**.
+- Unmodified Slime agent regressions: **49 passed, 1 skipped**.
+- Unmodified Slime DP scheduling / HF checkpoint saver tests: **15 passed**.
+- CPU `pip check`, Ruff, compilation, shell syntax and Git diff checks pass.
+  GPU image package metadata discrepancies remain documented in GPU_CONDA.md;
+  its `pip check` is not claimed clean.
 
 ## Baseline Ready Checklist
 
 | Requirement | Status |
 |---|---|
 | Actual Tencent task image and original scoring | VERIFIED on one optimization task |
-| Agent tool loop, patch and separate scoring | VERIFIED with API models; 9B task rollout NOT RUN |
+| Agent tool loop, patch and separate scoring | VERIFIED with API models; 4 real 9B trajectories scored 0 at step limit |
 | Qwen3.5-9B GPU load and tool-call parser | VERIFIED on A100 80GB, job 1427589 |
 | GPU kernels and pinned Slime/Megatron imports | VERIFIED, job 1427598; full training remains unverified |
 | Strong external proposer API/protocol | VERIFIED; full H-step candidate search NOT RUN |
-| Real Qwen3.5-9B GRPO update | NOT RUN — full training environment still needs validation |
+| Real Qwen3.5-9B GRPO update | ATTEMPTED; failed before optimizer, fixes under validation |
 | Checkpoint save/export/reload/serve | NOT RUN on a trained checkpoint |
 | Actual harness evolution and P-step hook acceptance | NOT RUN; CPU compatibility tests pass |
 | Two real H/P rounds / four-cell evaluation | NOT RUN |

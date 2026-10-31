@@ -72,14 +72,15 @@ names and the pod's own addresses to NO_PROXY for local Ray/SGLang traffic.
 ## Run entrypoint
 
 `bash scripts/baseline/run_training_smoke.sh` requires `GPU_CONDA_PREFIX`,
-`BASELINE_CONFIG`, `BASELINE_PHASE` (`oracle`, `rollout`, `p-step`, `run`),
+`BASELINE_CONFIG`, `BASELINE_PHASE` (`oracle`, `rollout`, `h-step`, `p-step`, `run`, `resume`),
 and Cybertron's `JOB_ID`. Optional `BASELINE_TASK_ID` restricts oracle/rollout/P-step
 to one **optimization_pool** task without changing split membership.
 `BASELINE_TIMEOUT` bounds the process (default 3600 seconds).
 
 Logs and artifacts are written live to the user's writable project area under
 `runs/train-smoke-20261031/job-<id>/`; a pointer is written to `/data/results`.
-`BASELINE_RUN_ROOT` can override the run root. Checkpoints go to the explicit
+`BASELINE_RUN_ROOT` can override the run root. `BASELINE_OUTPUT` selects the existing
+experiment artifacts directory when using `BASELINE_PHASE=resume`. Checkpoints go to the explicit
 `training.checkpoint_root`, not the read-only source model directory.
 
 The actual cluster oracle job `1427683` completed empty/invalid/reference patch

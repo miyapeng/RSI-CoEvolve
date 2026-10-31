@@ -1,12 +1,12 @@
-# Copy to tencent_images.local.yaml, or generate a task-specific inventory.
-# Exact source image -> mirrored immutable tag + registry manifest digest.
-# Authentication belongs in the host registry login, never this file.
-# images:
-#   source.registry/task/image:original-tag:
-#     image: your-registry.example/swe/task:immutable-tag
-#     digest: sha256:<64 lowercase hex characters from skopeo inspect>
+# Inspected existing Tencent mirrors for the small training/dev smoke.
+# Registry credentials remain outside Git; these are not final benchmark tasks.
 images:
-  # Existing mirror verified on 2026-10-31; one optimization task, not final-test data.
   aweaiteam/scaleswe:open-feature_python-sdk_pr329:
-    image: modelbest.tencentcloudcr.com/aweaiteam/scaleswe:open-feature_python-sdk_pr329
     digest: sha256:5bb2476cad1c647e22e267a9caedbb24efd6cf03948357b9f929177a6bf8b950
+    image: modelbest.tencentcloudcr.com/aweaiteam/scaleswe:open-feature_python-sdk_pr329
+  aweaiteam/scaleswe:eerimoq_asn1tools_pr112:
+    image: modelbest.tencentcloudcr.com/aweaiteam/scaleswe:eerimoq_asn1tools_pr112
+    digest: sha256:a3ee3a51bd319de3ea9d5ca21808876212a7ef3903c740173649833a710b2cef
+  docker.io/swerebenchv2/qiskit-qiskit:12665-1f1b89f:
+    image: modelbest.tencentcloudcr.com/swerebenchv2/qiskit-qiskit:12665-1f1b89f
+    digest: sha256:65faabf60cc74caca8bfc763b03507b0f24b4f77c3e7c9c93a8b57990332800b

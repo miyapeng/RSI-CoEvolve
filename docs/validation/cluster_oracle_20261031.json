@@ -1,0 +1,40 @@
+{
+  "simulated": false,
+  "job_id": 1427683,
+  "task_id": "open-feature_python-sdk_pr329",
+  "split": "optimization_pool",
+  "sandbox_connection": "direct",
+  "domain": "ap-beijing.tencentags.com",
+  "cases": {
+    "empty": {
+      "score": 0.0,
+      "resolved": false,
+      "reason": "empty_patch",
+      "executed_tests": false,
+      "exit_code": null,
+      "execution_image": null,
+      "registry_digest_before_create": null
+    },
+    "invalid": {
+      "score": 0.0,
+      "resolved": false,
+      "reason": "patch_apply_failed",
+      "executed_tests": false,
+      "exit_code": null,
+      "execution_image": "modelbest.tencentcloudcr.com/aweaiteam/scaleswe:open-feature_python-sdk_pr329",
+      "registry_digest_before_create": "sha256:5bb2476cad1c647e22e267a9caedbb24efd6cf03948357b9f929177a6bf8b950"
+    },
+    "reference": {
+      "score": 1.0,
+      "resolved": true,
+      "reason": null,
+      "executed_tests": true,
+      "exit_code": 0,
+      "execution_image": "modelbest.tencentcloudcr.com/aweaiteam/scaleswe:open-feature_python-sdk_pr329",
+      "registry_digest_before_create": "sha256:5bb2476cad1c647e22e267a9caedbb24efd6cf03948357b9f929177a6bf8b950",
+      "tests_passed": 43
+    }
+  },
+  "policy_rollout": "NOT_RUN in this scorer-only job",
+  "grpo_update": "NOT_RUN in this scorer-only job"
+}
