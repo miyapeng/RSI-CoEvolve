@@ -155,6 +155,9 @@ def check_diagnostic_leak(code, rows):
     for row in rows:
         if row["metadata"]["instance_id"] in code or (row["patch"].strip() and row["patch"].strip() in code):
             raise ValueError("Candidate embeds training task IDs or a reference patch")
+        paths = re.findall(r"^\+\+\+ b/(.+)$", row["patch"], flags=re.M)
+        if any(path.strip() in code for path in paths):
+            raise ValueError("Candidate hard-codes a source path from offline reference-patch diagnosis")
 
 
 def load(path, expected=None):

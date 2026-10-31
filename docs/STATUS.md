@@ -179,9 +179,17 @@ up by exact job metadata. Smoke gates now explicitly run three distinct seeds
 on the one optimization task and export all repetitions to the unchanged gate.
 The regression test still rejects a gate with only one submission out of three.
 
+Job **1428627** was stopped before training when its generated empty-submission
+guard embedded the optimization task's concrete source path in a model hint.
+It was not accepted. `check_diagnostic_leak` now rejects source paths copied from
+offline reference patches as well as full patches and task IDs. This catches
+that observed defect; it is not a proof against semantic contamination. The
+single active sandbox was cleaned up by exact job metadata. These stopped
+attempts and their original candidate code remain local research records.
+
 ## Software checks
 
-- CPU baseline: **26 passed, 1 skipped**. The extra native BatchBuilder test
+- CPU baseline: **27 passed, 1 skipped**. The extra native BatchBuilder test
   requires Ray and runs separately in the GPU Conda prefix without a GPU.
 - GPU Conda native adapter/group normalization: **2 passed**.
 - Unmodified Slime agent regressions: **49 passed, 1 skipped**.

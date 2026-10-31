@@ -1,0 +1,9 @@
+{
+  "job_id": 1428627,
+  "status": "STOPPED_FOR_ADAPTER_FIX",
+  "simulated": false,
+  "reason": "Stopped before training after finding an embedded optimization-task source path in candidate guidance. Candidate not accepted.",
+  "next_round": 0,
+  "accepted_checkpoint": "/user/miyapeng/rsi_evolve/self-hpo-baseline/checkpoints/train-smoke-20261031/job-1427911-4b380e178895/policy-0",
+  "completed_optimizer_steps": 0
+}

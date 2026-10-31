@@ -1,0 +1,9 @@
+{
+  "job_id": 1428458,
+  "status": "STOPPED_FOR_ADAPTER_FIX",
+  "simulated": false,
+  "reason": "Stopped before training to correct a one-trajectory adapter budget that could not satisfy upstream fire gate.",
+  "next_round": 0,
+  "accepted_checkpoint": "/user/miyapeng/rsi_evolve/self-hpo-baseline/checkpoints/train-smoke-20261031/job-1427911-4b380e178895/policy-0",
+  "completed_optimizer_steps": 0
+}

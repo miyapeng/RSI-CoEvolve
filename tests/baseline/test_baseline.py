@@ -10,7 +10,7 @@ from openai.types.chat import ChatCompletion
 
 from baseline.config import load_config
 from baseline.data import ROLES, configured_tasks, public_task, split, tasks
-from baseline.harness import load, revision, snapshot, validate_code
+from baseline.harness import check_diagnostic_leak, load, revision, snapshot, validate_code
 from baseline.outer_loop import run
 from baseline.records import ROOT, read, write
 from baseline.reward import grade, specification
@@ -133,6 +133,14 @@ def test_configured_small_tasks_cannot_cross_splits():
     c["task_ids"]["optimization_pool"] = [ids[0], ids[0]]
     with pytest.raises(ValueError, match="unique"):
         configured_tasks(c, "optimization_pool", 1)
+
+
+def test_candidate_cannot_embed_offline_gold_path_or_answer():
+    row = {"metadata": {"instance_id": "fixture-only-id"}, "patch": "--- a/pkg/private_fix.py\n+++ b/pkg/private_fix.py\n@@ -1 +1 @@\n-old\n+answer\n"}
+    for code in ("fixture-only-id", row["patch"], 'hint = "git diff -- pkg/private_fix.py > patch.txt"'):
+        with pytest.raises(ValueError):
+            check_diagnostic_leak(code, [row])
+    check_diagnostic_leak('self.env.execute({"command": "git diff --name-only"})', [row])
 
 
 def test_same_full_agent_hooks_and_frozen_snapshot(tmp_path):

@@ -111,6 +111,7 @@ Instance state must use self._hook_* names. No self.model/config access, host I/
 Use only normal dict/list/string operations and bounded loops. Candidate methods may call super().step()
 or super().execute_actions(message). Search and training invoke the identical full mini agent.
 The gold patches below are OFFLINE diagnosis only; never include their contents or task IDs in agent code.
+Do not hard-code source paths from diagnosis, even as examples. Discover relevant files from the live repo.
 The host validator below is authoritative for this API adaptation. Do not work around it.
 The class body contains ONLY methods: no class docstring, class constants, __init__, or module-level helpers.
 For a one-time action, a condition on self.n_calls or a search of self.messages avoids uninitialized state.
