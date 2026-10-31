@@ -8,7 +8,7 @@ work/
 
 # Local baseline assets and experiment records
 /runs/
-/data/
-/models/
+/data
+/models
 .pytest_cache/
 .ruff_cache/

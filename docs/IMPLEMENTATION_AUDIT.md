@@ -20,3 +20,11 @@ Baseline is an independent **Self-HPO Git worktree**, branch `research/baseline-
 The new baseline deliberately uses the already pinned official Slime v0.4.0 instead of Self-HPO's bundled 35B fork: native synchronous OpenAI capture permits the identical mini `run/step/execute_actions` path during training and evaluation, and the pin already contains dense 9B HF import/export. GPU compatibility is a pending execution check, not an asserted reproduction. Upstream optimizer/loss code is unchanged.
 
 Scope: fixed H/P schedule; three data roles; code+prompt harness snapshots; source-specific real reward; four-cell dev diagnostics; durable pair checkpoints. No Item Registry, dynamic trigger, KL, pruning, target selection, population, custom loss, or automatic task submission.
+
+## Completed local foundation checks
+
+- Dedicated Conda `self-hpo-baseline` was cloned from existing CPU environment. Only this environment uses Self-HPO's original `swebench==4.1.0`; the old prototype still uses 5.0.1. Orchard SDK installed from local pinned source. Missing SDK dependencies installed; `pip check` passed.
+- Frozen split: 1,987 optimization / 249 dev / 248 audit. Source-stratified repository components; zero cross-split task/repository/exact-patch/normalized-problem/image overlap. Semantic near-duplicates are not exhaustively ruled out.
+- All 2,484 task specs construct using the original Self-HPO test builders. Parser distribution: pytest 1,895; Scale-SWE 584; pytest_v2 5. Construction is not evidence that any task image or test executed.
+- Agent and grader use separate Orchard sandboxes. Public model projection excludes gold/test patch, test IDs and private grader metadata. The seed git-diff submission protocol is retained; agent source history is replaced with a clean baseline commit inside its fresh sandbox. This hardening is an explicit adaptation, still awaiting image-level validation.
+- Seven CPU tests passed at this checkpoint, including real mini + native Slime HTTP/token capture over scripted model/sandbox fixtures. Fixtures are not RL or benchmark results.

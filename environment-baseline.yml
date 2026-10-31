@@ -1,0 +1,19 @@
+name: self-hpo-baseline
+channels: [defaults]
+variables:
+  PYTHONNOUSERSITE: "1"
+  MSWEA_SILENT_STARTUP: "1"
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+      - -e ./mini-swe-agent
+      - -e ../references/Orchard-Agentic/orchard_env
+      - swebench==4.1.0
+      - pytest==8.4.2
+      - pyyaml==6.0.3
+      - openai==2.54.0
+      - safetensors
+      - tensorboard
+# CPU tests do not need Slime's CUDA/Megatron stack. GPU allocation uses the
+# pinned Slime image/setup from docs/RUNBOOK.md, with this same source and grader pin.

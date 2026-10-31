@@ -1,25 +1,15 @@
-"""Prepare the P-step data under $SELFHPO_WORK/rl/data.
+"""Prepare training-side data from the fixed local baseline manifest. Never fetch final benchmarks."""
+import os
+from pathlib import Path
+from baseline.data import tasks
+from baseline.records import ROOT, append
 
-  train.jsonl                  2,484 RL training tasks from the HF dataset self-hpo/Self-HPO-RL-Data
-  swebench_verified_500.jsonl  SWE-bench Verified test split in the same format (in-training eval)
-"""
-import json, os, shutil
-from datasets import load_dataset
-from huggingface_hub import hf_hub_download
-
-out = os.path.join(os.environ["SELFHPO_WORK"], "rl", "data")
-os.makedirs(out, exist_ok=True)
-
-src = hf_hub_download("self-hpo/Self-HPO-RL-Data", "train.jsonl", repo_type="dataset")
-shutil.copyfile(src, f"{out}/train.jsonl")
-
-keys = ["instance_id", "repo", "base_commit", "version", "test_patch", "hints_text", "created_at",
-        "environment_setup_commit", "FAIL_TO_PASS", "PASS_TO_PASS"]
-n = 0
-with open(f"{out}/swebench_verified_500.jsonl", "w") as f:
-    for r in load_dataset("princeton-nlp/SWE-bench_Verified", split="test"):
-        meta = {"dataset": "princeton-nlp/SWE-bench_Verified", **{k: r[k] for k in keys}}
-        f.write(json.dumps({"problem_statement": r["problem_statement"], "patch": r["patch"],
-                            "metadata": meta}) + "\n")
-        n += 1
-print(f"wrote {out}/train.jsonl and swebench_verified_500.jsonl ({n} tasks)")
+out = Path(os.environ["SELFHPO_WORK"]) / "rl/data"
+manifest = os.environ.get("BASELINE_SPLIT_MANIFEST", str(ROOT / "configs/split_manifest.json"))
+for role, name in [("optimization_pool", "train.jsonl"), ("dev_eval", "dev_eval.jsonl")]:
+    target = out / name
+    if target.exists():
+        raise FileExistsError(f"Refusing to replace {target}")
+    for row in tasks(manifest, role):
+        append(target, {k: row[k] for k in ("problem_statement", "patch", "metadata")})
+    print(f"wrote {target}")
