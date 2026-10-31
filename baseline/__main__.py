@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .audit import preflight
 from .config import load_config
+from .credentials import load_credentials
 from .data import split, tasks
 from .execution import evaluate, serve, serve_command
 from .outer_loop import cross_eval, run
@@ -17,6 +18,7 @@ from .training import prepare, train
 
 def main():
     os.umask(0o077)
+    load_credentials()
     p = argparse.ArgumentParser(description="Self-HPO fixed-schedule 9B baseline; execution is explicit")
     p.add_argument(
         "command",
@@ -38,7 +40,9 @@ def main():
     p.add_argument("--output", required=True, type=Path)
     p.add_argument("--execute", action="store_true")
     p.add_argument("--limit", type=int)
-    p.add_argument("--task-id", help="One optimization task for oracle/rollout, without changing the frozen split")
+    p.add_argument(
+        "--task-id", help="One optimization task for oracle/rollout/p-step, without changing the frozen split"
+    )
     p.add_argument("--mode", choices=["base", "h-only", "p-only", "hpo"])
     p.add_argument("--raw", type=Path)
     p.add_argument("--old-policy")
@@ -63,8 +67,8 @@ def main():
         return
     selected = None
     if a.task_id:
-        if a.command not in ("oracle", "rollout"):
-            p.error("--task-id is only for oracle/rollout")
+        if a.command not in ("oracle", "rollout", "p-step"):
+            p.error("--task-id is only for oracle/rollout/p-step")
         selected = [
             r
             for r in tasks(c["dataset_split_manifest"], "optimization_pool")

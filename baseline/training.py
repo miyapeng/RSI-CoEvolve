@@ -90,6 +90,7 @@ def command(request):
         "--adam-beta2": 0.98,
         "--rollout-num-gpus-per-engine": t["rollout_gpus_per_engine"],
         "--sglang-mem-fraction-static": config["serving"]["mem_fraction_static"],
+        "--sglang-context-length": r["max_context_tokens"],
         "--sglang-attention-backend": config["serving"]["attention_backend"],
         "--sglang-tool-call-parser": "qwen3_coder",
         "--sglang-reasoning-parser": "qwen3",
@@ -111,6 +112,8 @@ def command(request):
         "--attention-softmax-in-fp32",
         "--use-tensorboard",
     ]
+    if not t.get("gradient_accumulation_fusion", True):
+        flags.append("--no-gradient-accumulation-fusion")
     return [
         sys.executable,
         str(root / "train.py"),

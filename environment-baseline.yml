@@ -6,6 +6,7 @@ variables:
 dependencies:
   - python=3.12
   - pip
+  - conda-forge::rsync=3.4.1
   - pip:
       - -e ./mini-swe-agent
       - e2b==2.62.0

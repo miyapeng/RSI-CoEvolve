@@ -91,7 +91,7 @@ def check_image(mapping):
         timeout=120,
     )
     if result.returncode:
-        raise RuntimeError("Registry inspection failed; check host registry authentication/network")
+        raise RuntimeError(f"Registry inspection failed (exit {result.returncode}): {result.stderr.strip()[:2000]}")
     if result.stdout.strip() != mapping["digest"]:
         raise ValueError("Mirrored image tag has drifted from the recorded digest")
 

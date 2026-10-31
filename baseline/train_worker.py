@@ -5,8 +5,8 @@ import runpy
 import sys
 from pathlib import Path
 
+from .credentials import rollout_environment
 from .records import ROOT, read
-from .tencent import required_env
 from .training import command
 
 
@@ -24,18 +24,8 @@ def main():
     sys.path.insert(0, r["config"]["slime_root"])
     import ray
 
-    keys = [
-        "BASELINE_TRAIN_REQUEST",
-        "TENSORBOARD_DIR",
-        "PYTHONPATH",
-        "MSWEA_SILENT_STARTUP",
-        "WANDB_MODE",
-        *required_env(r["config"]["runtime"]["sandbox"]),
-    ]
-    # These are paths/routing settings, not credentials in the resolved config.
-    # A registry auth file must be mounted at the same path on every worker.
-    keys += [k for k in ("REGISTRY_AUTH_FILE", "NO_PROXY", "no_proxy") if k in os.environ]
-    ray.init(address="local", runtime_env={"env_vars": {k: os.environ[k] for k in keys}})
+    # Credentials are loaded by each rollout worker from the private file.
+    ray.init(address="local", runtime_env={"env_vars": rollout_environment(r["config"])})
     try:
         sys.argv = cmd[1:]
         runpy.run_path(cmd[1], run_name="__main__")

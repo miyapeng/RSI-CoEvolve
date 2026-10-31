@@ -1,0 +1,12 @@
+# Bootstrap only. Import the validated CUDA image's Python packages using
+# scripts/baseline/import_image_environment.py inside that image, then install
+# the pinned local mini/Slime/Megatron projects. Do not install CPU Torch here.
+name: self-hpo-gpu
+channels: [conda-forge, defaults]
+variables:
+  PYTHONNOUSERSITE: "1"
+  MSWEA_SILENT_STARTUP: "1"
+dependencies:
+  - python=3.12
+  - pip
+  - skopeo=1.24.1

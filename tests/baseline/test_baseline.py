@@ -204,10 +204,13 @@ def test_upstream_experience_gate_and_accept_reject(tmp_path):
 
 def test_training_plan_dense_no_final_benchmark_and_freeze(tmp_path):
     c = load_config(ROOT / "configs/baseline_9b.yaml")
+    c["training"]["gradient_accumulation_fusion"] = False
     rows = tasks(c["dataset_split_manifest"], "optimization_pool", 2)
     request = prepare(c["model_checkpoint"], c["harness_path"], rows, c, tmp_path / "p")
     cmd = command(request)
     assert "--save-hf" in cmd and "--advantage-estimator" in cmd
+    assert "--no-gradient-accumulation-fusion" in cmd
+    assert cmd[cmd.index("--sglang-context-length") + 1] == str(c["runtime"]["max_context_tokens"])
     assert not any("moe" in a or "expert" in a or "eval-prompt" in a for a in cmd)
     text = Path(request["train"]).read_text()
     assert '"patch"' not in text and '"test_patch"' not in text

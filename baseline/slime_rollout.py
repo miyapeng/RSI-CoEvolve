@@ -6,6 +6,7 @@ import os
 import uuid
 from pathlib import Path
 
+from .credentials import load_credentials
 from .data import tasks
 from .execution import rollout
 from .harness import revision
@@ -52,6 +53,7 @@ async def generate(args, sample, sampling_params, evaluation=False):
     global _service
     request = read(os.environ["BASELINE_TRAIN_REQUEST"])
     config = request["config"]
+    load_credentials([config["runtime"]["sandbox"]["key_env"]])
     if evaluation or sample.metadata["split"] != "optimization_pool":
         raise ValueError("This adapter never trains/evaluates on final benchmarks")
     if (

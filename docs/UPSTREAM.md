@@ -95,3 +95,10 @@ preparation alone does not certify image compatibility or a successful update.
 The official Megatron default branch was checked as `main` (remote HEAD then
 `831aa66d42f0a259dabbf8b6be9cf89ad929b360`); the checkout remains at the
 Slime-required pin above, not the remote HEAD.
+
+The dedicated `self-hpo-gpu` Conda prefix imports the image's SGLang Python
+package from source commit `0b3bb0cbe31873994c9f989fddfe2f87ca839fdd`, with
+its upstream license retained. This is an environment dependency, not another
+vendored agent/runtime. Image package provenance is recorded by
+`scripts/baseline/import_image_environment.py`; local Slime and Megatron editables
+override the image's versions. No upstream training loss was changed.
