@@ -6,6 +6,7 @@ import os
 import platform
 import shutil
 import subprocess
+from pathlib import Path
 
 from .checkpoint import inspect
 from .records import ORCHARD_COMMIT, ROOT, SLIME_COMMIT, sha
@@ -39,6 +40,7 @@ def environment(config):
             "commit": subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip(),
             "dirty": bool(subprocess.check_output(["git", "-C", str(path), "status", "--porcelain"], text=True)),
         }
+    import minisweagent
     import torch
 
     gpu = [
@@ -48,6 +50,7 @@ def environment(config):
     return {
         "python": platform.python_version(),
         "packages": packages,
+        "mini_source": str(Path(minisweagent.__file__).resolve()),
         "repositories": repos,
         "cuda": torch.version.cuda,
         "nccl_available": torch.distributed.is_nccl_available(),
@@ -84,6 +87,10 @@ def preflight(config, *, phase="run"):
         blockers.append("Orchard pin mismatch")
     if report["packages"]["swebench"] != "4.1.0":
         blockers.append("This baseline preserves Self-HPO's swebench==4.1.0 grading dependency")
+    if report["packages"]["mini-swe-agent"] != "2.2.6+selfhpo" or not Path(report["mini_source"]).is_relative_to(
+        ROOT / "mini-swe-agent/src"
+    ):
+        blockers.append("Install the pinned mini-SWE-agent editable from this worktree")
     return {
         **report,
         "status": "BLOCKED" if blockers else "PREFLIGHT_ONLY",

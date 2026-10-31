@@ -1,0 +1,24 @@
+# Separate final-test entrypoint. Never imported by the H/P loop.
+verified:
+  revision: 78f471bf655a3137b2e8a75af1501690ec009ec3
+  tasks: 500
+  module: swebench_verify_orchard
+  cwd: /testbed
+  seconds: 900
+multilingual:
+  revision: 846e647b9f33c0b51b739d005d13d85493c9af09
+  tasks: 300
+  module: swebench_multilingual_verify_orchard
+  cwd: /testbed
+  seconds: 900
+pro-v2:
+  revision: 2d52cb3df914a3fcf80c7f66738b3a88ae37fc50
+  tasks: 642
+  module: swebench_pro_verify_orchard
+  cwd: /app
+  seconds: 1800
+  verifier_repo: ../references/SWE-bench_Pro-os
+  verifier_commit: 66f92766bba642462d4bbe5479e83f91f9211862
+  verifier_seconds: 3000
+  grader_cpu: 4
+  grader_memory: 16Gi

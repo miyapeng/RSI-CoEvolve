@@ -1,5 +1,7 @@
 # Self-HPO: Self-Evolving Coding Agents via Harness-Policy Optimization
 
+> **本地 9B baseline 工作树**：新增入口为 `python -m baseline`，使用 Conda、固定 H/P 调度、同一 mini-SWE-agent 执行实现和官方 Slime Dense 9B GRPO。请先读 [实际审计](docs/IMPLEMENTATION_AUDIT.md)、[运行手册](docs/RUNBOOK.md)、[验证状态](docs/STATUS.md)。下方保留的上游 README 主要描述原作者的 35B / 8×B200 实验，不是本地已复现结果；不要用其安装脚本覆盖已有环境。旧 `../harness-policy-coevolution` 保留独立。
+
 [![arXiv](https://img.shields.io/badge/arXiv-2610.22791-b31b1b.svg)](https://arxiv.org/abs/2610.22791)
 [![Hugging Face](https://img.shields.io/badge/🤗-Checkpoints-yellow)](https://huggingface.co/self-hpo)
 [![Blog](https://img.shields.io/badge/Blog-Self--HPO-blue)](https://weizhepei.com/blog/self-hpo/)
