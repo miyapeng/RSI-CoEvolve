@@ -96,8 +96,11 @@ def evaluate_instance_orchard(
     *,
     logs_dir: Path | None = None,
     sample_idx: int = 0,
+    environment_factory=None,
 ) -> dict:
-    from minisweagent.environments.extra.orchard import OrchardEnvironment
+    if environment_factory is None:
+        from minisweagent.environments.extra.orchard import OrchardEnvironment
+        environment_factory = OrchardEnvironment
 
     instance_id = instance["instance_id"]
     res = {
@@ -127,7 +130,7 @@ def evaluate_instance_orchard(
     entry_timeout = int(os.environ.get("SWE_PRO_ENTRY_TIMEOUT") or _verifier_timeout(instance_id))
 
     try:
-        env = OrchardEnvironment(**cfg)
+        env = environment_factory(**cfg)
     except Exception as e:
         msg = str(e)
         res["error"] = "timeout" if ("timeout" in msg.lower() or "timed out" in msg.lower()) else msg[:180]

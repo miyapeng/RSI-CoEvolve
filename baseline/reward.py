@@ -61,5 +61,9 @@ def grade(row, patch, config, output, *, sandbox_factory=open_task):
                 "exit_code": test["returncode"],
             }
         result.update(sandbox_image=row["metadata"]["image_url"], sandbox_id=env.sandbox.sandbox_id)
+        result.update(
+            execution_image=getattr(env, "execution_image", None),
+            registry_digest_before_create=getattr(env, "registry_digest", None),
+        )
     write(output / "reward.json", result)
     return result

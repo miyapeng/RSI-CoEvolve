@@ -1,4 +1,4 @@
-# One fixed-budget HPO-style baseline. Real GPU and Orchard execution is opt-in.
+# One fixed-budget HPO-style baseline. Real GPU and Tencent sandbox execution is opt-in.
 seed: 42
 n_outer_rounds: 2
 h_enabled: true
@@ -32,12 +32,18 @@ runtime:
   top_p: 0.95
   grading_timeout: 900
   sandbox:
-    backend: orchard
-    endpoint_env: SANDBOX_BASE_URL
-    key_env: SANDBOX_API_KEY
+    backend: tencent_e2b
+    key_env: E2B_API_KEY
+    template_env: E2B_TEMPLATE
+    domain_env: E2B_DOMAIN
+    proxy_env: http_proxy
+    connection: proxy  # direct: no explicit proxy, class-level envd reconnect
+    image_manifest: configs/tencent_images.local.yaml
     cpu: 4
     memory: 8Gi
     setup_timeout: 600
+    sandbox_timeout: 7200
+    request_timeout: 120
 serving:
   port: 8000
   tensor_parallel: 2

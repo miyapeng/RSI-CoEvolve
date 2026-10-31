@@ -5,6 +5,7 @@ import importlib
 import json
 import os
 import subprocess
+from functools import partial
 from pathlib import Path
 
 import yaml
@@ -15,7 +16,15 @@ from .execution import serve
 from .harness import snapshot
 from .records import ROOT, append, digest, read, sha, write
 from .runtime import run_agent
-from .sandbox import TaskSandbox
+from .sandbox import GraderEnvironment, TaskSandbox
+
+
+def execution_image(benchmark, row):
+    if benchmark == "pro-v2":
+        return row["image_name"]
+    from minisweagent.run.benchmarks.utils.images import get_swebench_docker_image_name
+
+    return get_swebench_docker_image_name(row)
 
 
 def prepare(benchmark, config, output, limit=None):
@@ -50,14 +59,14 @@ def prepare(benchmark, config, output, limit=None):
         "policy_checkpoint": config["model_checkpoint"],
         "harness": snapshot(config["harness_path"], output / "harness"),
         "protocol": spec,
-        "sandbox": "Orchard",
+        "sandbox": config["runtime"]["sandbox"]["backend"],
         "workers": 1,
         "runtime": config["runtime"],
         "serving": config["serving"],
         "seed": config["seed"],
         "prompt_specialization": "Pro V2 appends public Requirements/Interface; selected harness prompts unchanged",
         "image_digest": None,
-        "limitation": "Image tags are not observed runtime digests; live validation pending",
+        "limitation": "Mirrored tags are checked against registry digests; provider runtime digests remain unobserved",
     }
     write(output / "plan.json", plan)
     return plan
@@ -80,8 +89,6 @@ def execute(plan, config, output):
     private = {r["instance_id"]: r for r in map(json.loads, Path(plan["grader_data"]).read_text().splitlines())}
     c = {**config["runtime"], "max_seconds": spec["seconds"]}
     env_config = {
-        "base_url": os.environ[c["sandbox"]["endpoint_env"]],
-        "api_key": os.environ[c["sandbox"]["key_env"]],
         "block_network": False,
         "sandbox_timeout": spec.get("verifier_seconds", 1800),
         "cpu": str(c["sandbox"]["cpu"]),
@@ -93,11 +100,7 @@ def execute(plan, config, output):
             iid = row["instance_id"]
             if row["split"] != "final_test":
                 raise ValueError("Unexpected final data role")
-            image = row["image_name"]
-            if plan["benchmark"] != "pro-v2":
-                from minisweagent.run.benchmarks.utils.images import get_swebench_docker_image_name
-
-                image = get_swebench_docker_image_name(row)
+            image = execution_image(plan["benchmark"], row)
             problem = row["problem_statement"]
             for key in ("requirements", "interface"):
                 if row.get(key):
@@ -127,7 +130,18 @@ def execute(plan, config, output):
                 instance = verifier.map_row_to_instance(instance)
             else:
                 instance = {**instance, "image_name": row["image_name"]}
-            result = verifier.evaluate_instance_orchard(instance, r["patch"], env_config, logs_dir=output / "grading")
+            try:
+                result = verifier.evaluate_instance_orchard(
+                    instance,
+                    r["patch"],
+                    env_config,
+                    logs_dir=output / "grading",
+                    environment_factory=partial(GraderEnvironment, task, c["sandbox"]),
+                )
+            except Exception as exc:
+                r.update(score=None, error_type=type(exc).__name__, error_stage="grading")
+                append(output / "results.jsonl", r)
+                raise
             infra = result.get("error") or result.get("exit_code", 0) in (-1, 124, 137)
             if plan["benchmark"] != "pro-v2":
                 log = (output / "grading" / f"{iid}_log.txt").read_text()
@@ -155,7 +169,8 @@ def main():
     config = load_config(a.config)
     plan = prepare(a.benchmark, config, a.output, a.limit)
     if a.execute:
-        report = preflight(config, phase="final-eval")
+        rows = [json.loads(line) for line in Path(plan["task_index"]).read_text().splitlines()][: plan["task_count"]]
+        report = preflight(config, phase="final-eval", images=[execution_image(a.benchmark, row) for row in rows])
         write(a.output / "preflight.json", report)
         if report["blockers"]:
             raise RuntimeError("Final preflight blocked: " + "; ".join(report["blockers"]))

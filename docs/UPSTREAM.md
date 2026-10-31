@@ -7,7 +7,7 @@
 | https://github.com/microsoft/agent-lightning | d381995396274039f2bb1cbe5ff42ac8067f4e47 | MIT | Inspected existing asset only; not imported or maintained as another trainer. |
 | Local harness-policy-coevolution | 937b5e8 | MIT, upstream notices retained there | Reuse dataset/model links and lessons from native Slime adapter integration. Research algorithms not imported. |
 
-| https://github.com/microsoft/Orchard-Agentic | bd8da32b3a075128700caab75bbc491fb6fdc16e | MIT | Only newly cloned repository, using SSH. Adjacent editable SDK `orchard_env/`, SandboxClient create/exec/network/delete; source unchanged. |
+| https://github.com/microsoft/Orchard-Agentic | bd8da32b3a075128700caab75bbc491fb6fdc16e | MIT | Acquired in the initial audit. Preserved as an unchanged reference; not required by the active Tencent baseline. |
 | https://github.com/scaleapi/SWE-bench_Pro-os | 66f92766bba642462d4bbe5479e83f91f9211862 | MIT, Copyright 2026 Scale AI | Existing adjacent dependency; Pro V2 per-task tests used by the original mini verifier. No tests copied or modified. |
 
 Default branches observed: all five repositories above use `main` (Slime checked with `git ls-remote --symref`, remote HEAD then `540ea919e45b8b929198abce008a103be9cfc779`). Slime remains pinned to the existing local v0.4.0 checkout, not that newer HEAD. This worktree shares Self-HPO Git history; dependency repositories remain outside this worktree's commits. Original root MIT, mini MIT and bundled Slime Apache-2.0 licenses are preserved. See [third-party notices](../THIRD_PARTY_NOTICES.md).
@@ -32,6 +32,13 @@ Default branches observed: all five repositories above use `main` (Slime checked
 | Official Slime `tests/test_agent/_fakes.py` and tests | Existing test-only HTTP/token fixtures and original regression tests; no simulated results published as experiments. |
 | Old local prototype `scripts/test_slime_upstream.sh` | Small environment-isolation recipe reused in `scripts/baseline/test_cpu.sh`; no upstream assertions or source altered. |
 | `scripts/eval/{gen_traj.sh,score_traj.sh,serve_model.sh}` | Audited; default B200 backend and 35B orchestration not invoked. `baseline/final_eval.py` calls original mini verifier functions; generation always uses the shared runtime. |
-| mini `swebench_verify_orchard.py`, `swebench_multilingual_verify_orchard.py`, `swebench_pro_verify_orchard.py` | Unchanged final graders, separate process entrypoint and frozen dataset versions. Pro V2 references official tests at the pin above. |
+| mini `swebench_verify_orchard.py`, `swebench_multilingual_verify_orchard.py`, `swebench_pro_verify_orchard.py` | Optional explicit `environment_factory` injection added for Tencent. Test construction, patch application, parsers and scoring retained. Pro V2 uses the official tests at the pin above. |
 
 No HarnessAdapt-RL proprietary source or prompts copied. No Meta-Harness/RRSI/AHE engine merged. No Agent Lightning/veRL training code imported. Official URLs, local licenses and pins were checked; no global dependency upgrade performed. The existing old prototype contributed local assets and prior adapter lessons, not its Item/trigger/pruning algorithms.
+
+## Tencent adaptation and publication
+
+- `baseline/tencent.py` adapts the earlier local MIT prototype's `harness_policy/tencent_sandbox.py` at `937b5e8`: explicit image/digest checks, proxy/direct reconnect, bounded commands, exit status and cleanup. The old project remains unchanged. No private dual-harness source, credentials or configuration files were copied; the supplied integration protocol informed the implementation.
+- [E2B SDK](https://github.com/e2b-dev/E2B): installed distribution **2.62.0**, Apache-2.0, used as a dependency. Installed source/signatures and the [official network API](https://docs.e2b.dev/network/internet-access) were checked. No Git commit is invented for a package release. Tencent provider enforcement remains unverified.
+- `sandbox.py` retains common task preparation; `train_worker.py` forwards required Tencent environment variables to native Ray workers. No model, GRPO loss or agent-loop changes accompany this transport replacement.
+- The frozen manifest's raw path is repository-relative; memberships, IDs, content hashes and seed are unchanged. Bootstrap fetches only missing pinned Slime/Pro source. Original Self-HPO README is preserved under `docs/upstream/` and in Git history; the repository README describes the 9B adaptation.

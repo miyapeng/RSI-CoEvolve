@@ -1,0 +1,8 @@
+# Copy to tencent_images.local.yaml, or generate a task-specific inventory.
+# Exact source image -> mirrored immutable tag + registry manifest digest.
+# Authentication belongs in the host registry login, never this file.
+# images:
+#   source.registry/task/image:original-tag:
+#     image: your-registry.example/swe/task:immutable-tag
+#     digest: sha256:<64 lowercase hex characters from skopeo inspect>
+images: {}

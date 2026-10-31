@@ -9,7 +9,9 @@ import subprocess
 from pathlib import Path
 
 from .checkpoint import inspect
-from .records import ORCHARD_COMMIT, ROOT, SLIME_COMMIT, sha
+from .data import tasks
+from .records import ROOT, SLIME_COMMIT, sha
+from .tencent import preflight as sandbox_preflight
 
 
 def environment(config):
@@ -23,7 +25,7 @@ def environment(config):
         "transformers",
         "mini-swe-agent",
         "swebench",
-        "orchard-env",
+        "e2b",
         "tensorboard",
     ):
         try:
@@ -34,11 +36,15 @@ def environment(config):
     for name, path in {
         "baseline": ROOT,
         "slime": config["slime_root"],
-        "orchard": ROOT.parent / "references/Orchard-Agentic",
     }.items():
+        exists = (Path(path) / ".git").exists()
         repos[name] = {
-            "commit": subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip(),
-            "dirty": bool(subprocess.check_output(["git", "-C", str(path), "status", "--porcelain"], text=True)),
+            "commit": subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip()
+            if exists
+            else None,
+            "dirty": bool(subprocess.check_output(["git", "-C", str(path), "status", "--porcelain"], text=True))
+            if exists
+            else None,
         }
     import minisweagent
     import torch
@@ -61,7 +67,7 @@ def environment(config):
     }
 
 
-def preflight(config, *, phase="run"):
+def preflight(config, *, phase="run", images=None):
     report = environment(config)
     blockers = []
     if phase != "oracle" and not report["gpus"]:
@@ -74,17 +80,25 @@ def preflight(config, *, phase="run"):
                 blockers.append(f"Training dependency missing: {name}")
         if len(report["gpus"]) < config["training"]["gpus"]:
             blockers.append("Allocation has fewer GPUs than the configured training budget")
-    for key in ("endpoint_env", "key_env"):
-        if not os.environ.get(config["runtime"]["sandbox"][key]):
-            blockers.append("Orchard environment variable missing: " + config["runtime"]["sandbox"][key])
+    if images is None:
+        selected = tasks(
+            config["dataset_split_manifest"],
+            "optimization_pool",
+            max(config["h_task_sample_size"], config["p_task_sample_size"]),
+        )
+        if phase in ("run", "h-step", "cross-eval"):
+            selected += tasks(config["dataset_split_manifest"], "dev_eval", config["dev_task_sample_size"])
+        elif phase == "audit-holdout":
+            selected = tasks(config["dataset_split_manifest"], "audit_holdout", config["dev_task_sample_size"])
+        images = [r["metadata"]["image_url"] for r in selected]
+    sandbox = sandbox_preflight(config["runtime"]["sandbox"], images)
+    blockers.extend(sandbox["blockers"])
     if phase in ("run", "h-step") and config["h_enabled"] and config["proposer_mode"] == "api":
         for key in ("key_env", "model_env"):
             if not os.environ.get(config["proposer"][key]):
                 blockers.append("Proposer environment variable missing: " + config["proposer"][key])
     if report["repositories"]["slime"]["commit"] != SLIME_COMMIT:
         blockers.append("Slime pin mismatch")
-    if report["repositories"]["orchard"]["commit"] != ORCHARD_COMMIT:
-        blockers.append("Orchard pin mismatch")
     if report["packages"]["swebench"] != "4.1.0":
         blockers.append("This baseline preserves Self-HPO's swebench==4.1.0 grading dependency")
     if report["packages"]["mini-swe-agent"] != "2.2.6+selfhpo" or not Path(report["mini_source"]).is_relative_to(
@@ -93,6 +107,7 @@ def preflight(config, *, phase="run"):
         blockers.append("Install the pinned mini-SWE-agent editable from this worktree")
     return {
         **report,
+        "sandbox": sandbox,
         "status": "BLOCKED" if blockers else "PREFLIGHT_ONLY",
         "blockers": blockers,
         "real_task_execution": "NOT_RUN",

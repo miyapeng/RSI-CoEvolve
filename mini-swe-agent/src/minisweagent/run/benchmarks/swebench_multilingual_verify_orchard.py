@@ -450,8 +450,11 @@ def _parse_test_output(log: str, instance: dict) -> dict[str, str]:
 
 def evaluate_instance_orchard(
     instance: dict, patch: str, env_config: dict, *, logs_dir: Path | None = None, sample_idx: int = 0,
+    environment_factory=None,
 ) -> dict:
-    from minisweagent.environments.extra.orchard import OrchardEnvironment
+    if environment_factory is None:
+        from minisweagent.environments.extra.orchard import OrchardEnvironment
+        environment_factory = OrchardEnvironment
 
     instance_id = instance["instance_id"]
     repo = instance.get("repo", "")
@@ -464,7 +467,7 @@ def evaluate_instance_orchard(
     cfg = {k: v for k, v in env_config.items() if k not in ("environment_class",)}
     cfg.update(image=image, cwd=DOCKER_WORKDIR)
 
-    env = OrchardEnvironment(**cfg)
+    env = environment_factory(**cfg)
     output = ""
     exit_code = -1
     patch_applied = False

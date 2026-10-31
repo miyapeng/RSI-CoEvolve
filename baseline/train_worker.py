@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from .records import ROOT, read
+from .tencent import required_env
 from .training import command
 
 
@@ -29,8 +30,7 @@ def main():
         "PYTHONPATH",
         "MSWEA_SILENT_STARTUP",
         "WANDB_MODE",
-        r["config"]["runtime"]["sandbox"]["endpoint_env"],
-        r["config"]["runtime"]["sandbox"]["key_env"],
+        *required_env(r["config"]["runtime"]["sandbox"]),
     ]
     ray.init(address="local", runtime_env={"env_vars": {k: os.environ[k] for k in keys}})
     try:

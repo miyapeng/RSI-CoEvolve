@@ -8,7 +8,7 @@ dependencies:
   - pip
   - pip:
       - -e ./mini-swe-agent
-      - -e ../references/Orchard-Agentic/orchard_env
+      - e2b==2.62.0
       - swebench==4.1.0
       - pytest==9.2.0
       - pyyaml==6.0.3

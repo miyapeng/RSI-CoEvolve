@@ -3,7 +3,7 @@ name = "self-hpo-baseline"
 version = "0.1.0"
 requires-python = ">=3.12"
 description = "Fixed-schedule Self-HPO coding baseline"
-dependencies = ["mini-swe-agent==2.2.6+selfhpo", "swebench==4.1.0", "openai==2.54.0", "pyyaml==6.0.3"]
+dependencies = ["mini-swe-agent==2.2.6+selfhpo", "swebench==4.1.0", "openai==2.54.0", "pyyaml==6.0.3", "e2b==2.62.0"]
 
 [build-system]
 requires = ["setuptools"]
