@@ -1,0 +1,38 @@
+{
+  "job_id": 1428024,
+  "status": "FAILED",
+  "simulated": false,
+  "stage": "h_step_proposal_parse",
+  "error_type": "JSONDecodeError",
+  "rollouts": [
+    {
+      "task_id": "eerimoq_asn1tools_pr112",
+      "split": "dev_eval",
+      "policy_checkpoint": "/user/miyapeng/rsi_evolve/self-hpo-baseline/checkpoints/train-smoke-20261031/job-1427911-4b380e178895/policy-0",
+      "harness_revision": "d335e0c842ce55e5c3ace4f6dbaeab2e8a6f65dac1710481d5bb3b172228597e",
+      "score": 0.0,
+      "tool_calls": 40,
+      "termination_reason": "LimitsExceeded",
+      "sampling_seed": 136738751,
+      "tokens": 449209,
+      "latency_seconds": 68.85649098921567
+    },
+    {
+      "task_id": "open-feature_python-sdk_pr329",
+      "split": "optimization_pool",
+      "policy_checkpoint": "/user/miyapeng/rsi_evolve/self-hpo-baseline/checkpoints/train-smoke-20261031/job-1427911-4b380e178895/policy-0",
+      "harness_revision": "d335e0c842ce55e5c3ace4f6dbaeab2e8a6f65dac1710481d5bb3b172228597e",
+      "score": 1.0,
+      "tool_calls": 35,
+      "termination_reason": "Submitted",
+      "sampling_seed": 1767154192,
+      "tokens": 457305,
+      "latency_seconds": 182.8888784898445
+    }
+  ],
+  "next_round": 0,
+  "accepted_checkpoint_unchanged": "/user/miyapeng/rsi_evolve/self-hpo-baseline/checkpoints/train-smoke-20261031/job-1427911-4b380e178895/policy-0",
+  "optimizer_steps": 0,
+  "candidate_executions": 0,
+  "reason": "Native Messages response contained a JSON fence followed by prose. Strict parser rejected it before candidate execution. Malformed candidates now count as rejected; parser/gates remain strict."
+}

@@ -143,7 +143,8 @@ original pretrained model. Its optimization rollout scored 1; its dev rollout
 reached the 40-turn limit and scored 0. The external proposer returned a JSON
 fence followed by prose and code outside the permitted hook surface. Strict
 parsing failed before candidate execution or training; the accepted pair stayed
-unchanged. Raw evidence is retained in `runs/two-round-smoke-20261031/`.
+unchanged. Raw evidence is retained in `runs/two-round-smoke-20261031/`; see the
+[compact failed-attempt record](validation/outer_attempt_1428024.json).
 
 Invalid proposal syntax/schema now produces a recorded candidate rejection and
 keeps the parent harness. API/transport failures still abort explicitly. The
