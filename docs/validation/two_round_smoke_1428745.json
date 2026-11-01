@@ -1,0 +1,351 @@
+{
+  "status": "SUCCEEDED",
+  "simulated": false,
+  "job_id": 1428745,
+  "code_commit": "bd4e794",
+  "run_dir": "runs/two-round-smoke-20261031/job-1428745/artifacts",
+  "warm_start": "Starts from verified one-update job 1427911; not untouched pretrained weights.",
+  "gpus": [
+    {
+      "name": "NVIDIA A100-SXM4-80GB",
+      "memory_bytes": 84987740160
+    },
+    {
+      "name": "NVIDIA A100-SXM4-80GB",
+      "memory_bytes": 84987740160
+    },
+    {
+      "name": "NVIDIA A100-SXM4-80GB",
+      "memory_bytes": 84987740160
+    },
+    {
+      "name": "NVIDIA A100-SXM4-80GB",
+      "memory_bytes": 84987740160
+    }
+  ],
+  "packages": {
+    "torch": "2.11.0+cu129",
+    "ray": "2.58.0",
+    "sglang": "0.5.15.post1",
+    "megatron-core": "0.19.2+4b4acac",
+    "transformer-engine": "2.16.1",
+    "transformers": "5.12.1",
+    "mini-swe-agent": "2.2.6+selfhpo",
+    "swebench": "4.1.0",
+    "e2b": "2.62.0",
+    "tensorboard": "2.21.0",
+    "straw-queue": "0.1.2"
+  },
+  "split_manifest_sha256": "476008728008ea3b4b2c8c9bbdd0e02995632c0f03f1c9d542eb63994791df3a",
+  "split_counts": {
+    "optimization_pool": {
+      "SWE-rebench-V2": 641,
+      "SWE-rebench (source field absent)": 879,
+      "Scale-SWE": 467
+    },
+    "dev_eval": {
+      "SWE-rebench-V2": 80,
+      "Scale-SWE": 59,
+      "SWE-rebench (source field absent)": 110
+    },
+    "audit_holdout": {
+      "SWE-rebench-V2": 80,
+      "Scale-SWE": 58,
+      "SWE-rebench (source field absent)": 110
+    }
+  },
+  "completed_rounds": 2,
+  "total_real_optimizer_updates": 2,
+  "completed_task_rollouts": 29,
+  "task_ids": [
+    "eerimoq_asn1tools_pr112",
+    "open-feature_python-sdk_pr329"
+  ],
+  "reported_agent_tokens": 14215924,
+  "token_records_missing": 0,
+  "tool_calls": 1091,
+  "artifact_wall_seconds": 8384.936110973358,
+  "monetary_cost": null,
+  "round_chaining_verified": true,
+  "checkpoint_harness_cross_eval_binding_verified": true,
+  "completed_state_resume_idempotent_verified": true,
+  "owned_sandboxes_remaining_at_check": 0,
+  "rounds": [
+    {
+      "round": 0,
+      "policy_before": "/user/miyapeng/rsi_evolve/self-hpo-baseline/checkpoints/train-smoke-20261031/job-1427911-4b380e178895/policy-0",
+      "policy_after": "/user/miyapeng/rsi_evolve/self-hpo-baseline/checkpoints/two-round-smoke-20261031/p_train-d6a5b2787efe/policy-0",
+      "harness_revision": "d335e0c842ce55e5c3ace4f6dbaeab2e8a6f65dac1710481d5bb3b172228597e",
+      "candidate_history": [
+        {
+          "candidate": "candidate_000",
+          "candidate_revision": "8e43dcb256f2f1e1089ff9b49523f9b40d27a6e7dfaa1cbd54af29d142184601",
+          "parent_revision": "d335e0c842ce55e5c3ace4f6dbaeab2e8a6f65dac1710481d5bb3b172228597e",
+          "accepted": false,
+          "rejection": "fire_gate_failed",
+          "fire_gate": {
+            "exit_code": 1,
+            "stdout": "FIRED=no REASON=LOCAL FILE ACCESS -> your mechanism will silently no-op on EVERY task. Found: patch.txt (there is NO local patch file -- the submission is in the Submitted exception). FIX: the repo runs in a REMOTE sandbox. Read the submission from the Submitted exception (inspect the exception object), and run any repo command inside the sandbox via self.env.execute. No subprocess, no patch.txt, no local Path.\n",
+            "stderr": ""
+          },
+          "evaluation": null
+        }
+      ],
+      "training_rewards": [
+        1.0,
+        1.0,
+        -1.0,
+        1.0
+      ],
+      "training_statistics": {
+        "training_metrics": {
+          "train/loss": [
+            {
+              "step": 0,
+              "value": -1.1816155165433884e-08
+            }
+          ],
+          "train/pg_loss": [
+            {
+              "step": 0,
+              "value": -1.1816155165433884e-08
+            }
+          ],
+          "train/entropy_loss": [
+            {
+              "step": 0,
+              "value": 0.24086803197860718
+            }
+          ],
+          "train/pg_clipfrac": [
+            {
+              "step": 0,
+              "value": 0.0
+            }
+          ],
+          "train/ppo_kl": [
+            {
+              "step": 0,
+              "value": 0.0
+            }
+          ],
+          "train/train_rollout_logprob_abs_diff": [
+            {
+              "step": 0,
+              "value": 0.007169059477746487
+            }
+          ],
+          "train/kl_loss": [
+            {
+              "step": 0,
+              "value": 0.0
+            }
+          ],
+          "train/grad_norm": [
+            {
+              "step": 0,
+              "value": 1.0194580554962158
+            }
+          ],
+          "train/lr-pg_0": [
+            {
+              "step": 0,
+              "value": 9.999999974752427e-07
+            }
+          ],
+          "train/lr-pg_1": [
+            {
+              "step": 0,
+              "value": 9.999999974752427e-07
+            }
+          ],
+          "train/global_batch_size": [
+            {
+              "step": 0,
+              "value": 4.0
+            }
+          ]
+        },
+        "observed_finite_nonzero_gradient_steps": 1,
+        "effective_loss_tokens": 31972,
+        "reward_groups": 1,
+        "mixed_reward_group_fraction": 1.0,
+        "changed_tensor_probes": 294
+      },
+      "reload_verified": true,
+      "reload_rollout": [
+        {
+          "task_id": "open-feature_python-sdk_pr329",
+          "score": 1.0,
+          "termination_reason": "Submitted",
+          "tool_calls": 27,
+          "latency_seconds": 351.98914921376854
+        }
+      ],
+      "dev_scores": {
+        "old_old": 0.0,
+        "old_new": 0.0,
+        "new_old": 0.0,
+        "new_new": 0.0
+      },
+      "p_step_artifact_wall_seconds": 2253.7547199726105
+    },
+    {
+      "round": 1,
+      "policy_before": "/user/miyapeng/rsi_evolve/self-hpo-baseline/checkpoints/two-round-smoke-20261031/p_train-d6a5b2787efe/policy-0",
+      "policy_after": "/user/miyapeng/rsi_evolve/self-hpo-baseline/checkpoints/two-round-smoke-20261031/p_train-61d1e6634cf2/policy-0",
+      "harness_revision": "d335e0c842ce55e5c3ace4f6dbaeab2e8a6f65dac1710481d5bb3b172228597e",
+      "candidate_history": [
+        {
+          "candidate": "candidate_000",
+          "candidate_revision": "e39a906f99319ced6bf3d4d75960facdc4252c2aa01f8febe0de254775657258",
+          "parent_revision": "d335e0c842ce55e5c3ace4f6dbaeab2e8a6f65dac1710481d5bb3b172228597e",
+          "accepted": false,
+          "rejection": null,
+          "fire_gate": {
+            "exit_code": 0,
+            "stdout": "FIRED=yes  marker='CAND_HPO_MRK_V1' fired in 3/3 trajs (3 submitted); hook=AgentHarness\n",
+            "stderr": ""
+          },
+          "evaluation": {
+            "candidate": "candidate_000",
+            "avg": 0.0,
+            "promoted": false,
+            "regressed_vs_seed": [],
+            "gained_vs_seed": [],
+            "mechanism": {
+              "act_marker": "CAND_HPO_ACT_V1",
+              "acted": {
+                "n": 0,
+                "cand_resolved": 0,
+                "seed_resolved": 0,
+                "gained": [],
+                "lost": []
+              },
+              "not_acted": {
+                "n": 1,
+                "cand_resolved": 0,
+                "seed_resolved": 0,
+                "gained": [],
+                "lost": []
+              }
+            },
+            "note": "mechanism.acted = tasks where the mechanism acted (its ACT_MARKER was recorded); on not_acted tasks the mechanism did not act, so gains and losses there mostly come from run-to-run sampling variation."
+          }
+        }
+      ],
+      "training_rewards": [
+        1.0,
+        1.0,
+        -1.0,
+        -1.0
+      ],
+      "training_statistics": {
+        "training_metrics": {
+          "train/loss": [
+            {
+              "step": 0,
+              "value": -1.3061799108982086e-07
+            }
+          ],
+          "train/pg_loss": [
+            {
+              "step": 0,
+              "value": -1.3061799108982086e-07
+            }
+          ],
+          "train/entropy_loss": [
+            {
+              "step": 0,
+              "value": 0.2511342763900757
+            }
+          ],
+          "train/pg_clipfrac": [
+            {
+              "step": 0,
+              "value": 0.0
+            }
+          ],
+          "train/ppo_kl": [
+            {
+              "step": 0,
+              "value": 0.0
+            }
+          ],
+          "train/train_rollout_logprob_abs_diff": [
+            {
+              "step": 0,
+              "value": 0.007621382363140583
+            }
+          ],
+          "train/kl_loss": [
+            {
+              "step": 0,
+              "value": 0.0
+            }
+          ],
+          "train/grad_norm": [
+            {
+              "step": 0,
+              "value": 1.1868728399276733
+            }
+          ],
+          "train/lr-pg_0": [
+            {
+              "step": 0,
+              "value": 9.999999974752427e-07
+            }
+          ],
+          "train/lr-pg_1": [
+            {
+              "step": 0,
+              "value": 9.999999974752427e-07
+            }
+          ],
+          "train/global_batch_size": [
+            {
+              "step": 0,
+              "value": 4.0
+            }
+          ]
+        },
+        "observed_finite_nonzero_gradient_steps": 1,
+        "effective_loss_tokens": 33774,
+        "reward_groups": 1,
+        "mixed_reward_group_fraction": 1.0,
+        "changed_tensor_probes": 294
+      },
+      "reload_verified": true,
+      "reload_rollout": [
+        {
+          "task_id": "open-feature_python-sdk_pr329",
+          "score": 0.0,
+          "termination_reason": "LimitsExceeded",
+          "tool_calls": 40,
+          "latency_seconds": 232.83792524784803
+        }
+      ],
+      "dev_scores": {
+        "old_old": 0.0,
+        "old_new": 0.0,
+        "new_old": 0.0,
+        "new_new": 0.0
+      },
+      "p_step_artifact_wall_seconds": 1789.7769331932068
+    }
+  ],
+  "limitations": [
+    "One optimization task and one repeatedly used dev task; no benchmark/generalization gain claim.",
+    "Both candidates rejected; accepted harness remained the seed. Changed-harness P-step was not observed in this run.",
+    "Round 0 static gate falsely rejected a prompt mentioning patch.txt; diagnosed and fixed after completion, not retroactively accepted.",
+    "Round 1 candidate passed its real execution gate but did not act on dev and did not improve dev score.",
+    "Second reload rollout completed at the step cap with score 0; reload success is not task-solving success.",
+    "Completed-state resume was checked; live mid-optimizer recovery was not tested."
+  ],
+  "post_run_gate_diagnostic": {
+    "production_history_changed": false,
+    "real_rollouts_reused_for_diagnosis_only": true,
+    "exit_code": 0,
+    "stdout": "FIRED=yes  marker='BUDGET_GUARD_WIRED_V1' fired in 3/3 trajs (3 submitted); hook=AgentHarness"
+  }
+}

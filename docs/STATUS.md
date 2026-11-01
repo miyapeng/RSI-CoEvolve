@@ -2,7 +2,10 @@
 
 **A real Qwen3.5-9B GRPO update, dense checkpoint export, fresh-server reload
 and a successful Tencent task rollout are now VERIFIED (job 1427911).**
-The two-round H/P validation is a separate run and is not yet claimed complete.
+**Two real H/P rounds also completed successfully in job 1428745**, starting from
+that verified checkpoint. Both candidates were rejected; the harness stayed at
+the seed and all four-cell dev scores were zero. This is execution validation,
+not evidence of a harness improvement or generalization gain.
 
 ## Live results
 
@@ -196,9 +199,59 @@ or `ContextLimitExceeded` with an empty submission if no context remains.
 Native Slime's empty length-limited response terminates the same way. Other API
 errors still propagate. No budget, reward, or optimizer assertion was weakened.
 
+## Completed two-round integration
+
+Job **1428745** succeeded on 4 A100-SXM4-80GB GPUs. Its fixed-code run used
+commit `bd4e794`, one optimization task, one dev task, one proposal per round,
+three gate seeds per candidate, and four on-policy samples per GRPO update.
+
+| Observation | Round 0 | Round 1 |
+|---|---|---|
+| Training rewards (order immaterial) | +1, +1, -1, +1 | +1, +1, -1, -1 |
+| Effective loss tokens | 31,972 | 33,774 |
+| Real nonzero-gradient updates | 1 | 1 |
+| Gradient norm | 1.019458 | 1.186873 |
+| Changed language-model tensor probes | 294 | 294 |
+| Fresh reload task score | 1, submitted in 27 tool calls | 0, 40-step limit |
+| Four-cell dev scores | 0 / 0 / 0 / 0 | 0 / 0 / 0 / 0 |
+| Accepted harness candidates | 0 | 0 |
+
+Round 1's source checkpoint, fresh serving process and native rollout provenance
+all match Round 0's exported policy. Each P-step's frozen harness matches its
+deployment and dev-evaluation hash. The completed real state was resumed with
+identical code/config/data and remained unchanged, without launching new work.
+Mid-optimizer live fault recovery is not claimed.
+
+There were **29 completed task rollouts**, **1,091 tool calls**, and 14,215,924
+reported agent prompt-plus-completion tokens (summed per call, including repeated
+contexts; excluding proposer usage). Artifact initialization to final round
+publication took **8,384.94 seconds**, about 2 h 20 min; P-step artifacts took
+2,253.75 s and 1,789.78 s. Currency cost was not retrieved. No infrastructure-error
+records appeared in this run; the job-scoped sandbox query returned no remaining
+instances after completion.
+
+Round 0's budget-guard candidate passed the actual task in all three gate
+trajectories, but the upstream static heuristic mistook prompt text containing
+`patch.txt` for host file access. Its recorded rejection is preserved. After
+completion, the gate was corrected to inspect filesystem calls, while retaining
+the submission/trigger requirements and forbidding actual host access even when
+the same code also mentions `self.env`. Regression tests cover the false positive
+and real `open` / `Path` calls. This fix does **not** retroactively promote the
+candidate or establish its dev performance.
+
+Round 1's empty-submission guard passed the real execution gate, then neither
+acted on the dev task nor improved its score, so it was rejected normally.
+Thus **training under an accepted changed harness was not observed**. CPU tests
+verify hook compatibility, but positive live harness promotion remains to be
+observed with a suitable, prospectively chosen multi-task budget.
+
+[Audited results and checkpoint paths](validation/two_round_smoke_1428745.json).
+Raw trajectories, proposals, grading, training and CSV/Markdown reports:
+`runs/two-round-smoke-20261031/job-1428745/artifacts/`.
+
 ## Software checks
 
-- CPU baseline: **28 passed, 1 skipped**. The extra native BatchBuilder test
+- CPU baseline: **32 passed, 1 skipped**. The extra native BatchBuilder test
   requires Ray and runs separately in the GPU Conda prefix without a GPU.
 - GPU Conda native adapter/group normalization: **2 passed**.
 - Unmodified Slime agent regressions: **49 passed, 1 skipped**.
@@ -216,12 +269,14 @@ errors still propagate. No budget, reward, or optimizer assertion was weakened.
 | Agent tool loop, patch and separate scoring | VERIFIED with API models and real 9B submissions/scoring |
 | Qwen3.5-9B GPU load and tool-call parser | VERIFIED on A100 80GB, job 1427589 |
 | GPU kernels and pinned Slime/Megatron imports | VERIFIED, followed by real training in job 1427911 |
-| Strong external proposer API/protocol | VERIFIED; full H-step candidate search NOT RUN |
+| Strong external proposer API/protocol | VERIFIED, two live proposals in job 1428745 |
 | Real Qwen3.5-9B GRPO update | VERIFIED, job 1427911: one real update |
 | Checkpoint save/export/reload/serve | VERIFIED, including a fresh real rollout |
-| Actual harness evolution and P-step hook acceptance | NOT RUN; CPU compatibility tests pass |
-| Two real H/P rounds / four-cell evaluation | NOT RUN |
+| Actual candidate generation, trigger gate and dev rejection | VERIFIED; both candidates rejected |
+| Accepted changed harness in a real P-step | NOT OBSERVED; CPU hook compatibility tests pass |
+| Two real H/P rounds / four-cell evaluation | VERIFIED, job 1428745; all dev cells scored 0 |
+| Next-round checkpoint binding / completed-state resume | VERIFIED; no live mid-optimizer recovery claim |
 | Verified / Multilingual / Pro V2 scores | NOT RUN; adapters remain independent of training |
 
-Next: finish H-step and two-round baseline validation from the verified checkpoint. Additional task image
-mappings must be inspected/pinned as the chosen search/dev budget grows.
+Next: choose a larger training-side task budget and inspect/pin its image mappings
+before a study. The single-task smoke validates the pipeline, not research gains.

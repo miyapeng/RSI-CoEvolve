@@ -88,3 +88,47 @@ model tensor probes and export/reload validation. Scores may still decrease.
 All-equal task rewards, infrastructure failures and unchanged parameters are
 reported explicitly; they are not replaced with simulated training gains.
 See [STATUS.md](STATUS.md) for measured acceptance, including failed attempts.
+
+## Completed two-round run and exact local paths
+
+Job **1428745** completed two rounds at code commit `bd4e794`. It used the same
+`configs/smoke_a100.yaml` settings except for two explicit overrides:
+
+```yaml
+model_checkpoint: /user/miyapeng/rsi_evolve/self-hpo-baseline/checkpoints/train-smoke-20261031/job-1427911-4b380e178895/policy-0
+training:
+  checkpoint_root: checkpoints/two-round-smoke-20261031
+```
+
+These are overrides, not a complete replacement YAML. The full local file is
+`configs/two_round_smoke.local.yaml`; the immutable resolved copy is in
+`runs/two-round-smoke-20261031/job-1428745/artifacts/config.resolved.yaml`.
+It started from the earlier one-update smoke, not untouched pretrained weights.
+
+For another bounded run, use the submission above with
+`BASELINE_PHASE=run`, `BASELINE_TIMEOUT=10800`,
+`BASELINE_CONFIG=/user/miyapeng/rsi_evolve/self-hpo-baseline/configs/two_round_smoke.local.yaml`,
+`BASELINE_RUN_ROOT=/user/miyapeng/rsi_evolve/self-hpo-baseline/runs/two-round-new`,
+and `PROPOSER_MODEL=CLAUDE_5puknv`. Each new job gets its own archive/checkpoint
+path. This launches real GPU/API/sandbox work. To start from the original model
+instead, select `configs/smoke_a100.yaml` explicitly.
+
+The final validated export is
+`checkpoints/two-round-smoke-20261031/p_train-61d1e6634cf2/policy-0`.
+Its reload task scored 0 at the step cap, while the first round's reload scored
+1; loading success must not be confused with task success. Both rounds had real
+nonzero gradients. Neither candidate was promoted and all dev cells scored 0.
+
+Read or regenerate the report without allocating a GPU:
+
+```bash
+conda activate self-hpo-baseline
+python -m baseline report \
+  --output runs/two-round-smoke-20261031/job-1428745/artifacts
+```
+
+Completed-state resume was verified before the post-run gate fix. Since resume
+checks source hashes, the historical run requires its original `bd4e794` source;
+do not edit its saved hashes to force a newer checkout to match. New experiments
+use the corrected gate and preserve their own source version. Raw historical
+rejections have not been changed. [Audited evidence](validation/two_round_smoke_1428745.json).

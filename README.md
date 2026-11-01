@@ -7,7 +7,10 @@ The execution path is **mini-SWE-agent → Tencent AGS/E2B task sandbox**, with 
 This repository is an implementation baseline, not a claim of reproduced RL gains.
 **One real Qwen3.5-9B GRPO update has passed on 4 A100 80GB GPUs**, followed by
 dense checkpoint export, fresh-server reload and a successful Tencent task rollout.
-Two live H/P rounds remain under validation. See the [measured status](docs/STATUS.md),
+**Two real H/P rounds also completed** (job 1428745), with two further GRPO updates,
+fresh checkpoint reloads and four-cell dev evaluation. Both harness candidates were
+rejected and dev scores stayed zero; this validates execution, not co-evolution gains.
+See the [two-round evidence](docs/validation/two_round_smoke_1428745.json), [measured status](docs/STATUS.md),
 [training smoke commands](docs/TRAINING_SMOKE.md), and [GPU Conda setup](docs/GPU_CONDA.md).
 
 ## Start with existing assets
