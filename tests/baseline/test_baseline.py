@@ -271,6 +271,40 @@ def test_same_full_agent_hooks_and_frozen_snapshot(tmp_path):
             validate_code(bad)
 
 
+@pytest.mark.parametrize(
+    "statement,allowed",
+    [
+        ('self.add_messages({"role": "user", "content": "Write patch.txt in the sandbox"})', True),
+        ('open("patch.txt").read()', False),
+        ('Path("patch.txt").read_text()', False),
+        ('self.env.execute("true"); open("patch.txt").read()', False),
+    ],
+)
+def test_gate_distinguishes_prompt_text_from_host_file_access(tmp_path, statement, allowed):
+    """Regression for job 1428745's real candidate; traces here are CPU fixtures."""
+    harness = tmp_path / "agents/candidate"
+    harness.mkdir(parents=True)
+    (harness / "agent.py").write_text(f"class AgentHarness:\n    def step(self):\n        {statement}\n")
+    (harness / "MARKER.txt").write_text("FIXTURE_MARK")
+    traces = tmp_path / "traces"
+    for index in range(3):
+        write(
+            traces / f"r{index}" / "task" / "task.traj.json",
+            {
+                "info": {
+                    "config": {"agent_type": "fixture.AgentHarness"},
+                    "exit_status": "Submitted",
+                    "harness_marks": [{"token": "FIXTURE_MARK"}],
+                },
+                "messages": [],
+            },
+        )
+    result = script("fire_gate.py", tmp_path, "candidate", extra_env={"BASELINE_GATE_TRACES": str(traces)})
+    assert result["exit_code"] == (0 if allowed else 1), result
+    if not allowed:
+        assert "LOCAL FILE ACCESS" in result["stdout"]
+
+
 def test_upstream_experience_gate_and_accept_reject(tmp_path):
     config = load_config(ROOT / "configs/baseline_9b.yaml")
     rows = tasks(config["dataset_split_manifest"], "optimization_pool", 3)

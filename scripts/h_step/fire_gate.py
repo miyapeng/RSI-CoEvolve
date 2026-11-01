@@ -34,14 +34,23 @@ if not marker:
 # ---- static check ----
 if "class AgentHarness" not in code:
     fail("your class MUST be named exactly 'class AgentHarness(ProgressTrackingAgent):' (literal name).")
-uses_env = ("self.env" in code) or (".env.execute" in code)
 bad = []
 if re.search(r'\bimport\s+subprocess\b|\bsubprocess\.', code): bad.append("subprocess (a LOCAL process; the repo is NOT local)")
-if "patch.txt" in code: bad.append("patch.txt (there is NO local patch file -- the submission is in the Submitted exception)")
+# A prompt mentioning a remote submission file is not host filesystem access.
+# Inspect actual calls, including Path("patch.txt").read_text(), instead.
+import ast
+for node in ast.walk(ast.parse(code)):
+    if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name):
+        continue
+    if node.func.id not in ("open", "Path"):
+        continue
+    if any(isinstance(arg, ast.Constant) and isinstance(arg.value, str)
+           and "patch.txt" in arg.value for arg in node.args):
+        bad.append("local filesystem call on patch.txt")
 if re.search(r'Path\(\s*["\']/testbed["\']\s*\)\s*\.\s*(exists|read_text|glob|iterdir|is_dir|open)', code): bad.append("local Path('/testbed').<fs op>")
 if re.search(r'open\(\s*["\'][^"\']*(?:testbed|patch\.txt)', code): bad.append("local open() on the repo/patch")
 if re.search(r'os\.(listdir|walk|scandir)\(', code) and "/testbed" in code: bad.append("os.listdir/walk on /testbed (local)")
-if bad and not uses_env:
+if bad:
     fail("LOCAL FILE ACCESS -> your mechanism will silently no-op on EVERY task. Found: " + "; ".join(bad) +
          ". FIX: the repo runs in a REMOTE sandbox. Read the submission from the Submitted exception "
          "(inspect the exception object), and run any repo command inside the sandbox via self.env.execute. "

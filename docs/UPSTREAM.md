@@ -21,7 +21,7 @@ Default branches observed: Self-HPO, Slime, Agent Lightning, Orchard-Agentic and
 | `mini-swe-agent/src/minisweagent/{agents/default.py,run/benchmarks/swebench.py,models/utils/actions_toolcall.py,environments/docker.py}` | Unchanged dependency calls: `run`, `step`, `execute_actions`, marks, formatting and submission detection. `baseline/runtime.py` supplies model/environment protocols, not another agent loop. |
 | `scripts/h_step/propose_prompt.tmpl` | Original file unchanged. `baseline/search.py` renders it and appends the explicit API/code-edit contract and bounded optimization-only evidence. Original ADD-on-parent restriction retained for this baseline. |
 | `scripts/h_step/build_experience.py`, `parent_check.py` | Only configurable working root (`BASELINE_WORKDIR`); retain original diagnosis and parent-retention check. |
-| `scripts/h_step/fire_gate.py` | Configurable root; accepts already collected real gate trajectories; discovers candidate class name. Existing wiring/action/submission checks retained. |
+| `scripts/h_step/fire_gate.py` | Configurable root; accepts collected real gate trajectories; discovers candidate class name. After job 1428745, distinguishes prompt text from actual host `open`/`Path` calls. Host access cannot bypass rejection by mentioning `self.env`. Trigger/submission checks retained; action markers are checked by `record_result.py`. |
 | `scripts/h_step/record_result.py` | Configurable root and promotion margin; original paired scoring/frontier logic retained. |
 | `scripts/h_step/{search_eval.py,run_h_step.sh,build_search_set.py}` | Audited and retained, not launched: original orchestration assumes original model/server/layout. Thin baseline caller invokes retained diagnostic/gate/selection components with its frozen splits. |
 | `slime/examples/mini_swe/swe_reward.py` | Extracted original `make_test_spec_scaleswe` / `make_test_spec_swerebench_v2` to `baseline/grading_spec.py` so CPU/eval do not import GPU training. Original file imports those functions. |
@@ -144,3 +144,12 @@ to remaining context and returns an empty length-limited turn at exhaustion.
 on its exact context-limit 400 diagnostic it uses the reported input count to
 cap one request, without truncating visible history; exhaustion ends the task.
 All other API failures propagate. The native adapter itself remains unmodified.
+
+Job 1428745 exposed a false positive in the original fire-gate heuristic:
+`patch.txt` in a model hint was treated as host file access. The post-run change
+inspects actual `open` / `Path` calls instead, and removes the unsafe exemption
+for code that also mentions `self.env`. The baseline's stricter AST edit boundary
+still runs first. CPU regressions cover remote hints, direct host reads, Path
+reads, and mixed remote/host calls. The at-least-two-submissions assertion and
+all live candidate records are preserved. This fix is not an assertion of
+general Python sandbox security or a retroactive candidate promotion.
