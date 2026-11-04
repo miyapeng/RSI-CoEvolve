@@ -1,5 +1,29 @@
 # Tencent AGS / E2B
 
+## Direct creation check (2026-11-04)
+
+`python -m baseline.sandbox_probe --output runs/new-connectivity-check --execute`
+creates one temporary sandbox through the existing `fixture_sandbox` helper,
+checks a command and a binary file upload/download, then kills the sandbox.
+Without `--execute` it only prints the requested image/resources. The API key
+is read from the environment or a hidden terminal prompt; it is never saved.
+Use the existing `self-hpo-baseline` Conda environment. The probe uses direct
+network routing and a digest-qualified image from the existing local manifest.
+It does not run the coding agent, call a model, train, or score a benchmark.
+
+Real result: **PASS**, 4.28 seconds, one sandbox, 1 CPU / 1 GiB, 600-second
+maximum lifetime, with successful explicit cleanup. Template:
+`code-agent-cfs2-new`; domain: `ap-beijing.tencentags.com`. Commands and binary
+roundtrip passed. The existing Scale-SWE image has Python but no Node.js, npm,
+Chrome/Chromium, Playwright CLI or Claude CLI on its default PATH. It is not a
+ready Vision2Web runtime. No new image was built or uploaded in this check.
+The report and lifecycle evidence are in the ignored local directory
+`runs/tencent-connectivity-20261104/`. Actual runtime-image attestation remains
+null; the report records the requested immutable image reference.
+
+This is a new connectivity check; earlier baseline/GPU results below retain
+their original dates and scope.
+
 The baseline uses Tencent sandboxes for H-step tasks, P-step tasks/reward, dev, audit and final Verified / Multilingual / Pro V2 evaluation. Qwen serving and Slime optimization stay on the GPU host. `runtime.run_agent` and the original test builders/parsers are retained.
 
 ## Configuration
