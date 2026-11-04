@@ -1,9 +1,12 @@
 """Explicit local adapters. No discovery service or automatic backend fallback."""
 
+from .arc_agi_3 import ARCAGI3
 from .base import BenchmarkAdapter
+from .osworld import OSWorldVerified
 from .swe import SWEBenchmark
+from .vision2web import Vision2Web
 
-ADAPTERS = {"swe": SWEBenchmark}
+ADAPTERS = {"swe": SWEBenchmark, "vision2web": Vision2Web, "osworld_verified": OSWorldVerified, "arc_agi_3": ARCAGI3}
 
 
 def get_benchmark(config) -> BenchmarkAdapter:

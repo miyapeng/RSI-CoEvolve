@@ -153,3 +153,34 @@ still runs first. CPU regressions cover remote hints, direct host reads, Path
 reads, and mixed remote/host calls. The at-least-two-submissions assertion and
 all live candidate records are preserved. This fix is not an assertion of
 general Python sandbox security or a retroactive candidate promotion.
+
+## Official visual / GUI / interactive-game evaluation adapters (2026-11-04)
+
+All three source repositories were newly cloned with SSH into the adjacent
+`/user/miyapeng/rsi_evolve/references/`, outside the main project's Git tree.
+Default branches were checked as `main`. The pinned tracked code is unmodified;
+we import it in an explicitly selected Conda subprocess, without vendoring its
+prompts, agent loops or graders. Model/data/VM downloads were not performed.
+
+| Official repository | Exact source commit | License evidence | Files/functions called or audited |
+| --- | --- | --- | --- |
+| [zai-org/Vision2Web](https://github.com/zai-org/Vision2Web) | `d80a4a3d0ea7326541ad87314294269a633789e4` | README Dataset/License: **CC-BY-NC-SA-4.0, academic research only**. No root LICENSE file. `setup.py` has an inconsistent MIT classifier; do not treat that as resolved MIT permission. Referenced externally, no source copied. | `vision2web/core/{dataset,config,sandbox}.py`; `inference/engine.py`, `inference/adapters/*`, `inference/prompts.py`; `evaluation/{engine,functional_tester,visual_scorer,prompts}.py`; `analyze/analyzer.py`; `cli.py`, `docker/build.sh`, `setup.py`. New caller: `baseline/benchmarks/vision2web.py`. |
+| [xlang-ai/OSWorld](https://github.com/xlang-ai/OSWorld) | `8903ebeb0efdf74331bd7dc37ed91ccbbff22317` | Root `LICENSE`: Apache-2.0. | `evaluation_examples/test_all.json`, `test_nogdrive.json`, example JSON; `mm_agents/agent.py::PromptAgent`; `desktop_env/desktop_env.py::DesktopEnv`; `lib_run_single.py::run_single_example`; `lib_results_logger.py`, `lib_run_errors.py`; native provider modules, `run.py`, README and `requirements.txt`. New caller: `baseline/benchmarks/osworld.py`. This is the official Verified lineage, not a separate OSWorld-V2 checkout. |
+| [arcprize/arc-agi-3-benchmarking](https://github.com/arcprize/arc-agi-3-benchmarking) | `353d38be471395b5ae47dbb44df95440677397e1` | Root `LICENSE`: MIT. | `main.py`; `benchmarking/{agent,base,swarm,model_config,model_configs.yaml,runtime_clients,recorder}`; `pyproject.toml`, `uv.lock`. New caller: `baseline/benchmarks/arc_agi_3.py`; calls native Swarm and scorecard, checks threaded-agent error exits. |
+
+ARC's lock records SDK `arc-agi==0.9.9`; it was not installed for this task.
+The SDK's official [source/license](https://github.com/arcprize/ARC-AGI) and
+[scorecard interface](https://github.com/arcprize/docs/blob/main/scorecards.mdx)
+were inspected as reference (MIT; no SDK Git commit inferred from its package
+version). We do not reimplement its scoring formula. The
+[GUI-HARVEST README](https://github.com/GaryYang12345/GUI-HARVEST) was read only
+to check comparison requirements; no code or prompt was copied. Its claimed
+361-task suite differs from the pinned OSWorld lists here; see the runbook.
+
+The local Vision2Web dataset and Conda environment from
+`/user/miyapeng/Visual-Self-Verification` were reused for read-only discovery and
+native-module import checks. That project's modified code, research methods,
+private configuration and historical results were neither changed nor copied.
+Its existing upstream archive has a different pin, so the worker explicitly
+loads the newly pinned official checkout. See [OFFICIAL_BENCHMARKS.md](OFFICIAL_BENCHMARKS.md)
+for exact asset paths, licenses, tests, environment requirements and NOT RUN items.

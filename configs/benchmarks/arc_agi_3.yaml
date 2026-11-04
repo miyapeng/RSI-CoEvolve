@@ -1,0 +1,11 @@
+# Explicit full game IDs from the official API. Empty list never means 'all games'.
+benchmark: arc_agi_3
+model: gpt-5.4-2026-03-05
+seed: 42
+eval_repetitions: 1
+official:
+  repo: ../references/arc-agi-3-benchmarking
+  python: python
+  task_ids: []
+  arc_base_url: https://arcprize.org
+  model_config_id: openai-gpt-5-4-2026-03-05

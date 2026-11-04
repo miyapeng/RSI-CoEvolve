@@ -7,8 +7,11 @@ The execution path is **mini-SWE-agent → Tencent AGS/E2B task sandbox**, with 
 This repository is an implementation baseline, not a claim of reproduced RL gains.
 The [Benchmark Adapter foundation](docs/BENCHMARK_ADAPTER_DESIGN.md) delegates
 task loading, execution and verification while retaining the existing SWE path.
-A CPU-only second adapter exercises the interface; multimodal H/P training is
-not implemented.
+Official evaluation adapters for **Vision2Web, OSWorld-Verified and ARC-AGI-3**
+now call their pinned native harnesses and verifiers. See the
+[setup, commands and measured limits](docs/OFFICIAL_BENCHMARKS.md).
+Their contracts have CPU tests; live visual/GUI/game evaluations and multimodal
+H/P training have **not** been validated.
 **One real Qwen3.5-9B GRPO update has passed on 4 A100 80GB GPUs**, followed by
 dense checkpoint export, fresh-server reload and a successful Tencent task rollout.
 **Two real H/P rounds also completed** (job 1428745), with two further GRPO updates,

@@ -1,0 +1,21 @@
+# Official evaluation only. Set VISION2WEB_DATA to an existing extracted dataset.
+benchmark: vision2web
+model: claude-sonnet-4-5-20250929
+seed: 42
+eval_repetitions: 1
+official:
+  repo: ../references/Vision2Web
+  python: python
+  dataset_dir: ${VISION2WEB_DATA}
+  task_ids: []
+  framework: claude_code
+  sandbox_image: vision2web-sandbox:latest
+  timeout: 7200
+  policy_api_key_env: ANTHROPIC_API_KEY
+  policy_base_url: null
+  functional_model: claude-sonnet-4-5-20250929
+  functional_api_key_env: ANTHROPIC_API_KEY
+  functional_base_url: null
+  visual_model: gemini-3-pro-preview
+  visual_api_key_env: VISION2WEB_VISUAL_API_KEY
+  visual_base_url: null

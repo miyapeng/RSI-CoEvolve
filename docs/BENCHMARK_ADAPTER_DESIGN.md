@@ -1,5 +1,12 @@
 # Minimal Benchmark Adapter foundation
 
+**Follow-up implementation (2026-11-04):** three concrete official evaluation
+adapters now exist. [OFFICIAL_BENCHMARKS.md](OFFICIAL_BENCHMARKS.md) documents the
+native entry points, pins, setup and actual verification. The foundation audit
+and measured results below describe the earlier interface-only milestone;
+its statements about no external adapters do not describe the follow-up.
+SWE H/P boundaries and historical resume hash enforcement remain unchanged.
+
 Implemented in `/user/miyapeng/rsi_evolve/self-hpo-baseline`, the worktree whose
 `rsi` remote is `git@github.com:miyapeng/RSI-CoEvolve.git`. The starting revision
 was `d649f79`; the worktree was clean before this change. The older

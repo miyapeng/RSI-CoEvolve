@@ -8,6 +8,9 @@ ROOT = Path(__file__).resolve().parents[2]
 DEPENDENCIES = {
     "slime": ("THUDM/slime", "0b0c277d5b4cc66efc3b6db269e2e5184e8f3b1e"),
     "SWE-bench_Pro-os": ("scaleapi/SWE-bench_Pro-os", "66f92766bba642462d4bbe5479e83f91f9211862"),
+    "Vision2Web": ("zai-org/Vision2Web", "d80a4a3d0ea7326541ad87314294269a633789e4"),
+    "OSWorld": ("xlang-ai/OSWorld", "8903ebeb0efdf74331bd7dc37ed91ccbbff22317"),
+    "arc-agi-3-benchmarking": ("arcprize/arc-agi-3-benchmarking", "353d38be471395b5ae47dbb44df95440677397e1"),
 }
 
 
@@ -16,8 +19,10 @@ def main():
     parser.add_argument("--with-final-eval", action="store_true")
     parser.add_argument("--ssh", action="store_true")
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--benchmarks", nargs="+", choices=["Vision2Web", "OSWorld", "arc-agi-3-benchmarking"], default=[])
     a = parser.parse_args()
-    for name in ["slime", "SWE-bench_Pro-os"] if a.with_final_eval else ["slime"]:
+    names = (["slime", "SWE-bench_Pro-os"] if a.with_final_eval else ["slime"]) + a.benchmarks
+    for name in names:
         repo, commit = DEPENDENCIES[name]
         path = ROOT.parent / "references" / name
         if not path.exists():
