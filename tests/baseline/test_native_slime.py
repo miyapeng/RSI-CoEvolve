@@ -53,13 +53,15 @@ def test_native_adapter_executes_the_real_harness_hooks(monkeypatch, tmp_path):
     from slime.agent.aiohttp_threaded import run_app_in_thread
     from slime.utils.types import Sample
 
-    from baseline import execution, slime_rollout
+    from baseline import reward, sandbox, slime_rollout
 
     spec = importlib.util.spec_from_file_location("baseline_slime_fixtures", slime / "tests/test_agent/_fakes.py")
     fakes = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(fakes)
     c = load_config(ROOT / "configs/baseline_9b.yaml")
-    row = tasks(c["dataset_split_manifest"], "optimization_pool", 1)[0]
+    # Explicit --task-id/prepare selection may differ from the default first task.
+    c["p_task_sample_size"] = 1
+    row = tasks(c["dataset_split_manifest"], "optimization_pool", 2)[1]
     h = candidate(tmp_path / "harness")
     r = prepare(c["model_checkpoint"], h, [row], c, tmp_path / "train")
     monkeypatch.setenv("BASELINE_TRAIN_REQUEST", str(tmp_path / "train/request.json"))
@@ -83,8 +85,8 @@ def test_native_adapter_executes_the_real_harness_hooks(monkeypatch, tmp_path):
                 "exception_info": "",
             }
 
-    monkeypatch.setattr(execution, "open_task", Sandbox)
-    monkeypatch.setattr(execution, "grade", lambda *a, **kw: {"score": 0.0, "resolved": False, "test_fixture": True})
+    monkeypatch.setattr(sandbox, "open_task", Sandbox)
+    monkeypatch.setattr(reward, "grade", lambda *a, **kw: {"score": 0.0, "resolved": False, "test_fixture": True})
 
     async def scenario():
         texts = {

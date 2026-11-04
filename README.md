@@ -5,6 +5,10 @@ A fixed-budget Harness–Policy Co-Evolution coding baseline adapted from [Self-
 The execution path is **mini-SWE-agent → Tencent AGS/E2B task sandbox**, with **native Slime GRPO** on the GPU allocation. Model inference/training stays on the GPU host; shell commands, repository edits and trusted tests run in separate remote sandboxes. Search, training and evaluation invoke the same agent implementation.
 
 This repository is an implementation baseline, not a claim of reproduced RL gains.
+The [Benchmark Adapter foundation](docs/BENCHMARK_ADAPTER_DESIGN.md) delegates
+task loading, execution and verification while retaining the existing SWE path.
+A CPU-only second adapter exercises the interface; multimodal H/P training is
+not implemented.
 **One real Qwen3.5-9B GRPO update has passed on 4 A100 80GB GPUs**, followed by
 dense checkpoint export, fresh-server reload and a successful Tencent task rollout.
 **Two real H/P rounds also completed** (job 1428745), with two further GRPO updates,

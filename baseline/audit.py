@@ -8,6 +8,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from .benchmarks import require_swe
 from .checkpoint import inspect
 from .data import configured_tasks
 from .records import ROOT, SLIME_COMMIT, sha
@@ -69,6 +70,7 @@ def environment(config):
 
 
 def preflight(config, *, phase="run", images=None):
+    require_swe(config, "GPU/CLI resource preflight")
     report = environment(config)
     blockers = []
     if phase != "oracle" and not report["gpus"]:

@@ -6,8 +6,8 @@ import yaml
 
 from . import execution, search, training
 from .audit import environment
+from .benchmarks import configured_tasks
 from .checkpoint import inspect
-from .data import configured_tasks
 from .harness import revision, snapshot
 from .records import ROOT, digest, read, sha, write
 
@@ -15,7 +15,7 @@ from .records import ROOT, digest, read, sha, write
 def core_hash():
     import minisweagent
 
-    files = sorted((ROOT / "baseline").glob("*.py")) + sorted((ROOT / "scripts/h_step").glob("*.py"))
+    files = sorted((ROOT / "baseline").rglob("*.py")) + sorted((ROOT / "scripts/h_step").glob("*.py"))
     files += [ROOT / "scripts/h_step/propose_prompt.tmpl"]
     mini = Path(minisweagent.__file__).parent
     return digest(

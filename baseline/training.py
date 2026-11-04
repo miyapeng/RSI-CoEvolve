@@ -6,6 +6,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
+from .benchmarks import require_swe
 from .checkpoint import complete_dense_export, inspect
 from .harness import revision, snapshot
 from .records import ROOT, SLIME_COMMIT, append, digest, read, sha, write
@@ -22,6 +23,7 @@ def check_slime(root):
 
 
 def command(request):
+    require_swe(request["config"], "Native SWE training")
     config, out = request["config"], Path(request["output"])
     t, r, root = config["training"], config["runtime"], Path(config["slime_root"])
     if r["top_p"] != 1.0:
@@ -133,6 +135,7 @@ def command(request):
 
 
 def prepare(checkpoint, harness, rows, config, output):
+    require_swe(config, "Native SWE training data preparation")
     output = Path(output).resolve()
     if (output / "request.json").exists():
         raise ValueError("P-step output already exists; resume completed stages or use a new experiment")

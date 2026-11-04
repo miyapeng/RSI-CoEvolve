@@ -8,8 +8,8 @@ from collections import defaultdict
 from pathlib import Path
 from types import SimpleNamespace
 
+from .benchmarks import get_benchmark, require_swe
 from .credentials import load_credentials
-from .data import tasks
 from .execution import rollout
 from .harness import revision
 from .records import read, sha, write
@@ -85,6 +85,7 @@ async def generate(args, sample, sampling_params, evaluation=False):
     global _service
     request = read(os.environ["BASELINE_TRAIN_REQUEST"])
     config = request["config"]
+    require_swe(config, "Native SWE token/logprob capture")
     load_credentials([config["runtime"]["sandbox"]["key_env"]])
     if evaluation or sample.metadata["split"] != "optimization_pool":
         raise ValueError("This adapter never trains/evaluates on final benchmarks")
@@ -100,8 +101,15 @@ async def generate(args, sample, sampling_params, evaluation=False):
     iid = sample.metadata["task_id"]
     if iid not in allowed:
         raise ValueError("Task outside frozen P-step selection")
+    benchmark = get_benchmark(config)
+    selected_config = {
+        **config,
+        "task_ids": {**config.get("task_ids", {}), "optimization_pool": sorted(allowed)},
+    }
     row = next(
-        r for r in tasks(config["dataset_split_manifest"], "optimization_pool") if r["metadata"]["instance_id"] == iid
+        r
+        for r in benchmark.load_tasks(selected_config, "optimization_pool", len(allowed))
+        if benchmark.task_info(r).task_id == iid
     )
     if _service is None:
         _service = CaptureService(args)

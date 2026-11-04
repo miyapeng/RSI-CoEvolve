@@ -7,6 +7,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from .benchmarks import require_swe
 from .execution import evaluate, mean_score
 from .harness import check_diagnostic_leak, diff, load, revision, snapshot
 from .proposer import complete, parse_json
@@ -173,6 +174,7 @@ def runtime_contract():
 
 
 def h_step(client, checkpoint, harness, optimization, dev, config, output):
+    require_swe(config, "Harness diagnosis/proposal/gates")
     output = Path(output)
     work = output / "search"
     snapshot(harness, work / "agents/parent")

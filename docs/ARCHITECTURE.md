@@ -4,6 +4,12 @@ The accepted state is a pair `(checkpoint, harness snapshot)`. For each round th
 
 Four boundaries are intentionally small:
 
+Task loading and episode execution/verification now dispatch through
+`baseline/benchmarks/`, with SWE as the default. The boundaries below describe
+the working SWE implementation; other domains may own different runtimes.
+See [Benchmark Adapter design and CPU validation](BENCHMARK_ADAPTER_DESIGN.md)
+for the interface and the remaining SWE-specific H/P assumptions.
+
 1. **Task / sandbox / reward:** `data.py` validates the existing 2,484-row JSONL and fixed manifest. `sandbox.py` uses the Tencent AGS/E2B transport in `tencent.py` with separate agent and trusted grader sandboxes. `reward.py` executes the original source-specific test scripts and parsers. Policy input is a public projection; gold/test patches and private test IDs stay outside it. Oracle diagnostics are an explicit optimization-only command.
 2. **Harness search:** `search.py` reuses Self-HPO's experience builder, proposal prompt, parent check, fire gate and paired promotion. Proposer output is one complete restricted `AgentHarness` edit, with wiring and action markers. It may override real `step()` / `execute_actions()` and add `_hook_*` helpers, but cannot modify the model client, grader or host environment. All candidates may fail; the parent then remains selected. The AST gate limits the supported code API; it is not a general-purpose Python security sandbox.
 3. **Policy update:** `training.py`, `train_worker.py`, `slime_rollout.py` call pinned Slime. `runtime.run_agent` invokes the same actual mini `DefaultAgent.run` and candidate methods used for H-step/dev/final generation. Native Slime captures the effective token sequences, response masks and logprobs. No Self-HPO action-after-facade mismatch remains in this path. A synchronous wrapper records the Slime update iteration; a source checkpoint reference alone does not imply that all inner iterations used identical weights.
