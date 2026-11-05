@@ -323,3 +323,12 @@ The dataset card has no explicit license metadata; do not infer that source MIT
 covers screenshots or task repository content. Data is downloaded to existing
 ignored asset storage, not redistributed. Old dataset-card narrative counts are
 recorded as stale in [SWE_MM.md](SWE_MM.md).
+
+Full-split setup additionally uses the same pinned dataset's `image_assets` and
+container references. `baseline/benchmarks/swe_mm_assets.py` and
+`swe_mm_images.py` are local preparation utilities, not copied agent/grader code.
+Private cached files follow upstream `swebench/task/repo.py::asset_path`; the
+existing transport passes that directory via native `run_instance(task_repo=...)`.
+No split, scorer, test script or task image is rewritten. Downloaded files and
+registry credentials remain outside Git. Actual incomplete resources are recorded
+in [validation/swe_mm_setup.json](validation/swe_mm_setup.json).

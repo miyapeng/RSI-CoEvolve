@@ -105,6 +105,96 @@ python -m baseline.benchmarks plan --config configs/benchmarks/swe_mm.yaml \
 
 ## Tencent images and a bounded dev run
 
+### Complete dev/test setup
+
+The full tables are already local: **100 dev + 480 test** tasks. This is distinct
+from having all referenced issue images, verifier assets and executable container
+images. Keep both original splits intact; a missing resource never removes a task
+from the denominator or changes its split.
+
+The setup now provides two resumable preparation commands. They do not call a
+model, create a sandbox, grade test tasks, or train a policy:
+
+```bash
+PY=/user/miyapeng/miniconda3/envs/self-hpo-baseline/bin/python
+MM=data/benchmarks/swe-mm/4e6662d51c48e475f7f346e4fa09a6f8b31fcaa5
+
+# Fetch all declared files for BOTH splits. Existing successful files are hash-checked.
+"$PY" -m baseline.benchmarks.swe_mm_assets --dataset "$MM" --output "$MM/assets" --workers 4
+
+# Small manifests only: resolve each official task's linux/amd64 image and size.
+"$PY" -m baseline.benchmarks.swe_mm_images inventory --dataset "$MM" --output "$MM/setup" --workers 2
+# No-network summary after an interruption:
+"$PY" -m baseline.benchmarks.swe_mm_images inventory --offline --dataset "$MM" --output "$MM/setup"
+
+# Actual container-layer transfer to Tencent; potentially hundreds of GiB.
+# Requires registry authentication, NOT the E2B API key. Does not need Docker daemon.
+export REGISTRY_AUTH_FILE=/path/to/private/registry-auth.json
+"$PY" -m baseline.benchmarks.swe_mm_images mirror --dataset "$MM" --output "$MM/setup" \
+  --image-map configs/swe_mm_images.local.yaml --workers 2
+```
+
+Preparation returns exit code **2** when resources are incomplete. Re-running
+reuses verified files/pins and attempts missing downloads once; there is no
+unbounded retry loop. Registry pull-rate errors stop subsequent batches. Use
+`skopeo login --authfile "$REGISTRY_AUTH_FILE" docker.io` locally if you have an
+authorized Docker Hub account, or arrange an internal mirror. Never put registry
+passwords into project YAML. `E2B_API_KEY` authenticates sandbox creation; it
+does **not** authenticate Docker Hub or the Tencent container registry. Execution
+remains on Tencent E2B throughout. The path is **official Docker Hub image →
+Tencent image registry → E2B sandbox**, not another purchased execution service.
+
+Files produced under the Git-ignored dataset directory:
+
+- `assets/public/`: URL-keyed public image files and a SHA256/dimensions manifest.
+  A GitHub `/blob/` file-view link is resolved to the corresponding raw file;
+  original, requested and redirected URLs remain recorded. Other invalid links
+  are explicit failures, never substitute images.
+- `assets/grader/`: private verifier files and separate manifest;
+  `task_repo/tasks/<id>/test_assets/<repo-relative-path>` matches the native
+  official verifier's local-asset convention. Only the trusted verifier uses it.
+- `assets/readiness.json`: counts, failed URLs and affected task IDs by split.
+- `setup/images/`, `setup/image_inventory.json`: immutable source digests,
+  compressed layer sizes, deduplicated byte count, and missing inventory entries.
+- `setup/mirror_report.json`: last transfer/verification outcomes. Only observed,
+  matching destination digests enter `configs/swe_mm_images.local.yaml`.
+
+Set `official.asset_dir: <dataset_dir>/assets` to require local assets. In this
+workspace, **`configs/swe_mm_dev.local.yaml` and `configs/swe_mm_test.local.yaml`**
+already select all original tasks, this strict cache, the existing Conda worker,
+and the previous Gemini gateway route using environment variable names only.
+The older one-task smoke config is preserved. The committed portable config
+keeps `asset_dir: null` for the existing on-demand behavior. For another machine,
+copy it to a local config, set the cache path and provider route, and explicitly
+select `--split dev` or `--split test`.
+
+```bash
+# These are offline readiness checks over EVERY selected task, not live evaluation.
+"$PY" -m baseline.benchmarks preflight --config configs/swe_mm_dev.local.yaml \
+  --limit 100 --output runs/swe-mm-dev-readiness
+"$PY" -m baseline.benchmarks preflight --config configs/swe_mm_test.local.yaml \
+  --limit 480 --output runs/swe-mm-test-readiness
+
+# Only after readiness + representative browser-task oracle validation:
+# These two commands DO incur model and sandbox usage; not executed during setup.
+"$PY" -m baseline.benchmarks run --config configs/swe_mm_dev.local.yaml \
+  --limit 100 --output runs/swe-mm-dev-full
+"$PY" -m baseline.benchmarks run --config configs/swe_mm_test.local.yaml \
+  --limit 480 --output runs/swe-mm-test-full
+```
+
+Preflight now checks images and cached public/private assets for the requested
+`--limit`, rather than checking only the first task. Strict cache runs fail on
+missing or changed bytes; they do not fall back to network fetches. Plans include
+both asset-manifest hashes, and the actual image files are hash-checked before
+use. Grading still delegates unchanged patch application and scoring to the
+official verifier with its `task_repo` argument. Code-hash resume protections
+remain in force; use the previous checkout for historical runs.
+
+See `docs/validation/swe_mm_setup.json` for the actual resource counts and blockers
+at the end of this setup attempt. A completed table download or CPU test does
+not imply that all 580 remote tasks have been validated.
+
 Each task has its own official `image` reference. A Vision2Web/OSWorld generic
 image cannot replace it. Mirror the **actual** task image from Docker Hub to TCR,
 record the source amd64 digest and destination tag/digest, and populate ignored

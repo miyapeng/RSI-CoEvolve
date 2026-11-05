@@ -2,7 +2,6 @@
 
 import base64
 import copy
-import io
 import json
 import os
 import shlex
@@ -15,6 +14,7 @@ from baseline.records import ROOT, digest, sha, write
 
 from .base import TaskInfo
 from .official import OfficialBenchmark, OfficialTask, file_reference, path_value
+from .swe_mm_assets import copy_public_observations, image_metadata
 from .swe_mm_data import DATASET, REVISION, load_split
 
 
@@ -72,19 +72,25 @@ class SWEMultimodal(OfficialBenchmark):
         )
         request["grader_patch_hash"] = sha(Path(__file__).with_name("swe_mm_transport.patch"))
         request["sandbox_images"] = runtime_settings(config["official"])["sandbox"]["images"]
+        cache = config["official"].get("asset_dir")
+        request["asset_manifests"] = (
+            {kind: sha(path_value(cache) / kind / "manifest.json") for kind in ("public", "grader")} if cache else None
+        )
         request["harness_revision"] = digest(
             {
                 k: request[k]
-                for k in ("harness_revision", "agent_harness", "runtime_hash", "grader_patch_hash", "sandbox_images")
+                for k in ("harness_revision", "agent_harness", "runtime_hash", "grader_patch_hash", "sandbox_images", "asset_manifests")
             }
         )
         return request
 
 
-def download_observations(public, output):
+def download_observations(public, output, asset_dir=None):
     """Only issue images, never patch/test images. Large bytes stay in artifact files."""
     import requests
-    from PIL import Image
+
+    if asset_dir is not None:
+        return copy_public_observations(asset_dir, public, output)
 
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
@@ -102,15 +108,11 @@ def download_observations(public, output):
                     raise ValueError("Issue image exceeds 20 MiB; inspect it before increasing the budget")
                 chunks.append(chunk)
         content = b"".join(chunks)
-        with Image.open(io.BytesIO(content)) as image:
-            if image.format not in ("PNG", "JPEG", "WEBP", "GIF"):
-                raise ValueError("Unsupported issue image type")
-            width, height, fmt = image.width, image.height, image.format
-            image.verify()
-        path = output / f"issue_{index}.{fmt.lower()}"
+        metadata = image_metadata(content)
+        path = output / f"issue_{index}.{metadata['format']}"
         path.write_bytes(content)
         reference = file_reference(path)
-        reference["metadata"].update(url=url, width=width, height=height)
+        reference["metadata"].update(url=url, width=metadata["width"], height=metadata["height"])
         observations.append({"kind": "image", "artifact": reference})
     write(output / "observations.json", observations)
     return observations
@@ -168,7 +170,12 @@ def run_native(request):
         raise ValueError("Agent harness changed after planning")
     harness = snapshot(request["agent_harness"]["path"], output / "agent_harness")
     public = task_record.public
-    observations = download_observations(public, output / "observations")
+    cache = path_value(options["asset_dir"]) if options.get("asset_dir") else None
+    if cache and request["asset_manifests"] != {
+        kind: sha(cache / kind / "manifest.json") for kind in ("public", "grader")
+    }:
+        raise ValueError("SWE-MM asset manifests changed after planning")
+    observations = download_observations(public, output / "observations", cache)
     task = {
         "task_id": public["task_id"],
         "dataset_source": DATASET,
@@ -228,6 +235,12 @@ def run_native(request):
     adapter.input_fingerprint(task_record)
     grader = Path(native["dataset_dir"]) / native["split"] / "grader.jsonl"
     row = next(r for r in map(json.loads, grader.read_text().splitlines()) if r["instance_id"] == task["task_id"])
+    if cache:
+        from .swe_mm_assets import grader_repo
+
+        if sha(cache / "grader/manifest.json") != request["asset_manifests"]["grader"]:
+            raise ValueError("Private asset manifest changed during execution")
+        runtime["grader_task_repo"] = grader_repo(cache, row)
     prediction = {
         "instance_id": task["task_id"],
         "model_name_or_path": request["model"],

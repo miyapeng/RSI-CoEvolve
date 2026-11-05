@@ -1,0 +1,125 @@
+{
+  "date": "2026-11-05",
+  "dataset_revision": "4e6662d51c48e475f7f346e4fa09a6f8b31fcaa5",
+  "dataset_manifest_sha256": "27e78bf049c7adc8cd6c77dad1f1345631c1ea3ed5e306b8f896625413a8316c",
+  "splits": {
+    "dev": {
+      "task_count": 100,
+      "tasks_with_all_file_assets": 98,
+      "asset_blocked_tasks": [
+        "chartjs__Chart.js-9399",
+        "markedjs__marked-1683"
+      ],
+      "missing_tencent_images": 99,
+      "ready_for_full_live_attempt": false
+    },
+    "test": {
+      "task_count": 480,
+      "tasks_with_all_file_assets": 477,
+      "asset_blocked_tasks": [
+        "PrismJS__prism-2678",
+        "openlayers__openlayers-13547",
+        "prettier__prettier-16347"
+      ],
+      "missing_tencent_images": 480,
+      "ready_for_full_live_attempt": false
+    }
+  },
+  "public_assets": {
+    "expected": 790,
+    "ready": 784,
+    "bytes": 171184508,
+    "failures": [
+      {
+        "url": "https://content.markdowner.net/emoji/g/64/1f44d.png",
+        "status": "missing",
+        "download_url": "https://content.markdowner.net/emoji/g/64/1f44d.png",
+        "error_type": "SSLError"
+      },
+      {
+        "url": "https://file.mo7.cc/disk/blog_preview_en.png",
+        "status": "missing",
+        "download_url": "https://file.mo7.cc/disk/blog_preview_en.png",
+        "error_type": "HTTPError",
+        "http_status": 404
+      },
+      {
+        "url": "https://chartio.com/images/tutorials/charts/histograms/histogram-example-1.png",
+        "status": "missing",
+        "download_url": "https://chartio.com/images/tutorials/charts/histograms/histogram-example-1.png",
+        "final_url": "https://chartio.com/images/tutorials/charts/histograms/histogram-example-1.png",
+        "content_type": "image/png",
+        "error_type": "UnidentifiedImageError"
+      },
+      {
+        "url": "https://file.mo7.cc/static/lxh_gif/lxh_71.gif",
+        "status": "missing",
+        "download_url": "https://file.mo7.cc/static/lxh_gif/lxh_71.gif",
+        "error_type": "HTTPError",
+        "http_status": 404
+      },
+      {
+        "url": "https://marked.js.org/demo/?text=%23%20Expected%20result%0A%0A%5B!%5BManny%20Pacquiao%5D(https%3A%2F%2Fimg.youtube.com%2Fvi%2Fs6bCmZmy9aQ%2F0.jpg",
+        "status": "missing",
+        "download_url": "https://marked.js.org/demo/?text=%23%20Expected%20result%0A%0A%5B!%5BManny%20Pacquiao%5D(https%3A%2F%2Fimg.youtube.com%2Fvi%2Fs6bCmZmy9aQ%2F0.jpg",
+        "final_url": "https://marked.js.org/demo/?text=%23%20Expected%20result%0A%0A%5B!%5BManny%20Pacquiao%5D(https%3A%2F%2Fimg.youtube.com%2Fvi%2Fs6bCmZmy9aQ%2F0.jpg",
+        "content_type": "text/html; charset=utf-8",
+        "error_type": "UnidentifiedImageError"
+      },
+      {
+        "url": "https://tile.nextzen.org/tilezen/terrain/v1/{tilesize}/terrarium/{z}/{x}/{y}.png",
+        "status": "missing",
+        "download_url": "https://tile.nextzen.org/tilezen/terrain/v1/{tilesize}/terrarium/{z}/{x}/{y}.png",
+        "error_type": "HTTPError",
+        "http_status": 400
+      }
+    ]
+  },
+  "private_assets": {
+    "expected": 155,
+    "ready": 155,
+    "bytes": 4586232
+  },
+  "image_inventory": {
+    "expected": 580,
+    "pinned_manifests": 196,
+    "compressed_bytes_for_inventoried_images": 220036218591,
+    "unique_blob_bytes_for_inventoried_images": 76560684319,
+    "all_580_images_total_size": "UNKNOWN"
+  },
+  "tencent": {
+    "existing_image_digests_reverified": 1,
+    "new_images_mirrored": 0,
+    "catalog_returned_repositories": 0,
+    "catalog_result": "Cannot infer absence of other images from this catalog response"
+  },
+  "blockers": [
+    "Docker Hub explicitly returned unauthenticated pull-rate-limit errors; inventory stopped; no automated bypass",
+    "Six declared public asset URLs remain unavailable or do not return image files; exact failures recorded below",
+    "579 task images are not yet present in the verified Tencent runtime mapping"
+  ],
+  "cpu_tests": {
+    "baseline": {
+      "passed": 67,
+      "skipped": 2
+    },
+    "upstream_slime": {
+      "passed": 49,
+      "skipped": 1
+    },
+    "focused_swe_mm": {
+      "passed": 11
+    },
+    "ruff": "PASS",
+    "pip_check": "PASS"
+  },
+  "live_model_calls": 0,
+  "sandboxes_created": 0,
+  "gpu_training": "NOT_RUN",
+  "full_dev_or_test_evaluation": "NOT_RUN",
+  "local_configs": [
+    "configs/swe_mm_dev.local.yaml",
+    "configs/swe_mm_test.local.yaml"
+  ],
+  "resource_records": "data/benchmarks/swe-mm/4e6662d51c48e475f7f346e4fa09a6f8b31fcaa5"
+}

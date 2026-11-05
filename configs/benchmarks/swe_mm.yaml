@@ -7,6 +7,8 @@ official:
   repo: ../references/SWE-bench
   python: python  # Activate the existing self-hpo-baseline Conda environment.
   dataset_dir: data/benchmarks/swe-mm/4e6662d51c48e475f7f346e4fa09a6f8b31fcaa5
+  # Set to <dataset_dir>/assets after running swe_mm_assets (strict offline cache).
+  asset_dir: null
   split: dev  # test is separate; never H/P selection or smoke debugging.
   task_ids: []
   agent_harness: harnesses/seed

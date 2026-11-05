@@ -15,7 +15,7 @@ from . import get_benchmark
 from .official import path_value
 
 
-def preflight(config):
+def preflight(config, limit=1):
     """Read-only checks: no images pulled, sandboxes created or model calls made."""
     adapter = get_benchmark(config)
     report = {"benchmark": adapter.name, "checks": {}, "live_execution": "NOT_RUN"}
@@ -135,10 +135,26 @@ def preflight(config):
 
         checks["policy_api_key_env"] = bool(os.environ.get(options["policy_api_key_env"]))
         runtime = runtime_settings(options)
-        rows = adapter.load_tasks(config, adapter.evaluation_role(config), 1) if checks["local_task"] else []
+        rows = adapter.load_tasks(config, adapter.evaluation_role(config), limit) if checks["local_task"] else []
+        report["selected_tasks"] = len(rows)
         sandbox = sandbox_preflight(runtime["sandbox"], [r.public["sandbox_image"] for r in rows])
         report["sandbox"] = sandbox
         checks["sandbox"] = not sandbox["blockers"]
+        if options.get("asset_dir") and rows:
+            from .swe_mm_assets import grader_repo, public_files
+
+            cache = path_value(options["asset_dir"])
+            data = path_value(options["dataset_dir"]) / options["split"] / "grader.jsonl"
+            private = {r["instance_id"]: r for r in map(json.loads, data.read_text().splitlines())}
+            blocked = {}
+            for task in rows:
+                try:
+                    public_files(cache, task.public)
+                    grader_repo(cache, private[task.info.task_id])
+                except (ValueError, OSError, KeyError) as exc:
+                    blocked[task.info.task_id] = type(exc).__name__
+            report["asset_blockers"] = blocked
+            checks["prepared_assets"] = not blocked
         report["remote_task_image"] = "NOT_VERIFIED by offline preflight"
     else:
         checks["arc_api_key"] = bool(os.environ.get("ARC_API_KEY"))
@@ -188,7 +204,7 @@ def main():
         config["official"]["task_ids"] = args.task_id
     adapter = get_benchmark(config)
     if args.action == "preflight":
-        report = preflight(config)
+        report = preflight(config, args.limit)
         if args.output:
             write(Path(args.output) / "preflight.json", report)
         print(json.dumps(report, indent=2))
@@ -208,7 +224,7 @@ def main():
         ]
         print(json.dumps(plans, indent=2))
         return 0
-    report = preflight(config)
+    report = preflight(config, args.limit)
     if not report["ready_for_live_attempt"]:
         print(json.dumps(report, indent=2))
         return 2

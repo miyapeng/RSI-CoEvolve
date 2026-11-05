@@ -287,6 +287,11 @@ rejected=bridge.grade(row,{'task_id':'x__x-1','image':'fixture:latest'},pred,
                      {'sandbox':{},'grading_timeout':1,'image_environment':{}},sys.argv[1],Path(sys.argv[2])/'rejected')
 assert rejected['patch_rejected'] and not rejected['resolved'] and not rejected['infra_failure']
 assert closed==[True]
+bridge.GradingTransport=lambda *args: Transport()
+cached=bridge.grade(row,{'task_id':'x__x-1','image':'fixture:latest'},pred,
+                   {'sandbox':{},'grading_timeout':1,'image_environment':{},'grader_task_repo':str(task_repo)},
+                   sys.argv[1],Path(sys.argv[2])/'cached')
+assert cached['resolved'] and not cached['missing_grader_assets']
 print('native grader + explicit transport: passed (CPU fixtures)')
 """
     env = {**os.environ, "PYTHONPATH": str(repo) + os.pathsep + str(ROOT), "PYTHONNOUSERSITE": "1"}

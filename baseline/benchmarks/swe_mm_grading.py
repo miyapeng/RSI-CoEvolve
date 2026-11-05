@@ -118,6 +118,7 @@ def grade(row, task, prediction, runtime, repo, output):
         str(Path(output).resolve() / "grading"),
         timeout=runtime["grading_timeout"],
         transport=transport,
+        task_repo=runtime.get("grader_task_repo"),
     )
     model = prediction["model_name_or_path"].replace("/", "__")
     logs = Path(output) / "grading" / model / task["task_id"]
