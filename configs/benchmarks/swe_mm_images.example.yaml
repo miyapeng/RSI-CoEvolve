@@ -1,0 +1,6 @@
+# One verified dev image, already mirrored to the user's Tencent registry.
+# Copy to configs/swe_mm_images.local.yaml; add other tasks only after mirroring.
+images:
+  swebench/sweb.eval.x86_64.markedjs_1776_marked-1435:latest:
+    image: modelbest.tencentcloudcr.com/code-interpreter/swe-mm-marked-1435:v2
+    digest: sha256:d395fcb0a68f27329812cc558047b1595fedadbefef727c8620cbf2e3f2d0f59

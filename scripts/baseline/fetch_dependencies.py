@@ -6,6 +6,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 DEPENDENCIES = {
+    "SWE-bench": ("SWE-bench/SWE-bench", "87ab1f6ced28f75ba73ca899dc759b019310944a"),
     "slime": ("THUDM/slime", "0b0c277d5b4cc66efc3b6db269e2e5184e8f3b1e"),
     "SWE-bench_Pro-os": ("scaleapi/SWE-bench_Pro-os", "66f92766bba642462d4bbe5479e83f91f9211862"),
     "Vision2Web": ("zai-org/Vision2Web", "d80a4a3d0ea7326541ad87314294269a633789e4"),
@@ -23,7 +24,7 @@ def main():
     parser.add_argument(
         "--benchmarks",
         nargs="+",
-        choices=["Vision2Web", "OSWorld", "arc-agi-3-benchmarking", "ags-cookbook"],
+        choices=["Vision2Web", "OSWorld", "arc-agi-3-benchmarking", "ags-cookbook", "SWE-bench"],
         default=[],
     )
     a = parser.parse_args()

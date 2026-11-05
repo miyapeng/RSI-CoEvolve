@@ -1,0 +1,37 @@
+# SWE-bench Multimodal v2, evaluation only. Dev is the default smoke split.
+benchmark: swe_mm
+model: gemini-3.1-pro-preview  # Set the accessId if using an enterprise gateway.
+seed: 42
+eval_repetitions: 1
+official:
+  repo: ../references/SWE-bench
+  python: python  # Activate the existing self-hpo-baseline Conda environment.
+  dataset_dir: data/benchmarks/swe-mm/4e6662d51c48e475f7f346e4fa09a6f8b31fcaa5
+  split: dev  # test is separate; never H/P selection or smoke debugging.
+  task_ids: []
+  agent_harness: harnesses/seed
+  policy_api_key_env: SWE_MM_API_KEY
+  policy_base_url: https://generativelanguage.googleapis.com/v1beta/openai/
+  policy_trust_env: false
+  runtime:
+    max_steps: 40
+    max_seconds: 900
+    command_timeout: 120
+    max_tokens: 4096
+    max_context_tokens: 32768
+    temperature: 0.0
+    top_p: 1.0
+    grading_timeout: 900
+    sandbox:
+      backend: tencent_e2b
+      key_env: E2B_API_KEY
+      template_env: E2B_TEMPLATE
+      domain_env: E2B_DOMAIN
+      proxy_env: http_proxy
+      connection: direct
+      image_manifest: configs/swe_mm_images.local.yaml
+      cpu: 4
+      memory: 8Gi
+      setup_timeout: 600
+      sandbox_timeout: 3600
+      request_timeout: 120

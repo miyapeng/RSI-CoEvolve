@@ -237,7 +237,10 @@ def test_proxy_stays_on_host_and_remote_preflight_does_not_require_docker(monkey
         cli,
         "get_benchmark",
         lambda config: NS(
-            name="vision2web", source=lambda c: {}, load_tasks=lambda *a: [NS(info=NS(task_id="fixture"))]
+            name="vision2web",
+            source=lambda c: {},
+            load_tasks=lambda *a: [NS(info=NS(task_id="fixture"))],
+            evaluation_role=lambda c: "final_test",
         ),
     )
     commands = []

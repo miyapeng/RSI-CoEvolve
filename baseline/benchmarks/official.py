@@ -69,8 +69,11 @@ class OfficialBenchmark:
             )
         return {"url": self.url, "commit": commit, "repo": str(repo)}
 
+    def evaluation_role(self, config):
+        return "final_test"
+
     def load_tasks(self, config, role, limit):
-        if role != "final_test":
+        if role != self.evaluation_role(config):
             raise ValueError(f"{self.name} is evaluation-only; do not use final benchmark tasks for H/P selection")
         if limit < 1:
             raise ValueError("Task limit must be positive")
@@ -169,7 +172,7 @@ class OfficialBenchmark:
         artifacts = [
             file_reference(p)
             for p in output.rglob("*")
-            if p.is_file() and p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".mp4"}
+            if p.is_file() and p.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp4"}
         ]
         return {
             "task_id": task.info.task_id,
@@ -178,7 +181,10 @@ class OfficialBenchmark:
             "policy_checkpoint": checkpoint,
             "harness_revision": request["harness_revision"],
             "sampling_seed": seed,
-            "sampling_params": {"seed_applied_to_model": False, "official_options": config["official"]},
+            "sampling_params": {
+                "seed_applied_to_model": native.get("seed_applied_to_model", False),
+                "official_options": config["official"],
+            },
             "trajectory": str(output / "native"),
             "termination_reason": native["termination_reason"],
             "error_type": native.get("error_type"),

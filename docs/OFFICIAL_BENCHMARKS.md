@@ -9,6 +9,7 @@ Implemented in `self-hpo-baseline`, the worktree associated with
 
 | Adapter / module | Official execution and verification | Environment |
 | --- | --- | --- |
+| `swe_mm` / `baseline/benchmarks/swe_mm.py` | Existing mini-SWE-agent + issue image inputs; native SWE-bench v5 `run_instance` / JavaScript grader | Tencent task images; separate official dev 100 / test 480, [details and measured status](SWE_MM.md) |
 | `vision2web` / `baseline/benchmarks/vision2web.py` | `DatasetManager`, `InferenceEngine.run_single_project`, `EvaluationEngine.evaluate_single_project`, `ResultAnalyzer.analyze`; default official Claude Code harness | Official Vision2Web Docker image, generated website, Playwright CLI; separate functional and visual judge models |
 | `osworld_verified` / `baseline/benchmarks/osworld.py` | `PromptAgent`, `DesktopEnv`, `lib_run_single.run_single_example`; the official driver calls `env.evaluate()` | Local Docker/KVM, VMware or VirtualBox; opt-in Tencent OSWorld desktop template, validated for one real task |
 | `arc_agi_3` / `baseline/benchmarks/arc_agi_3.py` | Official `BenchmarkingAgent` through `Swarm.main`; SDK/server scorecard | Official online ARC game API and a pinned native model profile |
@@ -38,13 +39,17 @@ existing `execution.evaluate` without starting SWE SGLang or changing `outer_loo
 `list`, `plan` and `preflight` do not call a model or create a sandbox. `run` is
 explicit and fails preflight before launching if required resources are absent.
 
-These adapters accept `final_test` tasks only. They reject use as optimization,
+Vision2Web, OSWorld and ARC accept `final_test` tasks only. SWE-MM explicitly maps
+its official dev split to `dev_eval` and test split to `final_test` (no re-split).
+They reject use as optimization,
 development or audit training pools; existing `require_swe` checks still reject
 non-SWE H/P entry points. No final benchmark has been placed in the SWE splits.
 Native API model names identify the actual configured model; they are not
 presented as exported/reloaded Qwen checkpoints. The recorded sampling seed is
 an experiment identifier; `seed_applied_to_model: false` states that these native
-APIs do not receive it. Repeated online runs need not be deterministic.
+APIs do not receive it. SWE-MM passes a seed to its OpenAI-compatible model API
+and records that separately; provider determinism is still not guaranteed.
+Repeated online runs need not be deterministic.
 
 ## Private inputs, scoring and records
 

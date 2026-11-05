@@ -222,3 +222,14 @@ No historical run, split manifest, model weight or upstream dependency source
 was modified. No remote Git operation or real task run was performed for this
 milestone. The new code's real GPU regression is **NOT RUN** by task scope;
 previous GPU results remain historical evidence only.
+
+## SWE-MM extension (2026-11-05)
+
+`SWEMultimodal` adds an explicit official dev/test mapping via
+`OfficialBenchmark.evaluation_role(config)`; all pre-existing official adapters
+keep the original `final_test` default. No H/P scheduler or training dispatch
+changed. SWE-MM uses the existing mini agent with an image-aware API boundary and
+a copy of the official SWE-bench v5 grader with an explicit Tencent transport.
+Public issue images and private test/reference images remain separate. See
+[SWE_MM.md](SWE_MM.md) for source/data pins, run commands and actual validation;
+this is evaluation support, not multimodal policy training.

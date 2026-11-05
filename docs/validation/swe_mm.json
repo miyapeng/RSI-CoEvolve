@@ -1,0 +1,110 @@
+{
+  "date_utc": "2026-11-05",
+  "benchmark": "SWE-bench Multimodal v2",
+  "adapter": "swe_mm",
+  "source_commit": "87ab1f6ced28f75ba73ca899dc759b019310944a",
+  "dataset_revision": "4e6662d51c48e475f7f346e4fa09a6f8b31fcaa5",
+  "split_counts": {
+    "dev": 100,
+    "test": 480
+  },
+  "task_id_overlap": [],
+  "repository_overlap": [],
+  "parquet_sha256": {
+    "dev": "714f4b815680608168d620c87c6b3420b3d4690d6656fc85b1da6511bfb55931",
+    "test": "ce21141e0b2aadb6b91cf21d27c93e4c159afb1c4c25b7b4ea9222d823dd9da7"
+  },
+  "tests": {
+    "baseline": {
+      "passed": 62,
+      "skipped": 2
+    },
+    "slime_agent": {
+      "passed": 49,
+      "skipped": 1
+    },
+    "official_swebench_selected": {
+      "passed": 47
+    },
+    "ruff": "PASS",
+    "pip_check": "PASS"
+  },
+  "task_id": "markedjs__marked-1435",
+  "split": "dev",
+  "sandbox_backend": "tencent_e2b",
+  "image": "modelbest.tencentcloudcr.com/code-interpreter/swe-mm-marked-1435:v2",
+  "source_and_tcr_digest": "sha256:d395fcb0a68f27329812cc558047b1595fedadbefef727c8620cbf2e3f2d0f59",
+  "oracle": {
+    "empty": {
+      "resolved": false,
+      "execution": "official no-prediction report, no sandbox"
+    },
+    "invalid": {
+      "resolved": false,
+      "execution": "real official patch rejection in fresh Tencent sandbox"
+    },
+    "reference": {
+      "resolved": true,
+      "execution": "real official grader, 679 specs, 0 failures"
+    }
+  },
+  "first_oracle_attempt": "Failed before tests: AGS commands did not inherit NVM_DIR. Fixed by restoring digest-pinned image Config.Env; failure records retained in runs/swe-mm-oracle-001.",
+  "model_capability": {
+    "route": "GEMINI_ooyf06",
+    "response_model": "gemini-3.1-pro-preview",
+    "image_description_and_bash_call": "PASS",
+    "probe_256_tokens": "length limit, no tool call",
+    "probe_2048_tokens": "tool_calls",
+    "reported_total_tokens": [
+      1425,
+      1587
+    ]
+  },
+  "live_episodes": [
+    {
+      "run": "swe-mm-dev-001",
+      "max_steps": 16,
+      "score": 0.0,
+      "termination_reason": "LimitsExceeded",
+      "error_type": null,
+      "tokens": 99024,
+      "tool_calls": 16,
+      "latency_seconds": 124.16986674629152,
+      "simulated": false,
+      "harness_revision": "2862046dc6340f9fb673ad74396318276df7cfae66f70083ff2a07b4c2822b01",
+      "adapter_code_hash": "71de8340d920ffbafa1822d1e5b3c6891730764e35828627f3bdf1df36a76af6",
+      "model_patch_submitted": false,
+      "grading": "official no-prediction result; no model patch existed to execute tests against",
+      "agent_sandbox_delete_204_recorded": true
+    },
+    {
+      "run": "swe-mm-dev-002",
+      "max_steps": 40,
+      "score": 0.0,
+      "termination_reason": "LimitsExceeded",
+      "error_type": null,
+      "tokens": 327934,
+      "tool_calls": 40,
+      "latency_seconds": 294.6941951494664,
+      "simulated": false,
+      "harness_revision": "269ba6a762e79d62ec6c1103c440406606c477cbe8dd334ed070f90fac1d2f21",
+      "adapter_code_hash": "71de8340d920ffbafa1822d1e5b3c6891730764e35828627f3bdf1df36a76af6",
+      "model_patch_submitted": false,
+      "grading": "official no-prediction result; no model patch existed to execute tests against",
+      "agent_sandbox_delete_204_recorded": true
+    }
+  ],
+  "full_dev_suite": "NOT_RUN",
+  "test_suite": "NOT_RUN",
+  "multimodal_rl": "NOT_RUN",
+  "gpu_usage": "NONE",
+  "cloud_cost_usd": null,
+  "limitations": [
+    "Only one dev task image is mirrored and oracle-validated.",
+    "Browser tasks needing SYS_ADMIN/shared memory require separate Tencent verification.",
+    "Provider network-isolation and running-image digest attestation are unverified.",
+    "Initial issue images only; no additional image-view/browser tool added to mini agent.",
+    "Both bounded Gemini attempts reached the step limit without submitting a patch; no successful model-generated repair is claimed."
+  ],
+  "status": "ADAPTER_AND_ORACLE_VALIDATED; MODEL_ATTEMPTS_UNRESOLVED"
+}

@@ -7,6 +7,9 @@ The execution path is **mini-SWE-agent → Tencent AGS/E2B task sandbox**, with 
 This repository is an implementation baseline, not a claim of reproduced RL gains.
 The [Benchmark Adapter foundation](docs/BENCHMARK_ADAPTER_DESIGN.md) delegates
 task loading, execution and verification while retaining the existing SWE path.
+[SWE-bench Multimodal v2](docs/SWE_MM.md) adds explicit **dev (100) / test (480)**
+evaluation, public issue-image inputs and the official JavaScript grader over
+Tencent E2B; it reuses the existing mini-SWE-agent execution loop.
 Official evaluation adapters for **Vision2Web, OSWorld-Verified and ARC-AGI-3**
 now call their pinned native harnesses and verifiers. See the
 [setup, commands and measured limits](docs/OFFICIAL_BENCHMARKS.md).

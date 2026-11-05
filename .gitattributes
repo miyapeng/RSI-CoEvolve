@@ -1,0 +1,2 @@
+# Unified diff files intentionally prefix empty context lines with a space.
+baseline/benchmarks/*.patch whitespace=-blank-at-eol,-blank-at-eof

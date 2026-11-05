@@ -1,0 +1,4 @@
+# Optional image decoding for SWE-MM; install into the existing CPU Conda env.
+# SWE-bench 5.0.1 is imported from the pinned external checkout in the worker,
+# not installed over the SWE training environment's swebench==4.1.0.
+Pillow==11.0.0

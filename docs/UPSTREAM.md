@@ -289,3 +289,37 @@ server and HTTP module hashes are recorded in the patch. Template source was rea
 inside disposable user-authorized sandboxes for compatibility diagnosis; it is
 not vendored. Its original action/setup routes remain in place. Runtime copies
 and patches are recorded per episode; both Git checkouts stay clean.
+
+## SWE-bench Multimodal v2 adapter (2026-11-05)
+
+Reused the existing clean SSH checkout of [SWE-bench/SWE-bench](https://github.com/SWE-bench/SWE-bench),
+default branch `main`, exact pin `87ab1f6ced28f75ba73ca899dc759b019310944a`
+(release 5.0.1), MIT. No new repository clone and no update of the training
+installation's `swebench==4.1.0`. A source-path-isolated evaluation worker imports
+v5. The source license is retained in `licenses/SWE-bench-MIT.txt`.
+
+Reused unchanged: `swebench/harness/utils.py::make_test_spec`,
+`harness/grading.py`, `harness/log_parsers/javascript.py`, `types.py` and their
+upstream tests. `swe_mm_transport.patch` adds optional explicit transport
+injection to a per-episode copy of `harness/run_evaluation.py::run_instance` and
+its binary-asset copy helper. Patch application order, asset restoration order,
+eval scripts, parser selection and scoring remain native. Default Docker code
+paths remain in that copy; the adapter supplies Tencent creation/copy/exec/cleanup.
+Missing private image assets are additionally classified as invalid evaluation,
+not ordinary task failure. The reference checkout is never patched in place.
+
+Existing project `baseline/runtime.py::run_agent`, `harnesses/seed`,
+`baseline/sandbox.py::TaskSandbox` and `baseline/tencent.py::TencentSandbox` are
+reused. Original adapter code adds public issue-image API binding and restricted
+Node PATH setup. Live AGS commands lacked the official Docker `ENV` (notably
+`NVM_DIR`), so the adapter reads `Config.Env` from the pinned OCI digest and
+restores it for trusted setup/grading; no host environment or credentials are
+forwarded. Agent commands still use the original cleared environment plus Node
+PATH. It does not copy another agent or introduce a new training loop.
+
+Pinned data: `SWE-bench/SWE-bench_Multimodal` at
+`4e6662d51c48e475f7f346e4fa09a6f8b31fcaa5`, actual dev/test sizes 100/480.
+The dataset card has no explicit license metadata; do not infer that source MIT
+covers screenshots or task repository content. Data is downloaded to existing
+ignored asset storage, not redistributed. Old dataset-card narrative counts are
+recorded as stale in [SWE_MM.md](SWE_MM.md).

@@ -27,7 +27,7 @@ def preflight(config):
         checks["source"] = False
         report["source_error"] = str(exc)
     try:
-        rows = adapter.load_tasks(config, "final_test", 1)
+        rows = adapter.load_tasks(config, adapter.evaluation_role(config), 1)
         checks["local_task"] = True
         report["example_task_id"] = rows[0].info.task_id
     except (ValueError, OSError, KeyError) as exc:
@@ -38,6 +38,7 @@ def preflight(config):
         "vision2web": ["vision2web.inference.engine", "vision2web.evaluation.engine"],
         "osworld_verified": ["desktop_env.desktop_env", "mm_agents.agent", "lib_run_single"],
         "arc_agi_3": ["benchmarking.swarm"],
+        "swe_mm": ["swebench.harness.run_evaluation", "baseline.runtime", "PIL.Image"],
     }[adapter.name]
     # Probe a separate process so an editable package from another project cannot shadow the pinned checkout.
     probe = (
@@ -127,6 +128,18 @@ def preflight(config):
             checks["local_vm"] = bool(options.get("path_to_vm")) and path_value(options["path_to_vm"]).is_file()
             if options["provider_name"] == "docker":
                 checks["kvm"] = os.access("/dev/kvm", os.R_OK | os.W_OK)
+    elif adapter.name == "swe_mm":
+        from baseline.tencent import preflight as sandbox_preflight
+
+        from .swe_mm import runtime_settings
+
+        checks["policy_api_key_env"] = bool(os.environ.get(options["policy_api_key_env"]))
+        runtime = runtime_settings(options)
+        rows = adapter.load_tasks(config, adapter.evaluation_role(config), 1) if checks["local_task"] else []
+        sandbox = sandbox_preflight(runtime["sandbox"], [r.public["sandbox_image"] for r in rows])
+        report["sandbox"] = sandbox
+        checks["sandbox"] = not sandbox["blockers"]
+        report["remote_task_image"] = "NOT_VERIFIED by offline preflight"
     else:
         checks["arc_api_key"] = bool(os.environ.get("ARC_API_KEY"))
         from .arc_agi_3 import model_profile
@@ -158,10 +171,15 @@ def main():
     parser.add_argument("--limit", type=int, default=1)
     parser.add_argument("--task-id", action="append")
     parser.add_argument("--python", help="Python executable in the benchmark's Conda environment")
-    parser.add_argument("--dataset-dir", help="Existing Vision2Web data; no downloads")
+    parser.add_argument("--dataset-dir", help="Existing benchmark data directory; no downloads")
+    parser.add_argument("--split", choices=["dev", "test"], help="Official SWE-MM split; never re-splits tasks")
     parser.add_argument("--output", help="New run directory; also optional report path for preflight")
     args = parser.parse_args()
     config = yaml.safe_load(Path(args.config).read_text())
+    if args.split:
+        if config["benchmark"] != "swe_mm":
+            parser.error("--split currently applies only to swe_mm")
+        config["official"]["split"] = args.split
     if args.python:
         config["official"]["python"] = args.python
     if args.dataset_dir:
@@ -176,7 +194,7 @@ def main():
         print(json.dumps(report, indent=2))
         return 0 if report["ready_for_live_attempt"] else 2
     adapter.source(config)
-    rows = adapter.load_tasks(config, "final_test", args.limit)
+    rows = adapter.load_tasks(config, adapter.evaluation_role(config), args.limit)
     if args.action == "list":
         print(json.dumps([{"task_id": r.info.task_id, "split": r.info.split} for r in rows], indent=2))
         return 0

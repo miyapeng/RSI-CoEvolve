@@ -1,0 +1,90 @@
+--- a/run_evaluation.py
++++ b/run_evaluation.py
+@@ -169,7 +169,8 @@
+ 
+ 
+ def _stage_image_assets(
+-    container, test_spec, log_dir: Path, logger, task_repo: str | None = None
++    container, test_spec, log_dir: Path, logger, task_repo: str | None = None,
++    copy_file=copy_to_container,
+ ) -> list[str]:
+     """Stage a patch's binary assets in the container; return restore commands.
+ 
+@@ -203,7 +204,7 @@
+         flat = asset["path"].replace("/", "__")
+         local = staging / flat
+         local.write_bytes(data)
+-        copy_to_container(container, local, PurePosixPath("/image_assets") / flat)
++        copy_file(container, local, PurePosixPath("/image_assets") / flat)
+         restore.append(
+             f"mkdir -p $(dirname {asset['path']}) && cp /image_assets/{flat} {asset['path']}"
+         )
+@@ -235,6 +236,7 @@
+     rewrite_reports: bool = False,
+     skip_patch: bool = False,
+     task_repo: str | None = None,
++    transport=None,
+ ):
+     """
+     Run a single instance with the given prediction.
+@@ -248,6 +250,11 @@
+         rewrite_reports (bool): True if eval run is just to reformat existing report
+         skip_patch (bool): True to skip applying model patch (negative test mode)
+     """
++    # RSI-CoEvolve: explicit transport seam, preserving native grading.
++    create = transport.create_container if transport else create_container
++    copy_file = transport.copy_file if transport else copy_to_container
++    execute = transport.execute if transport else exec_run_with_timeout
++    cleanup = transport.cleanup if transport else cleanup_container
+     # Set up logging directory
+     instance_id = test_spec.instance_id
+     model_name_or_path = pred.get("model_name_or_path", "None").replace("/", "__")
+@@ -281,7 +288,7 @@
+     container = None
+     try:
+         # Create container from image
+-        container = create_container(test_spec, client, run_id, logger)
++        container = create(test_spec, client, run_id, logger)
+         container.start()
+         logger.info(f"Container for {instance_id} started: {container.id}")
+ 
+@@ -292,7 +299,7 @@
+             logger.info(
+                 f"Intermediate patch for {instance_id} written to {patch_file}, now applying to container..."
+             )
+-            copy_to_container(
++            copy_file(
+                 container, patch_file, PurePosixPath(CONTAINER_PATCH_FILE)
+             )
+ 
+@@ -353,7 +360,7 @@
+         # them as urls in image_assets; without this the tests run against a
+         # missing baseline and error out.
+         restore_cmds = _stage_image_assets(
+-            container, test_spec, log_dir, logger, task_repo
++            container, test_spec, log_dir, logger, task_repo, copy_file=copy_file
+         )
+ 
+         eval_file = Path(log_dir / "eval.sh")
+@@ -361,10 +368,10 @@
+         logger.info(
+             f"Eval script for {instance_id} written to {eval_file}; copying to container..."
+         )
+-        copy_to_container(container, eval_file, PurePosixPath("/eval.sh"))
++        copy_file(container, eval_file, PurePosixPath("/eval.sh"))
+ 
+         # Run eval script, write output to logs
+-        test_output, timed_out, total_runtime = exec_run_with_timeout(
++        test_output, timed_out, total_runtime = execute(
+             container, "/bin/bash /eval.sh", timeout
+         )
+         test_output_path = log_dir / LOG_TEST_OUTPUT
+@@ -424,7 +431,7 @@
+         logger.error(error_msg)
+     finally:
+         # Remove instance container + image, close logger
+-        cleanup_container(client, container, logger)
++        cleanup(client, container, logger)
+         close_logger(logger)
+     return
+ 
