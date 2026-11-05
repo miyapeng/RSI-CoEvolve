@@ -14,7 +14,10 @@ Vision2Web also has a [Tencent E2B transport and image/probe runbook](docs/VISIO
 One real website-generation/browser/visual-scoring episode completed; that task
 had no functional cases. [ARC-AGI-3](docs/ARC_AGI_3.md) also completed a real
 eight-action official online episode and scorecard (score 0, no game win).
-OSWorld live GUI execution and multimodal H/P training remain **NOT RUN**.
+[OSWorld-Verified on Tencent](docs/OSWORLD_TENCENT.md) completed one real desktop
+episode with the official verifier and recording (3 model calls, score 0: the
+model failed the task). The existing OSWorld template is reused; no local VM or
+image build is needed. Full benchmark suites and multimodal H/P training remain **NOT RUN**.
 **One real Qwen3.5-9B GRPO update has passed on 4 A100 80GB GPUs**, followed by
 dense checkpoint export, fresh-server reload and a successful Tencent task rollout.
 **Two real H/P rounds also completed** (job 1428745), with two further GRPO updates,

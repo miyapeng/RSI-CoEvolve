@@ -96,11 +96,37 @@ def preflight(config):
                     "Set VISION2WEB_SANDBOX_IMAGE to a real TCR tag@sha256 and check the tencent settings"
                 )
     elif adapter.name == "osworld_verified":
-        checks["provider"] = options["provider_name"] in {"docker", "vmware", "virtualbox"}
+        checks["provider"] = options["provider_name"] in {"docker", "vmware", "virtualbox", "tencent_e2b"}
         checks["policy_api_key_env"] = bool(os.environ.get(options["policy_api_key_env"]))
-        checks["local_vm"] = bool(options.get("path_to_vm")) and path_value(options["path_to_vm"]).is_file()
-        if options["provider_name"] == "docker":
-            checks["kvm"] = os.access("/dev/kvm", os.R_OK | os.W_OK)
+        if options["provider_name"] == "tencent_e2b":
+            from .osworld_tencent import source
+
+            checks["sandbox_key"] = bool(os.environ.get(options["tencent"]["key_env"]))
+            checks["patch_tool"] = bool(shutil.which("patch"))
+            try:
+                probe = subprocess.run(
+                    [
+                        options.get("python", "python"),
+                        "-c",
+                        "import e2b,aiohttp; import importlib.metadata as m; print(m.version('e2b'))",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=20,
+                )
+                checks["e2b_sdk"] = probe.returncode == 0 and probe.stdout.strip() == "2.62.0"
+            except (OSError, subprocess.TimeoutExpired):
+                checks["e2b_sdk"] = False
+            try:
+                report["tencent_source"] = source(options)
+                checks["tencent_source"] = True
+            except (ValueError, OSError, subprocess.CalledProcessError):
+                checks["tencent_source"] = False
+            report["remote_desktop"] = "NOT_VERIFIED by offline preflight"
+        else:
+            checks["local_vm"] = bool(options.get("path_to_vm")) and path_value(options["path_to_vm"]).is_file()
+            if options["provider_name"] == "docker":
+                checks["kvm"] = os.access("/dev/kvm", os.R_OK | os.W_OK)
     else:
         checks["arc_api_key"] = bool(os.environ.get("ARC_API_KEY"))
         from .arc_agi_3 import model_profile

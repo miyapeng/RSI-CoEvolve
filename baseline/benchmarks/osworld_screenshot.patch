@@ -1,0 +1,7 @@
+--- a/python.py
++++ b/python.py
+@@ -1,0 +2 @@
++import os
+@@ -156 +157 @@
+-                response = requests.get(self.http_server + "/screenshot", timeout=10)
++                response = requests.get(self.http_server + "/screenshot", timeout=float(os.environ.get("OSWORLD_SCREENSHOT_TIMEOUT", "10")))

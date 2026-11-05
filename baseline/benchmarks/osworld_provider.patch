@@ -1,0 +1,10 @@
+--- a/desktop_env.py
++++ b/desktop_env.py
+@@ -107,0 +108 @@
++            provider_pair: Optional[Tuple[Any, Any]] = None,
+@@ -161 +162 @@
+-        self.manager, self.provider = create_vm_manager_and_provider(provider_name, region, use_proxy=False)
++        self.manager, self.provider = provider_pair or create_vm_manager_and_provider(provider_name, region, use_proxy=False)
+@@ -168 +169 @@
+-        if self.provider_name in {"docker", "aws", "gcp", "azure", "aliyun", "volcengine", "fastvm", "pyromind", "modal", "daytona"}:
++        if self.provider_name in {"docker", "aws", "gcp", "azure", "aliyun", "volcengine", "fastvm", "pyromind", "modal", "daytona", "tencent_e2b"}:

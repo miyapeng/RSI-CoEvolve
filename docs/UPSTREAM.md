@@ -248,3 +248,44 @@ The [official game-access docs](https://docs.arcprize.org/available-games) and
 [official SDK](https://github.com/arcprize/ARC-AGI) informed anonymous public-game
 access. A returned catalog does not establish play authorization for all games.
 Measured results and environment/test commands: [ARC_AGI_3.md](ARC_AGI_3.md).
+
+
+## OSWorld Tencent desktop provider (2026-11-05 UTC)
+
+Reused clean xlang-ai/OSWorld `8903ebeb0efdf74331bd7dc37ed91ccbbff22317`.
+New external SSH clone: [TencentCloudAgentRuntime/ags-cookbook](https://github.com/TencentCloudAgentRuntime/ags-cookbook),
+default branch `main`, pin `b83d476e5e31006570cd8fab9a55ee342ca41491`, Apache-2.0
+(root `LICENSE-Agent Sandbox Cookbook.txt`). No project-owned unlicensed source
+is copied. The cookbook's OSWorld overlay targets an older base, so its full
+DesktopEnv is not overlaid on the current pin.
+
+Reused through per-episode copies: `examples/osworld-ags/overlay/OSWorld/desktop_env/providers/ags/`
+`provider.py`, `manager.py`, `config.py`, `sandbox_setup.py`, `cdp_proxy.py`,
+`socat_wrapper.sh`. Reused its authenticated HTTP/WebSocket proxies and guest
+CDP bridge; a small `osworld_ags_stream.patch` changes buffered successful HTTP
+responses to streaming without changing payloads. A separate
+`osworld_screenshot.patch` makes the read-only screenshot idle timeout explicit
+(60 seconds for the measured Tencent link), leaving action execution unchanged. Overrode lifecycle to use E2B 2.62, verify tool identity, propagate
+cleanup failure and replace no-op snapshot reset with fresh-instance creation.
+The official cookbook tests for sandbox bootstrap and CDP proxy are run directly.
+
+Modified-at-runtime copy: OSWorld `desktop_env/desktop_env.py` constructor only,
+through the versioned `baseline/benchmarks/osworld_provider.patch` (Apache-2.0;
+license retained in `licenses/OSWorld-Apache-2.0.txt`). Original reset, step,
+recording checks, task setup and evaluators remain unchanged. Original adapter
+`osworld_gateway.py` subclasses native `PromptAgent` only at `call_llm`, retaining
+its prompts/history/parser. `requirements/osworld-eval.in` selects the official
+evaluator dependencies for a separate CPU host environment, excluding unused
+providers and agents. No Slime/training settings are changed.
+
+The [Tencent OSWorld beta guide](https://cloud.tencent.com.cn/document/product/1814/129382)
+was checked for the native API/tool-name protocol and official cookbook link.
+Actual template and run evidence: [OSWORLD_TENCENT.md](OSWORLD_TENCENT.md).
+
+`osworld_recording_guest.patch` adds a hash-guarded Tencent modular-launcher case
+to native `recording_update/guest.py`. Official discovery, installer transaction,
+rollback and recorder handlers remain unchanged. The inspected Tencent launcher,
+server and HTTP module hashes are recorded in the patch. Template source was read
+inside disposable user-authorized sandboxes for compatibility diagnosis; it is
+not vendored. Its original action/setup routes remain in place. Runtime copies
+and patches are recorded per episode; both Git checkouts stay clean.

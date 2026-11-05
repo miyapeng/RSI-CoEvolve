@@ -4,9 +4,17 @@ This is a Git worktree derived from Microsoft/MSR-Orchard Self-HPO at the commit
 
 The retained mini-SWE-agent fork is covered by [mini-swe-agent/LICENSE.md](mini-swe-agent/LICENSE.md) (MIT). The historical bundled Slime is covered by [slime/LICENSE](slime/LICENSE) (Apache-2.0). Active training imports the separate THUDM/slime dependency (Apache-2.0), with its license retained in that checkout. Native Slime test fixtures are imported from that dependency only during tests.
 
-E2B SDK 2.62.0 is an Apache-2.0 dependency, not vendored. Tencent transport adapts MIT code from the earlier local prototype using the supplied integration protocol. Orchard-Agentic (MIT) remains an unchanged historical reference, no longer an active requirement. SWE-bench_Pro-os (MIT, Scale AI) remains separate and unchanged. SWE-bench 4.1.0 package notices are retained. Model weights and task repositories are not redistributed; their individual terms still apply. Public split metadata does not relicense dataset contents or task code.
+E2B SDK 2.62.0 is an MIT dependency (installed package license metadata), not vendored. Tencent transport adapts MIT code from the earlier local prototype using the supplied integration protocol. Orchard-Agentic (MIT) remains an unchanged historical reference, no longer an active requirement. SWE-bench_Pro-os (MIT, Scale AI) remains separate and unchanged. SWE-bench 4.1.0 package notices are retained. Model weights and task repositories are not redistributed; their individual terms still apply. Public split metadata does not relicense dataset contents or task code.
 
 Exact commits, source paths and modification types: [UPSTREAM.md](docs/UPSTREAM.md).
+
+OSWorld and TencentCloudAgentRuntime/ags-cookbook are external Apache-2.0
+dependencies. The `baseline/benchmarks/osworld_provider.patch` and
+`osworld_recording_guest.patch` / `osworld_screenshot.patch` are derived
+from xlang-ai/OSWorld's environment constructor, screenshot HTTP call and recording installer.
+`osworld_ags_stream.patch` modifies the Apache-2.0 Tencent proxy's HTTP buffering. Its Apache-2.0 license is retained at
+`licenses/OSWorld-Apache-2.0.txt`. Upstream prompts, controllers, evaluators and
+Tencent proxy helpers remain in their pinned source checkouts with their notices.
 
 The adjacent NVIDIA/Megatron-LM training source is BSD-3-Clause by default, with
 additional per-file third-party notices retained in its full LICENSE. The two

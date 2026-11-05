@@ -1,0 +1,22 @@
+--- a/provider.py
++++ b/provider.py
+@@ -275,0 +276,16 @@
++                    if response.status < 400:
++                        # Forward bytes as they arrive: native OSWorld's screenshot
++                        # timeout is an idle timeout, not a whole-download budget.
++                        headers = {k: v for k, v in response.headers.items()
++                                   if k.lower() not in ("transfer-encoding", "content-encoding", "content-length", "connection")}
++                        stream = web.StreamResponse(status=response.status, headers=headers)
++                        await stream.prepare(request)
++                        try:
++                            async for chunk in response.content.iter_chunked(64 * 1024):
++                                await stream.write(chunk)
++                            await stream.write_eof()
++                        except BaseException:
++                            if request.transport is not None:
++                                request.transport.close()
++                            raise
++                        return stream
+@@ -738 +754 @@
+-                response = requests.get(url, timeout=(10, 10))
++                response = requests.get(url, timeout=(10, self.screenshot_timeout))

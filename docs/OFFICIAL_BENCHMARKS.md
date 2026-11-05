@@ -10,10 +10,12 @@ Implemented in `self-hpo-baseline`, the worktree associated with
 | Adapter / module | Official execution and verification | Environment |
 | --- | --- | --- |
 | `vision2web` / `baseline/benchmarks/vision2web.py` | `DatasetManager`, `InferenceEngine.run_single_project`, `EvaluationEngine.evaluate_single_project`, `ResultAnalyzer.analyze`; default official Claude Code harness | Official Vision2Web Docker image, generated website, Playwright CLI; separate functional and visual judge models |
-| `osworld_verified` / `baseline/benchmarks/osworld.py` | `PromptAgent`, `DesktopEnv`, `lib_run_single.run_single_example`; the official driver calls `env.evaluate()` | Official Ubuntu desktop VM with Docker/KVM, VMware or VirtualBox; this adapter currently checks local providers only |
+| `osworld_verified` / `baseline/benchmarks/osworld.py` | `PromptAgent`, `DesktopEnv`, `lib_run_single.run_single_example`; the official driver calls `env.evaluate()` | Local Docker/KVM, VMware or VirtualBox; opt-in Tencent OSWorld desktop template, validated for one real task |
 | `arc_agi_3` / `baseline/benchmarks/arc_agi_3.py` | Official `BenchmarkingAgent` through `Swarm.main`; SDK/server scorecard | Official online ARC game API and a pinned native model profile |
 
-No upstream agent loop, prompt, action parser or verifier was copied or rewritten.
+Upstream agent loops, prompts, action parsers and verifiers remain in pinned
+dependencies. The Tencent OSWorld worker makes a per-episode source copy for
+explicit provider, screenshot-transport and recorder compatibility patches.
 The OSWorld single-example function is also used by its ordinary parallel runner;
 we call it directly for one bounded episode and close the environment in `finally`.
 ARC retains the official profile's state management; its separate bounded smoke
@@ -24,7 +26,8 @@ serve the working SWE baseline. Vision2Web now has an opt-in
 visual-scoring episode recorded on 2026-11-05 (no functional cases in that task).
 [ARC online inference](ARC_AGI_3.md) also completed an eight-action public-game
 smoke and official scorecard. ARC needs no Tencent sandbox in this online path;
-OSWorld still requires a separate desktop VM. A SWE command container is not one.
+OSWorld now reuses the supplied Tencent OSWorld desktop template through its
+[Tencent adapter](OSWORLD_TENCENT.md). A SWE command container is not a desktop VM.
 
 The existing adapter registry dispatches these names. `official.py` adds only
 task identity, a clean pinned-source check, a subprocess boundary and common
@@ -133,13 +136,13 @@ python scripts/baseline/fetch_dependencies.py --check \
 # On a new machine only; reuse existing Conda environments when possible.
 conda create -n rsi-vision2web python=3.12 pip
 conda run -n rsi-vision2web python -m pip install -e ../references/Vision2Web
-conda create -n rsi-osworld python=3.12 pip
-conda run -n rsi-osworld python -m pip install -r ../references/OSWorld/requirements.txt
+# OSWorld: use environment-osworld.yml and the CPU lock in OSWORLD_TENCENT.md.
 # ARC: use environment-arc3.yml and the frozen-lock commands in ARC_AGI_3.md.
 ```
 
-OSWorld's dependency/VM stack remains untested. Its upstream requirements contain
-unbounded entries. ARC's frozen `uv.lock` export was installed inside `rsi-arc3`
+OSWorld's focused dependency profile is frozen in `requirements/osworld-eval.lock`
+and tested in Conda `rsi-osworld`; its upstream requirements contain unbounded
+entries. ARC's frozen `uv.lock` export was installed inside `rsi-arc3`
 (including `arc-agi==0.9.9`); plain pip installation of its `pyproject` would not
 enforce that lock. The worker imports its pinned source directly. Per-episode
 package inventories are recorded. The SWE CPU and GPU environments were not upgraded.
@@ -227,7 +230,9 @@ Measured on 2026-11-04:
 
 The 2026-11-05 follow-ups completed Vision2Web website/browser/visual scoring
 and ARC public-game inference/scorecard; see their runbooks for exact budgets
-and limitations. OSWorld still needs a validated desktop VM. Multimodal Slime data,
+and limitations. The subsequent [OSWorld Tencent smoke](OSWORLD_TENCENT.md)
+completed one desktop task, recording and official evaluation (score 0, model
+failure; successful execution is not task success). Multimodal Slime data,
 vision tensors/logprobs/masks and domain-specific H-step edit gates remain separate
 engineering work, not capabilities supplied by these evaluation adapters.
 

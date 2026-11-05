@@ -1,0 +1,12 @@
+--- a/guest.py
++++ b/guest.py
+@@ -32,0 +33,4 @@
++    # Tencent's main.py is a small launcher, with HTTP handlers in src/.
++    if digest(source.encode()) == 'df5c72e8eb70483eee7022bf6c0c718bc0774725fdcb2275eae2e4ba1236896d':
++        lines = source.splitlines(keepends=True)
++        return lines, 0, len(lines), 'df5c72e8eb70483eee7022bf6c0c718bc0774725fdcb2275eae2e4ba1236896d'
+@@ -54,0 +59,4 @@
++    if digest(source.encode()) == 'df5c72e8eb70483eee7022bf6c0c718bc0774725fdcb2275eae2e4ba1236896d':
++        result = 'import os, logging, hashlib\nfrom pathlib import Path\nfrom flask import jsonify, send_file\nfrom Xlib import display\nfrom screen_recording import ScreenRecorder, RecordingError, recording_build_id\n# Only this inspected Tencent modular server is supported. Other layouts fail closed.\nfor relative, expected in {\n    "src/server.py": "30774953a153876d36c8cb9683f25d669fb5272a7ed7d2b278d445d4a2c1276a",\n    "src/http_routes.py": "2b5a42dd336416343b48556a395412bcbb08785d62fece3616ab9f738aa1eeaf",\n}.items():\n    if hashlib.sha256(Path(__file__).with_name("src").joinpath(Path(relative).name).read_bytes()).hexdigest() != expected:\n        raise RuntimeError("Unrecognized Tencent server source: " + relative)\nfrom src.server import app, asgi_app, main\n# Keep every task/action route; replace only the two recording handlers.\nfor endpoint in ("start_recording", "end_recording"):\n    app.view_functions.pop(endpoint)\nlogger = logging.getLogger("osworld.recording")\nrecorder = ScreenRecorder()\n\n' + routes + '\n\n_RECORDING_BUILD_ID = recording_build_id(__file__)\n\nif __name__ == "__main__":\n    main()\n'
++        compile(result, 'patched-main.py', 'exec')
++        return result

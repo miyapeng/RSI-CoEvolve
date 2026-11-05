@@ -12,6 +12,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 packages = ["baseline", "baseline.benchmarks"]
 
+[tool.setuptools.package-data]
+"baseline.benchmarks" = ["*.patch"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests/baseline"]
 asyncio_default_fixture_loop_scope = "function"

@@ -1,0 +1,35 @@
+# Independent official evaluation, one real desktop task by default.
+benchmark: osworld_verified
+model: GEMINI_ooyf06
+seed: 42
+eval_repetitions: 1
+official:
+  repo: ../references/OSWorld
+  python: /user/miyapeng/miniconda3/envs/rsi-osworld/bin/python
+  task_ids: [os/f9be0997-4b7c-45c5-b05c-4612b44a6118]
+  suite: test_all.json
+  provider_name: tencent_e2b
+  policy_transport: openai_chat
+  policy_api_key_env: LLM_CENTER_API_KEY
+  policy_base_url: https://llm-center.modelbest.co/v1
+  model_request_timeout: 90
+  observation_type: screenshot
+  action_space: pyautogui
+  screen_width: 1920
+  screen_height: 1080
+  max_steps: 8
+  max_trajectory_length: 3
+  sleep_after_execution: 2.0
+  max_tokens: 2048
+  temperature: 1.0
+  top_p: 0.9
+  tencent:
+    cookbook_repo: ../references/ags-cookbook
+    key_env: E2B_API_KEY
+    domain: ap-guangzhou.tencentags.com
+    template: osworld-2qqhvdmu2a4
+    tool_id: sdt-m63gjp45
+    sandbox_timeout: 1800
+    request_timeout: 45
+    ready_timeout: 120
+    screenshot_timeout: 60

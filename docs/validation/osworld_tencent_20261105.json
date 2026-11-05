@@ -1,0 +1,109 @@
+{
+  "date": "2026-11-05",
+  "run": "runs/osworld-tencent-live-20261105-02",
+  "simulated": false,
+  "pipeline_complete": true,
+  "task_id": "os/f9be0997-4b7c-45c5-b05c-4612b44a6118",
+  "official_score": 0.0,
+  "task_solved": false,
+  "termination_reason": "official_evaluated",
+  "requested_model": "GEMINI_ooyf06",
+  "returned_models": [
+    "gemini-3.1-pro-preview"
+  ],
+  "model_calls": 3,
+  "actions": 3,
+  "max_model_turns": 8,
+  "gateway_usage_totals": {
+    "prompt_tokens": 8346,
+    "completion_tokens": 1985,
+    "total_tokens": 10331
+  },
+  "monetary_cost": null,
+  "latency_seconds": 348.7350116465241,
+  "harness_revision": "a0324e40d303b4e82e509507a726df60055de562d50f3b9398d024f1746faba7",
+  "adapter_code_hash": "658af3fa34b4a3b26412bc2b1c9fceb95f50b2f2b25dc38178294352e9957937",
+  "osworld": {
+    "url": "https://github.com/xlang-ai/OSWorld",
+    "commit": "8903ebeb0efdf74331bd7dc37ed91ccbbff22317",
+    "repo": "/user/miyapeng/rsi_evolve/references/OSWorld"
+  },
+  "tencent_source": {
+    "repo": "/user/miyapeng/rsi_evolve/references/ags-cookbook",
+    "commit": "b83d476e5e31006570cd8fab9a55ee342ca41491",
+    "provider_patch_sha256": "3400e960f35f7c70e763358a7ec19326483f7bd8609b0015740c16142853639e",
+    "http_stream_patch_sha256": "05772d2db05d27f896875517f0e8a399336e1bdfed814ecc93ca3ca0f0dfdd8c",
+    "recording_guest_patch_sha256": "608f8ea30e134894e8f5afe51d6d2ee5378195073e40c0d4a6e05d5c30cb2f7b",
+    "screenshot_patch_sha256": "0e5b9a86fd67d84f1977ede9cd3397ad7f8fc4196e3a61cbed5b1ca9111fd8ed"
+  },
+  "template": "osworld-2qqhvdmu2a4",
+  "tool_id": "sdt-m63gjp45",
+  "domain": "ap-guangzhou.tencentags.com",
+  "sandbox_cpu": 4,
+  "sandbox_memory_mb": 8192,
+  "gpu_used": false,
+  "recording_build_id": "696bf8a799594a498a0c673da5447068c74825b6d8fa5020d51ddfbedc1e7ef2",
+  "recording_update_status": "updated",
+  "keyboard_autorepeat": {
+    "x11_disabled": true,
+    "gnome_persisted": true
+  },
+  "cleanup_confirmed": true,
+  "video": {
+    "bytes": 3405721,
+    "sha256": "a6f4c186209bb160d02b1d310f3b479f11af00ab248edc88d8b51058d40fe3f5",
+    "first_frame_decodable": true,
+    "fps": 30.0,
+    "frames": 4559.0,
+    "native_coverage": "unknown"
+  },
+  "diagnosis": "Model clicked the wrong desktop location then emitted DONE. Official evaluator observed notifications still enabled and returned 0. No agent correction or score override was applied.",
+  "tests": {
+    "baseline": {
+      "passed": 56,
+      "skipped": 2
+    },
+    "osworld_adapter_in_conda": {
+      "passed": 5
+    },
+    "tencent_upstream_helpers": {
+      "passed": 13
+    },
+    "osworld_upstream_selected": {
+      "passed": 58,
+      "failed": 1,
+      "failure": "test_recording_update.py::test_boot_path_checks_again_and_failure_blocks_setup: unchanged upstream fixture lacks _disable_key_autorepeat"
+    },
+    "ruff": "passed",
+    "pip_check": "passed"
+  },
+  "not_run": [
+    "full OSWorld suite",
+    "actual browser CDP task",
+    "GUI-HARVEST comparison",
+    "multimodal training"
+  ],
+  "sandbox_instances_including_diagnostics": 9,
+  "all_diagnostic_and_episode_sandboxes_cleaned_up": true,
+  "patch_serialization": {
+    "note": "Live patch checksums above refer to contextual diffs archived in run/source_patches. Repository patches subsequently normalized to zero-context diffs to preserve clean whitespace; applying each to its pinned source produces byte-identical output. No additional model run was needed.",
+    "canonical_repository_patches": {
+      "osworld_provider.patch": {
+        "byte_identical_patched_source": true,
+        "sha256": "a786680930bbccea2750785ba5725fb5187218c09f9464f3c3c4147bc242eabb"
+      },
+      "osworld_recording_guest.patch": {
+        "byte_identical_patched_source": true,
+        "sha256": "c9284823f082cd754debfc7a303582a7242b899f09f27608a97bc349cc1c3b98"
+      },
+      "osworld_screenshot.patch": {
+        "byte_identical_patched_source": true,
+        "sha256": "60fc5c5fe7c46fe980fdd26d2daaf9dd9095cc44adc543b2288bd0316d30a201"
+      },
+      "osworld_ags_stream.patch": {
+        "byte_identical_patched_source": true,
+        "sha256": "20e62af268c28ee91ed56aedfc3a8181a3ceec77ab87939d7ae8a9e06f8a5e45"
+      }
+    }
+  }
+}
