@@ -10,6 +10,9 @@ task loading, execution and verification while retaining the existing SWE path.
 Official evaluation adapters for **Vision2Web, OSWorld-Verified and ARC-AGI-3**
 now call their pinned native harnesses and verifiers. See the
 [setup, commands and measured limits](docs/OFFICIAL_BENCHMARKS.md).
+Vision2Web also has a [Tencent E2B transport and image/probe runbook](docs/VISION2WEB_TENCENT.md).
+Its real command/file/background-server transport test passed; the Web image,
+browser and official scoring still require live validation.
 Their contracts have CPU tests; live visual/GUI/game evaluations and multimodal
 H/P training have **not** been validated.
 **One real Qwen3.5-9B GRPO update has passed on 4 A100 80GB GPUs**, followed by

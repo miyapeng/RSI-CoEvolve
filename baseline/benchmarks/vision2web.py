@@ -1,5 +1,6 @@
-"""Vision2Web official Docker inference, browser verifier and ResultAnalyzer."""
+"""Vision2Web official inference, browser verifier and ResultAnalyzer."""
 
+import json
 from pathlib import Path
 
 from baseline.records import digest, sha
@@ -50,6 +51,40 @@ class Vision2Web(OfficialBenchmark):
                     )
                 )
         return rows
+
+
+def evaluation_artifacts(workspace, project):
+    """Report missing verifier evidence separately from the native zero-filled scores."""
+    workflows = json.loads((project.path / "workflow.json").read_text())
+    expected = []
+    for idx, workflow in enumerate(workflows):
+        for name in workflow.get("prototype", {}):
+            expected.append(workspace / "test_results/prototypes" / f"{name}_scores.json")
+        for case_idx, _ in enumerate(workflow.get("content", [])):
+            expected.append(workspace / f"test_results/workflow_{idx}/test_case_{case_idx}/result.json")
+    missing, invalid = [], []
+    for path in expected:
+        relative = str(path.relative_to(workspace))
+        if not path.is_file():
+            missing.append(relative)
+            continue
+        try:
+            value = json.loads(path.read_text())
+            valid = (
+                (isinstance(value, list) and bool(value) and all("score" in x for x in value))
+                if path.name.endswith("_scores.json")
+                else (isinstance(value, dict) and bool(value.get("result")))
+            )
+            if not valid:
+                invalid.append(relative)
+        except (ValueError, TypeError):
+            invalid.append(relative)
+    return {
+        "expected_files": len(expected),
+        "missing": missing,
+        "invalid": invalid,
+        "complete": bool(expected) and not missing and not invalid,
+    }
 
 
 async def run_native(request):
@@ -105,11 +140,14 @@ async def run_native(request):
     )
     analysis = ResultAnalyzer(str(c.results_dir)).analyze(str(c.datasets_dir))
     write(Path(request["output"]) / "analysis.json", analysis)
+    artifacts = evaluation_artifacts(workspace, project)
+    write(Path(request["output"]) / "evaluation_artifacts.json", artifacts)
+    complete = evaluated["status"] == "success" and artifacts["complete"]
     # Keep official VS/FS and failure status. No invented scalar reward or weighting.
     return {
         "task_id": request["task_id"],
         "score": None,
-        "metrics": {"analysis": analysis, "evaluation": evaluated},
-        "termination_reason": "official_evaluation_" + evaluated["status"],
-        "error_type": "OfficialEvaluationError" if evaluated["status"] != "success" else None,
+        "metrics": {"analysis": analysis, "evaluation": evaluated, "artifacts": artifacts},
+        "termination_reason": "official_evaluation_" + (evaluated["status"] if complete else "incomplete"),
+        "error_type": None if complete else "OfficialEvaluationIncomplete",
     }

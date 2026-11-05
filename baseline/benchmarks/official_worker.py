@@ -1,6 +1,7 @@
 """Subprocess entry: import the pinned native harness before any globally installed copy."""
 
 import asyncio
+import contextlib
 import importlib
 import json
 import logging
@@ -34,7 +35,18 @@ def main():
     )
     module = importlib.import_module(adapter.__module__)
     if adapter.name == "vision2web":
-        result = asyncio.run(module.run_native(request))
+        with contextlib.ExitStack() as stack:
+            if request["options"].get("transport", "docker") == "tencent_e2b":
+                from baseline.benchmarks.vision2web_e2b import transport
+
+                stack.enter_context(transport(request))
+
+            async def run():
+                return await asyncio.wait_for(
+                    module.run_native(request), timeout=request["options"].get("episode_timeout", 14400)
+                )
+
+            result = asyncio.run(run())
     else:
         result = module.run_native(request)
     write(Path(request["output"]) / "native_result.json", result)

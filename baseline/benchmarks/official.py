@@ -94,6 +94,10 @@ class OfficialBenchmark:
         if checkpoint != config["model"]:
             raise ValueError("Policy identity must match the model passed to the official harness")
         options = dict(config["official"])
+        if self.name == "vision2web" and options.get("transport", "docker") == "tencent_e2b":
+            from .vision2web_e2b import validate
+
+            validate(options)
         if options.get("path_to_vm"):
             options["path_to_vm"] = str(path_value(options["path_to_vm"]))
         # Credentials are environment references only, never request JSON or argv.

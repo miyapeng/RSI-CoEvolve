@@ -64,6 +64,37 @@ def preflight(config):
     if adapter.name == "vision2web":
         for field in ("policy_api_key_env", "functional_api_key_env", "visual_api_key_env"):
             checks[field] = bool(os.environ.get(options[field]))
+        transport = options.get("transport", "docker")
+        checks["transport"] = transport in {"docker", "tencent_e2b"}
+        if transport == "tencent_e2b":
+            from baseline.tencent import SDK_VERSION
+
+            from .vision2web_e2b import validate
+
+            try:
+                cfg = validate(options)
+                checks["tencent_config"] = True
+                checks["e2b_key"] = bool(os.environ.get(cfg["key_env"]))
+                if cfg["connection"] == "proxy":
+                    checks["e2b_proxy"] = bool(os.environ.get(cfg["proxy_env"]))
+                p = subprocess.run(
+                    [
+                        options.get("python", "python"),
+                        "-c",
+                        "import importlib.metadata; print(importlib.metadata.version('e2b'))",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=20,
+                )
+                checks["e2b_sdk"] = p.returncode == 0 and p.stdout.strip() == SDK_VERSION
+                report["remote_image_tools"] = "NOT_VERIFIED; run the Tencent probe"
+            except (ValueError, KeyError, OSError) as exc:
+                checks["tencent_config"] = False
+                report["tencent_error_type"] = type(exc).__name__
+                report["tencent_requirement"] = (
+                    "Set VISION2WEB_SANDBOX_IMAGE to a real TCR tag@sha256 and check the tencent settings"
+                )
     elif adapter.name == "osworld_verified":
         checks["provider"] = options["provider_name"] in {"docker", "vmware", "virtualbox"}
         checks["policy_api_key_env"] = bool(os.environ.get(options["policy_api_key_env"]))
@@ -80,7 +111,9 @@ def preflight(config):
         if entry:
             report["native_profile"] = entry  # Only pinned public config; no environment values.
             checks["policy_api_key_env"] = bool(os.environ.get(entry["client"]["api_key_env"]))
-    if adapter.name == "vision2web" or (adapter.name == "osworld_verified" and options["provider_name"] == "docker"):
+    if (adapter.name == "vision2web" and options.get("transport", "docker") == "docker") or (
+        adapter.name == "osworld_verified" and options["provider_name"] == "docker"
+    ):
         checks["docker_image"] = False
         if shutil.which("docker"):
             image = options.get("sandbox_image", "happysixd/osworld-docker")
@@ -140,8 +173,12 @@ def main():
     from baseline.execution import evaluate
 
     results = evaluate(None, rows, config["model"], config["official"]["repo"], config, root / "episodes")
-    write(root / "summary.json", {"benchmark": adapter.name, "results": results, "training": "NOT_RUN"})
-    return 0
+    complete = all(not r.get("error_type") for r in results)
+    write(
+        root / "summary.json",
+        {"benchmark": adapter.name, "results": results, "complete": complete, "training": "NOT_RUN"},
+    )
+    return 0 if complete else 1
 
 
 if __name__ == "__main__":

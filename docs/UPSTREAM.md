@@ -156,6 +156,20 @@ general Python sandbox security or a retroactive candidate promotion.
 
 ## Official visual / GUI / interactive-game evaluation adapters (2026-11-04)
 
+Vision2Web's optional Tencent adaptation adds an original process-local Docker
+command bridge in `baseline/benchmarks/vision2web_e2b.py`; the official source
+remains clean at the commit below. The directly invoked command surface was
+audited in `core/sandbox.py`, `inference/adapters/claude_code.py`, and
+`evaluation/{engine,functional_tester}.py`. The build helper invokes the
+unmodified upstream `docker/Dockerfile` externally (not vendored). Runtime
+dependency `e2b==2.62.0` retains the existing SDK dependency boundary; its installed
+package metadata declares `License-Expression: MIT`.
+The user's `Visual-Self-Verification/evaluate/vision2web/clusterx_transport/docker`
+was read as a transport-design reference; no sibling source or prompts were
+copied. The new bridge manages real Tencent lifetimes rather than reusing a
+ClusterX job's local filesystem. Actual tests and remaining image blocker are
+in `docs/VISION2WEB_TENCENT.md`.
+
 All three source repositories were newly cloned with SSH into the adjacent
 `/user/miyapeng/rsi_evolve/references/`, outside the main project's Git tree.
 Default branches were checked as `main`. The pinned tracked code is unmodified;

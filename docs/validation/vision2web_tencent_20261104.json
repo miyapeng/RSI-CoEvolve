@@ -1,0 +1,62 @@
+{
+  "date": "2026-11-04",
+  "scope": "Vision2Web official SandboxManager through Tencent E2B transport",
+  "source": "d80a4a3d0ea7326541ad87314294269a633789e4",
+  "simulated": false,
+  "transport": {
+    "status": "PASS",
+    "elapsed_seconds": 10.17,
+    "cleanup": true,
+    "checks": {
+      "official_exec": true,
+      "detached_website": true,
+      "binary_upload_stdin_download": true
+    },
+    "cpu": 1,
+    "memory": "1Gi",
+    "image": "modelbest.tencentcloudcr.com/aweaiteam/scaleswe:open-feature_python-sdk_pr329@sha256:5bb2476cad1c647e22e267a9caedbb24efd6cf03948357b9f929177a6bf8b950",
+    "evidence": "runs/vision2web-e2b-transport-ready-20261104/report.json",
+    "adapter_code_hash": "58c1161d270dd7ec6b5b3b018c69c0126117b4b42c61e776035f0ac11eb065e8"
+  },
+  "model_calls": 0,
+  "browser": "NOT_RUN",
+  "official_scoring": "NOT_RUN",
+  "multimodal_rl": "NOT_RUN",
+  "image_build": {
+    "status": "BLOCKED",
+    "engine": "podman",
+    "exit_code": 125,
+    "reason": "Ubuntu layer ApplyLayer failed: remount / permission denied",
+    "log": "runs/vision2web-image-build-20261104/build.log"
+  },
+  "cpu_tests": {
+    "baseline_passed": 47,
+    "baseline_skipped": 1,
+    "upstream_agent_passed": 49,
+    "upstream_agent_skipped": 1,
+    "ruff": "PASS",
+    "shell_syntax": "PASS"
+  },
+  "limitations": [
+    "No compatible Web image was verified in TCR",
+    "Real browser and official judge validation remain outstanding",
+    "Fixture scores are not benchmark measurements"
+  ],
+  "additional_attempts": [
+    {
+      "evidence": "runs/vision2web-e2b-transport-20261104/report.json",
+      "status": "PASS",
+      "elapsed_seconds": 15.31,
+      "cleanup": true
+    },
+    {
+      "evidence": "runs/vision2web-e2b-transport-final-20261104/report.json",
+      "status": "FAIL",
+      "error_type": "AssertionError",
+      "cleanup": true,
+      "elapsed_seconds": 19.2,
+      "stage": "HTTP check after detached server startup",
+      "change": "Probe now waits up to 10 seconds for its HTTP server; no native benchmark logic changed"
+    }
+  ]
+}

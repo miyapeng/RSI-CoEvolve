@@ -18,8 +18,10 @@ The OSWorld single-example function is also used by its ordinary parallel runner
 we call it directly for one bounded episode and close the environment in `finally`.
 ARC retains the official profile's context/action budgets and state management.
 Different native action spaces remain different. Tencent AGS/E2B continues to
-serve the working SWE baseline; these three adapters **do not** claim Tencent
-transport support. A SWE command container is not an OSWorld desktop VM.
+serve the working SWE baseline. Vision2Web now has an opt-in
+[Tencent command transport](VISION2WEB_TENCENT.md), with a real transport-only
+test; its browser/image/scoring validation is still pending. OSWorld and ARC
+have no Tencent adaptation here. A SWE command container is not an OSWorld desktop VM.
 
 The existing adapter registry dispatches these names. `official.py` adds only
 task identity, a clean pinned-source check, a subprocess boundary and common
