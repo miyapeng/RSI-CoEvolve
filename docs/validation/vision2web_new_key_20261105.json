@@ -1,0 +1,153 @@
+{
+  "date_utc": "2026-11-05",
+  "simulated": false,
+  "credential_source": "Separate owner-only file outside repository; credential omitted",
+  "catalog_auth_http_status": 200,
+  "checks": [
+    {
+      "access_id": "CLAUDE_ruivhq",
+      "status": "FAIL",
+      "stage": "official Claude Code",
+      "reason": "Same upstream model-not-found HTTP 404 with new credential",
+      "seconds": 25.57
+    },
+    {
+      "access_id": "CLAUDE_5x3ex6",
+      "status": "FAIL",
+      "stage": "official Claude Code image/tool capability",
+      "text_response": true,
+      "tool_use_events": 0,
+      "reason": "CLI exited zero but declined Read/Bash; not counted as successful execution"
+    },
+    {
+      "access_id": "CLAUDE_01szjs",
+      "reported_model": "claude-sonnet-5",
+      "status": "PASS",
+      "stage": "Anthropic Messages image/tool schema",
+      "image_color": "red"
+    },
+    {
+      "access_id": "CLAUDE_01szjs",
+      "status": "PASS",
+      "stage": "official Claude Code in Tencent sandbox",
+      "actual_tools": [
+        "Read",
+        "Bash"
+      ],
+      "bash_result": "VISION2WEB_TOOL_OK",
+      "image_color": "red",
+      "seconds": 14.76,
+      "cleanup": true
+    },
+    {
+      "access_id": "GEMINI_ooyf06",
+      "reported_model": "gemini-3.1-pro-preview",
+      "status": "PASS",
+      "stage": "tiny-image Chat Completions capability",
+      "http_status": 200,
+      "seconds": 4.51
+    }
+  ],
+  "official_source_commit": "d80a4a3d0ea7326541ad87314294269a633789e4",
+  "image": "modelbest.tencentcloudcr.com/code-interpreter/vision2web:official-d80a4a3-20261105@sha256:9a45ff15a7812250ecf20da6d19215974b38197785ade0c02b31363db686c194",
+  "official_cli_reported_cost_usd": 0.6192457499999999,
+  "actual_billed_cost_usd": null,
+  "notes": [
+    "CLI-reported cost is not enterprise gateway billing",
+    "Tool fixture is not a benchmark score",
+    "Different access IDs may expose different upstream capability despite appearing in the same catalog",
+    "Model alias may differ from response model; preserve both",
+    "Old credential with the newly working route was not tested; do not attribute success solely to credential replacement"
+  ],
+  "evidence": "runs/vision2web-new-key-20261105/",
+  "baseline_commit": "52621f7",
+  "benchmark": {
+    "task_id": "webpage/abc",
+    "split": "final_test",
+    "status": "PASS",
+    "complete": true,
+    "meaning": "Official workflow completed; not a claim of high visual fidelity or a benchmark-wide success rate",
+    "run": "runs/vision2web-real-20261105-05",
+    "policy_model_access_id": "CLAUDE_01szjs",
+    "visual_model_access_id": "GEMINI_ooyf06",
+    "visual_grading_response_model": null,
+    "adapter_code_hash": "267bb331f28ff195ef82ad001dd8b2d4eb19120be34c78d59b8474fee9e25024",
+    "harness_revision": "056fbe8e66b62fa67e6d1659f63cc7ad2a50833e4f383f79222617938d7bfd5d",
+    "dataset_fingerprint": "0e5e4a37126e002c77831acf2f39718b0bd2e98f33b9b11dee82a6bf97d77a3b",
+    "inference_seconds": 1738.911025,
+    "evaluation_seconds": 175.91415,
+    "episode_seconds": 1915.773883386515,
+    "official_prototype_scores": {
+      "mobile": 0.3055555555555556,
+      "tablet": 0.4583333333333333,
+      "desktop": 0.2857142857142857
+    },
+    "functional_cases": 0,
+    "functional_scoring": "NOT_EXERCISED",
+    "training_reward": null,
+    "artifacts": {
+      "expected_files": 3,
+      "missing": [],
+      "invalid": [],
+      "complete": true
+    },
+    "inference_cli_turns": 82,
+    "inference_cli_reported_usage": {
+      "input_tokens": 114,
+      "cache_creation_input_tokens": 515089,
+      "cache_read_input_tokens": 5259338,
+      "output_tokens": 128181,
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 0,
+        "ephemeral_5m_input_tokens": 515089
+      },
+      "inference_geo": "not_available",
+      "iterations": [],
+      "speed": "standard"
+    },
+    "inference_cli_estimated_cost_usd": 9.29069375,
+    "actual_billed_cost_usd": null,
+    "sandboxes": [
+      {
+        "sandbox_id": "oqwaybjdroipo6qwm4qhwziyjqokaw7ts7vb4kxc",
+        "stopped": true,
+        "resources": {
+          "cpu": "2",
+          "memory": "8Gi"
+        }
+      },
+      {
+        "sandbox_id": "r5ykyjbaxq2v2zh4iwg6da5a75gmauif57owhajd",
+        "stopped": true,
+        "resources": {
+          "cpu": "2",
+          "memory": "8Gi"
+        }
+      }
+    ],
+    "gpu": 0,
+    "rl_training": "NOT_RUN",
+    "evidence_sha256": {
+      "summary.json": "af9aca80e277108f9749f853c0d0358dbaee801471151f3267438416e80303a8",
+      "episodes/r0/webpage/abc/inference.json": "5f7e7c2e66508ea89bbb36e479d5d14522053d2d4a0d3765eb86422c90070d0f",
+      "episodes/r0/webpage/abc/analysis.json": "9d82a90a58ab1021ae44ddb4bd032a9bb9f74f21f22d56fd18a8c3fe2ce88ee4",
+      "episodes/r0/webpage/abc/evaluation_artifacts.json": "76fe81da68488cdd219810375f7d66f4a597fec2bbbc14a819bfc8224e993330",
+      "episodes/r0/webpage/abc/native/webpage/claude_code/CLAUDE_01szjs/abc/test_results/prototypes/desktop_actual.png": "bb7bf824d6746f2c61fd71ef96dce4bfb923f88fee63170cd3930d79aea71a51",
+      "episodes/r0/webpage/abc/native/webpage/claude_code/CLAUDE_01szjs/abc/test_results/prototypes/desktop_scores.json": "aad11d375b8488d396efb4aa1f36ea16c6c6d36a25e4bb708efef361d141f1ef",
+      "episodes/r0/webpage/abc/native/webpage/claude_code/CLAUDE_01szjs/abc/test_results/prototypes/mobile_actual.png": "8cbcff8a2853f4ebc9d49059655ebdbd7748b8aa6c31a0817fca2114b2488685",
+      "episodes/r0/webpage/abc/native/webpage/claude_code/CLAUDE_01szjs/abc/test_results/prototypes/mobile_scores.json": "22e0b9c6b6367fff1205ccbcca066bd145163242f476948f9651fe1450c72296",
+      "episodes/r0/webpage/abc/native/webpage/claude_code/CLAUDE_01szjs/abc/test_results/prototypes/tablet_actual.png": "002f1c511d2e741f489ae1c20cf396dd31a4f8e3fa1930f9bf508ec908122319",
+      "episodes/r0/webpage/abc/native/webpage/claude_code/CLAUDE_01szjs/abc/test_results/prototypes/tablet_scores.json": "82302628905eb1e646334137d60e1a1c0d14617ee9cea32bfce25071d02a724e"
+    }
+  },
+  "validation": {
+    "method": "Live official CLI, real sandbox/browser and official scorer; source clean, artifact identities and completeness checked",
+    "unit_tests": "NOT_RERUN: no implementation code changed in this credential/configuration check",
+    "git_remote_push": "NOT_RUN"
+  }
+}

@@ -360,3 +360,100 @@ PY
 
 This is a fresh evaluation attempt, not a resume override. Historical code-hash
 checks remain intact; do not force H/P runs made before these changes to resume.
+
+## New credential and model-route diagnosis, 2026-11-05 UTC
+
+A newly supplied credential was stored separately in an owner-only file outside
+Git. The original credential file was preserved. Authentication to the model
+catalog returned HTTP 200, but actual request capability varied by access ID:
+
+| Access ID | Actual observation with the new credential |
+| --- | --- |
+| `CLAUDE_ruivhq` | Same upstream model-not-found HTTP 404 in official Claude Code. Credential replacement alone did not restore this route. |
+| `CLAUDE_5x3ex6` | Simple text completed, but the image/tool test produced no `Read` or `Bash` events and declined the task. Exit code zero was not counted as capability success. |
+| `CLAUDE_01szjs` | Native image + tool-schema request passed; official Claude Code then actually read the test PNG, ran `printf VISION2WEB_TOOL_OK` and identified red, in 14.76 seconds. Sandbox cleanup confirmed. |
+| `GEMINI_ooyf06` | Tiny-image Chat Completions request returned HTTP 200 and identified red. Response reported `gemini-3.1-pro-preview`, despite the catalog's `gemini-3-pro-preview` label. |
+
+The working policy route's response reported `claude-sonnet-5`. These are gateway
+model identities, not verified weight hashes. Preserve both access IDs and
+response identities; this smoke is not a reproduction of the paper's exact model
+configuration. The old credential was not tested against the working new route,
+so success cannot be attributed solely to replacing the credential.
+
+The strict fixture requires real `tool_use` events, a successful shell result
+and the correct image observation. Merely receiving text, HTTP 200 or a CLI exit
+code of zero is insufficient. Diagnostic evidence is in
+`runs/vision2web-new-key-20261105/`; it contains no benchmark scores. CLI-reported
+cost is an estimate, not company gateway billing. No benchmark runtime, prompt,
+grader, Dockerfile or training algorithm was changed for this diagnosis.
+
+### Successful single-task run
+
+`runs/vision2web-real-20261105-05/summary.json` reports `complete: true` and
+`official_evaluation_success`. The unchanged official harness completed:
+
+1. Model reads prototypes/materials and generates HTML, CSS, JavaScript and
+   `start.sh`; inference succeeded in **1738.91 seconds**.
+2. A separate fresh Tencent sandbox deploys the submitted website; port 3000
+   became ready in **1.9 seconds**.
+3. Official screenshot-only workflows capture desktop, tablet and mobile;
+   all three official VLM scoring files are present and valid. Evaluation took
+   **175.91 seconds**, with three workflows completed and zero failed.
+4. Both inference and evaluation sandboxes were destroyed. Total episode time
+   was **1915.77 seconds** (31.93 minutes), with 2 CPU / 8 GiB per sandbox, zero GPUs.
+
+Official `ResultAnalyzer` prototype scores (range 0–1):
+
+| Desktop | Tablet | Mobile |
+| --- | --- | --- |
+| 0.285714 | 0.458333 | 0.305556 |
+
+These measure this generated page's visual fidelity; successful pipeline
+completion is not a high-quality score or a benchmark-wide success rate.
+This task has **zero functional cases**, so functional grading remains
+**NOT EXERCISED**. The scalar training reward remains null; no RL was run.
+The visual route's exact per-grading-response model ID is not retained by the
+upstream scorer, so the earlier probe's reported model must not be mistaken for
+verified identities for all three grading requests.
+
+Claude Code reported 82 turns and an estimated inference cost of **USD 9.2907**.
+This is the CLI's estimate, not the enterprise gateway bill; actual total billing
+and the visual judge's cost are unknown. Raw reported usage is preserved.
+The full inference included automatic context compaction and real browser
+checks; no prompt or agent output was manually edited to obtain completion.
+
+Evidence: native `inference.json`, `analysis.json`, `evaluation_artifacts.json`,
+`native/.../test_results/prototypes/*_{actual.png,scores.json}` and transport
+lifecycle records beneath the episode directory. The portable summary with
+artifact SHA256 values is
+[`validation/vision2web_new_key_20261105.json`](validation/vision2web_new_key_20261105.json).
+No implementation code changed in this follow-up, so CPU unit tests were not
+repeated; the live execution and official output validation above were run.
+
+The full single-task attempt uses `configs/vision2web.new-key.local.yaml`, policy
+and functional-model access ID `CLAUDE_01szjs`, and the existing visual-judge access
+ID `GEMINI_ooyf06`. Load only the sandbox credential from the old file and the new
+model credential from its separate file, then use a fresh output directory:
+
+```bash
+conda activate self-hpo-baseline
+export BASELINE_SECRET_ENV_FILE=/user/miyapeng/.secrets/rsi-coevolve.env
+python - <<'PY'
+import os
+import subprocess
+from dotenv import dotenv_values
+from baseline.credentials import load_credentials
+
+load_credentials(["E2B_API_KEY"])
+os.environ["LLM_CENTER_API_KEY"] = dotenv_values(
+    "/user/miyapeng/.secrets/vision2web-model.env", interpolate=False
+)["LLM_CENTER_API_KEY"]
+os.umask(0o077)
+raise SystemExit(subprocess.run([
+    "/user/miyapeng/miniconda3/envs/vision2web/bin/python", "-m", "baseline.benchmarks",
+    "run", "--config", "configs/vision2web.new-key.local.yaml",
+    "--task-id", "webpage/abc", "--limit", "1",
+    "--output", "runs/vision2web-real-NEW_RUN",
+]).returncode)
+PY
+```
