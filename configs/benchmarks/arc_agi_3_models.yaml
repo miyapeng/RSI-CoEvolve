@@ -1,0 +1,20 @@
+# Native Standard/manual_rolling harness. Model and budgets are smoke overrides.
+# No guessed gateway pricing; any upstream zero cost is not actual billing.
+- id: llmcenter-sonnet-smoke
+  agent:
+    MAX_ACTIONS_BASELINE_MULTIPLIER: 5.0
+    MAX_CONTEXT_LENGTH: 175000
+    MAX_RUNTIME_SECONDS: 300
+    MAX_RETRIES: 1
+  runtime:
+    sdk: anthropic-python
+    api: messages
+    state: manual_rolling
+  client:
+    api_key_env: LLM_CENTER_API_KEY
+  request:
+    model: CLAUDE_01szjs
+    max_tokens: 2048
+    thinking:
+      type: disabled
+    timeout: 45

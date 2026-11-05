@@ -1,0 +1,15 @@
+# Explicit online smoke; reduced budget is not an official leaderboard protocol.
+benchmark: arc_agi_3
+model: CLAUDE_01szjs
+seed: 42
+eval_repetitions: 1
+official:
+  repo: ../references/arc-agi-3-benchmarking
+  python: /user/miyapeng/miniconda3/envs/rsi-arc3/bin/python
+  task_ids: [ls20-9607627b]
+  arc_base_url: https://arcprize.org
+  model_config_id: llmcenter-sonnet-smoke
+  model_config_path: configs/benchmarks/arc_agi_3_models.yaml
+  anthropic_base_url: https://llm-center.modelbest.co
+  smoke_test: true
+  max_actions_hard_cap: 8

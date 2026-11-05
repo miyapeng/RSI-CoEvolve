@@ -103,13 +103,15 @@ def preflight(config):
             checks["kvm"] = os.access("/dev/kvm", os.R_OK | os.W_OK)
     else:
         checks["arc_api_key"] = bool(os.environ.get("ARC_API_KEY"))
-        repo = path_value(options["repo"])
-        profile_path = repo / "benchmarking/model_configs.yaml"
-        profiles = yaml.safe_load(profile_path.read_text()) if profile_path.is_file() else []
-        entry = next((x for x in profiles if x["id"] == options["model_config_id"]), None)
+        from .arc_agi_3 import model_profile
+
+        try:
+            entry = model_profile(options)
+        except (ValueError, OSError, KeyError):
+            entry = None
         checks["model_profile"] = entry is not None and entry["request"]["model"] == config["model"]
         if entry:
-            report["native_profile"] = entry  # Only pinned public config; no environment values.
+            report["native_profile"] = entry  # Credential environment names only, never their values.
             checks["policy_api_key_env"] = bool(os.environ.get(entry["client"]["api_key_env"]))
     if (adapter.name == "vision2web" and options.get("transport", "docker") == "docker") or (
         adapter.name == "osworld_verified" and options["provider_name"] == "docker"

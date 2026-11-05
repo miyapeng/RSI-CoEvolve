@@ -16,12 +16,15 @@ Implemented in `self-hpo-baseline`, the worktree associated with
 No upstream agent loop, prompt, action parser or verifier was copied or rewritten.
 The OSWorld single-example function is also used by its ordinary parallel runner;
 we call it directly for one bounded episode and close the environment in `finally`.
-ARC retains the official profile's context/action budgets and state management.
+ARC retains the official profile's state management; its separate bounded smoke
+config explicitly uses the upstream development action cap.
 Different native action spaces remain different. Tencent AGS/E2B continues to
 serve the working SWE baseline. Vision2Web now has an opt-in
-[Tencent command transport](VISION2WEB_TENCENT.md), with a real transport-only
-test; its browser/image/scoring validation is still pending. OSWorld and ARC
-have no Tencent adaptation here. A SWE command container is not an OSWorld desktop VM.
+[Tencent command transport](VISION2WEB_TENCENT.md), with a real website/browser/
+visual-scoring episode recorded on 2026-11-05 (no functional cases in that task).
+[ARC online inference](ARC_AGI_3.md) also completed an eight-action public-game
+smoke and official scorecard. ARC needs no Tencent sandbox in this online path;
+OSWorld still requires a separate desktop VM. A SWE command container is not one.
 
 The existing adapter registry dispatches these names. `official.py` adds only
 task identity, a clean pinned-source check, a subprocess boundary and common
@@ -115,9 +118,9 @@ source and Agent S3 were not imported into this project.
 ## Conda setup and commands
 
 Keep benchmark environments separate from the working Slime training environment.
-Only source fetching is automatic; these setup commands are for deliberate later
-installation. No new dependencies, VM images or datasets were installed/downloaded
-while implementing this milestone.
+Only source fetching is automatic. The initial 2026-11-04 adapter milestone
+installed no environments; the 2026-11-05 ARC smoke subsequently installed a
+dedicated Conda environment from the official frozen lock. See its linked runbook.
 
 ```bash
 cd /user/miyapeng/rsi_evolve/self-hpo-baseline
@@ -132,19 +135,14 @@ conda create -n rsi-vision2web python=3.12 pip
 conda run -n rsi-vision2web python -m pip install -e ../references/Vision2Web
 conda create -n rsi-osworld python=3.12 pip
 conda run -n rsi-osworld python -m pip install -r ../references/OSWorld/requirements.txt
-conda create -n rsi-arc3 python=3.12 pip
-conda run -n rsi-arc3 python -m pip install ../references/arc-agi-3-benchmarking
+# ARC: use environment-arc3.yml and the frozen-lock commands in ARC_AGI_3.md.
 ```
 
-The last two native dependency stacks are not installed/tested here. OSWorld's
-upstream requirements contain unbounded entries; ARC's `uv.lock` is the upstream
-resolved dependency record (including `arc-agi==0.9.9`). Installing its `pyproject`
-via pip alone does not enforce that lock. For reproducible deployment, export
-that existing lock to requirements with upstream `uv export --frozen --no-dev
---no-emit-project`, then install that export inside `rsi-arc3` and install the
-project with `--no-deps`. This uses Conda, not `uv venv`; it was not executed here.
-Archive the resolved package list with the run. The current CPU baseline and
-GPU environments were not upgraded.
+OSWorld's dependency/VM stack remains untested. Its upstream requirements contain
+unbounded entries. ARC's frozen `uv.lock` export was installed inside `rsi-arc3`
+(including `arc-agi==0.9.9`); plain pip installation of its `pyproject` would not
+enforce that lock. The worker imports its pinned source directly. Per-episode
+package inventories are recorded. The SWE CPU and GPU environments were not upgraded.
 
 Start with read-only commands:
 
@@ -227,12 +225,9 @@ Measured on 2026-11-04:
 - Real model inference, browser/GUI/game episodes, paid judge calls, benchmark
   scores, GPU training and multimodal H/P rounds: **NOT RUN**.
 
-Recommended next implementation step is one Vision2Web native episode with
-separate inference/judge credentials and a verified isolated runtime, retaining
-the official prompts and graders. If Tencent is the required execution service,
-adapt its container transport explicitly and test artifact transfer/lifecycle
-before claiming equivalence to the official Docker path. Then validate a desktop
-VM for OSWorld and official scorecard access for ARC. Multimodal Slime data,
+The 2026-11-05 follow-ups completed Vision2Web website/browser/visual scoring
+and ARC public-game inference/scorecard; see their runbooks for exact budgets
+and limitations. OSWorld still needs a validated desktop VM. Multimodal Slime data,
 vision tensors/logprobs/masks and domain-specific H-step edit gates remain separate
 engineering work, not capabilities supplied by these evaluation adapters.
 

@@ -11,10 +11,10 @@ Official evaluation adapters for **Vision2Web, OSWorld-Verified and ARC-AGI-3**
 now call their pinned native harnesses and verifiers. See the
 [setup, commands and measured limits](docs/OFFICIAL_BENCHMARKS.md).
 Vision2Web also has a [Tencent E2B transport and image/probe runbook](docs/VISION2WEB_TENCENT.md).
-Its real command/file/background-server transport test passed; the Web image,
-browser and official scoring still require live validation.
-Their contracts have CPU tests; live visual/GUI/game evaluations and multimodal
-H/P training have **not** been validated.
+One real website-generation/browser/visual-scoring episode completed; that task
+had no functional cases. [ARC-AGI-3](docs/ARC_AGI_3.md) also completed a real
+eight-action official online episode and scorecard (score 0, no game win).
+OSWorld live GUI execution and multimodal H/P training remain **NOT RUN**.
 **One real Qwen3.5-9B GRPO update has passed on 4 A100 80GB GPUs**, followed by
 dense checkpoint export, fresh-server reload and a successful Tencent task rollout.
 **Two real H/P rounds also completed** (job 1428745), with two further GRPO updates,

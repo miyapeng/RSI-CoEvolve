@@ -182,7 +182,8 @@ prompts, agent loops or graders. Model/data/VM downloads were not performed.
 | [xlang-ai/OSWorld](https://github.com/xlang-ai/OSWorld) | `8903ebeb0efdf74331bd7dc37ed91ccbbff22317` | Root `LICENSE`: Apache-2.0. | `evaluation_examples/test_all.json`, `test_nogdrive.json`, example JSON; `mm_agents/agent.py::PromptAgent`; `desktop_env/desktop_env.py::DesktopEnv`; `lib_run_single.py::run_single_example`; `lib_results_logger.py`, `lib_run_errors.py`; native provider modules, `run.py`, README and `requirements.txt`. New caller: `baseline/benchmarks/osworld.py`. This is the official Verified lineage, not a separate OSWorld-V2 checkout. |
 | [arcprize/arc-agi-3-benchmarking](https://github.com/arcprize/arc-agi-3-benchmarking) | `353d38be471395b5ae47dbb44df95440677397e1` | Root `LICENSE`: MIT. | `main.py`; `benchmarking/{agent,base,swarm,model_config,model_configs.yaml,runtime_clients,recorder}`; `pyproject.toml`, `uv.lock`. New caller: `baseline/benchmarks/arc_agi_3.py`; calls native Swarm and scorecard, checks threaded-agent error exits. |
 
-ARC's lock records SDK `arc-agi==0.9.9`; it was not installed for this task.
+ARC's lock records SDK `arc-agi==0.9.9`; it was not installed during the initial
+2026-11-04 adapter milestone and was installed for the 2026-11-05 smoke below.
 The SDK's official [source/license](https://github.com/arcprize/ARC-AGI) and
 [scorecard interface](https://github.com/arcprize/docs/blob/main/scorecards.mdx)
 were inspected as reference (MIT; no SDK Git commit inferred from its package
@@ -224,3 +225,26 @@ no source, prompt, retry framework or agent loop was copied. E2B 2.62's installe
 `commands/command.py` documents that `request_timeout` is ignored for streaming
 commands; command timeout alone did not prevent the observed 150-second stream
 failure. Model algorithms, prompts and grading remain upstream implementations.
+
+## ARC online smoke and enterprise model profile (2026-11-05 UTC)
+
+Reused the same clean official checkout at `353d38be471395b5ae47dbb44df95440677397e1`;
+no new source repository or game/model dataset was downloaded. Its frozen
+`uv.lock` runtime export was installed in Conda `rsi-arc3`. SDK package metadata
+for `arc-agi==0.9.9` and `arcengine==0.9.3` declares MIT; no SDK source is vendored.
+The installed `arc_agi/base.py` was inspected for anonymous-key registration,
+online game access and scorecard closure. Runtime client and model-config loader
+tests, native Anthropic runtime tests and Swarm tests were reused unmodified.
+
+Original adapter additions: a process-scoped native `MODEL_CONFIG_PATH` setting,
+profile-content hash, recorded Anthropic gateway endpoint, explicit use of
+upstream `MAX_ACTIONS_HARD_CAP` only for smoke configurations, scorecard-log
+credential redaction, and a private anonymous-key/catalog helper. Upstream
+`BenchmarkingAgent`, prompts, text-grid observations, action parser, recording,
+game API, time/action accounting and score formula remain unchanged. The custom
+YAML model profile is configuration, not a copied or forked native agent.
+
+The [official game-access docs](https://docs.arcprize.org/available-games) and
+[official SDK](https://github.com/arcprize/ARC-AGI) informed anonymous public-game
+access. A returned catalog does not establish play authorization for all games.
+Measured results and environment/test commands: [ARC_AGI_3.md](ARC_AGI_3.md).

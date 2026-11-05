@@ -4,6 +4,8 @@ import asyncio
 import enum
 import importlib.util
 import json
+import logging
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -299,7 +301,14 @@ def test_arc_profile_binding_scorecard_and_thread_failure(monkeypatch, tmp_path)
         TIME_BUDGET = "TIME_BUDGET"
         AGENT_ERROR = "AGENT_ERROR"
 
-    agent = NS(exit_reason=Reason.GAME_WIN, levels_completed=1, token_counter=10, action_counter=2)
+    agent = NS(
+        exit_reason=Reason.GAME_WIN,
+        levels_completed=1,
+        token_counter=10,
+        action_counter=2,
+        run_dir="recordings/fixture",
+        run_record=NS(total_usage=NS(cost=0)),
+    )
     closed = []
 
     class Swarm:
@@ -332,6 +341,8 @@ def test_arc_profile_binding_scorecard_and_thread_failure(monkeypatch, tmp_path)
     Path(request["output"]).mkdir()
     result = arc_adapter.run_native(request)
     assert result["score"] == 7.5 and result["tokens"] == 10 and closed == [True]
+    assert result["metrics"]["cost_usd"] is None
+    assert result["metrics"]["step_records"] == str(tmp_path / "run/recordings/fixture")
     request["model"] = "wrong-profile"
     with pytest.raises(ValueError, match="profile"):
         arc_adapter.run_native(request)
@@ -342,3 +353,85 @@ def test_arc_profile_binding_scorecard_and_thread_failure(monkeypatch, tmp_path)
     with pytest.raises(RuntimeError, match="did not finish normally"):
         arc_adapter.run_native(request)
     assert read(tmp_path / "error/native/scorecard.json")["card_id"] == "fixture"
+
+
+def test_arc_external_profile_is_frozen_and_scoped(monkeypatch, tmp_path):
+    c = config("arc_agi_3_smoke")
+    repo = official_repo(c)
+    profile = tmp_path / "model.yaml"
+    profile.write_text(Path(c["official"]["model_config_path"]).read_text())
+    c["official"]["model_config_path"] = str(profile)
+    adapter = get_benchmark(c)
+    row = adapter.load_tasks(c, "final_test", 1)[0]
+    request = adapter.plan(row, c["model"], str(repo), c, tmp_path / "run", 42)
+    assert request["options"]["model_config_sha256"]
+    assert arc_adapter.model_profile(c["official"])["request"]["model"] == c["model"]
+    native = NS(MODEL_CONFIG_PATH=Path("original.yaml"))
+    monkeypatch.setitem(sys.modules, "benchmarking.model_config", native)
+    monkeypatch.delenv("MAX_ACTIONS_HARD_CAP", raising=False)
+    monkeypatch.delenv("ANTHROPIC_BASE_URL", raising=False)
+    with pytest.raises(RuntimeError, match="fixture failure"):
+        with arc_adapter.native_settings(request):
+            assert native.MODEL_CONFIG_PATH == profile
+            assert os.environ["MAX_ACTIONS_HARD_CAP"] == "8"
+            assert os.environ["ANTHROPIC_BASE_URL"] == "https://llm-center.modelbest.co"
+            raise RuntimeError("fixture failure")
+    assert native.MODEL_CONFIG_PATH == Path("original.yaml")
+    assert "MAX_ACTIONS_HARD_CAP" not in os.environ and "ANTHROPIC_BASE_URL" not in os.environ
+    request["options"]["smoke_test"] = False
+    with pytest.raises(ValueError, match="explicit smoke_test"):
+        with arc_adapter.native_settings(request):
+            pytest.fail("A full protocol must not silently use the smoke action cap")
+    request["options"]["smoke_test"] = True
+    profile.write_text(profile.read_text() + "\n# changed after planning\n")
+    with pytest.raises(ValueError, match="Frozen ARC"):
+        with arc_adapter.native_settings(request):
+            pytest.fail("Frozen profile mutation was ignored")
+
+
+def test_arc_credentials_are_not_profiles_or_log_output(tmp_path):
+    profile = tmp_path / "bad.yaml"
+    profile.write_text("- id: test\n  client:\n    api_key: fixture-secret\n")
+    with pytest.raises(ValueError, match="credential environment"):
+        arc_adapter.model_profile({"model_config_path": str(profile), "model_config_id": "test"})
+    record = logging.LogRecord("root", logging.INFO, "", 0, "scorecard %s", ('{"api_key": "fixture-secret"}',), None)
+    assert arc_adapter.SecretFilter(["fixture-secret"]).filter(record)
+    assert "fixture-secret" not in record.getMessage() and "[REDACTED]" in record.getMessage()
+
+
+def test_arc_anonymous_access_keeps_key_private_and_reuses_it(monkeypatch, tmp_path, capsys):
+    from scripts.baseline import arc3_public_access
+
+    requests = []
+
+    class Client:
+        def __init__(self, **kw):
+            assert kw["base_url"] == "https://arcprize.org"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def get(self, path, **kw):
+            requests.append(path)
+            if path == "/api/games/anonkey":
+                data = {"api_key": "fixture-secret"}
+            else:
+                assert path == "/api/games" and kw["headers"] == {"X-API-Key": "fixture-secret"}
+                data = [{"game_id": "ls20-fixture"}]
+            return NS(raise_for_status=lambda: None, json=lambda: data)
+
+    key = tmp_path / "private/key.env"
+    catalog = tmp_path / "catalog.json"
+    monkeypatch.setattr(arc3_public_access.httpx, "Client", Client)
+    monkeypatch.setattr(sys, "argv", ["arc3_public_access", "--key-file", str(key), "--output", str(catalog)])
+    arc3_public_access.main()
+    assert key.stat().st_mode & 0o777 == 0o600
+    assert "fixture-secret" not in capsys.readouterr().out
+    assert read(catalog) == [{"game_id": "ls20-fixture"}]
+    before = key.read_bytes()
+    arc3_public_access.main()
+    assert key.read_bytes() == before
+    assert requests == ["/api/games/anonkey", "/api/games", "/api/games"]
