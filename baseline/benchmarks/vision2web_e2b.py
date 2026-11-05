@@ -182,6 +182,8 @@ def run_command(box, cfg, argv, *, env=None, cwd="/workspace", user="root", back
         box.files.write(upload, stdin, user="root")
         command += " < " + shlex.quote(upload)
     try:
+        if not background:
+            return run_foreground(box, cfg, command, env or {}, cwd, user)
         return box.commands.run(
             command,
             envs=env or {},
@@ -196,6 +198,60 @@ def run_command(box, cfg, argv, *, env=None, cwd="/workspace", user="root", back
     finally:
         if upload is not None:
             box.commands.run("rm -f " + shlex.quote(upload), user="root", timeout=10)
+
+
+def run_foreground(box, cfg, command, env, cwd, user):
+    """Keep long silent commands off the AGS streaming connection.
+
+    Preserve stdout/stderr/exit status in private temporary files. No command
+    retries: a failed poll fails the episode and its owner cleans up the sandbox.
+    GNU timeout enforces the process deadline even if the client disconnects.
+    """
+    from e2b.sandbox.commands.command_handle import CommandResult
+
+    root = "/tmp/v2w-command-" + uuid.uuid4().hex
+    box.commands.run(f"mkdir -m 700 {root}", user=user, timeout=15)
+    script = (
+        "#!/bin/bash\n"
+        f"timeout -k 5 {cfg['command_timeout']} bash -c {shlex.quote(command)} "
+        f"> {root}/stdout 2> {root}/stderr\n"
+        f"printf '%s' \"$?\" > {root}/exit.tmp\n"
+        f"mv {root}/exit.tmp {root}/exit\n"
+    )
+    handle = None
+    complete = False
+    try:
+        box.files.write(root + "/run.sh", script, user=user)
+        handle = box.commands.run(
+            "bash " + root + "/run.sh",
+            background=True,
+            envs=env,
+            cwd=cwd,
+            user=user,
+            timeout=cfg["command_timeout"] + 10,
+        )
+        handle.disconnect()  # Closing this stream does not stop the remote process.
+        deadline = time.monotonic() + cfg["command_timeout"] + 10
+        while time.monotonic() < deadline:
+            result = box.commands.run(
+                f"if test -f {root}/exit; then cat {root}/exit; else printf RUNNING; fi",
+                user=user,
+                timeout=min(20, cfg["request_timeout"]),
+            )
+            if result.stdout != "RUNNING":
+                complete = True
+                return CommandResult(
+                    stdout=box.files.read(root + "/stdout", user=user),
+                    stderr=box.files.read(root + "/stderr", user=user),
+                    exit_code=int(result.stdout),
+                    error=None,
+                )
+            time.sleep(1)
+        raise TimeoutError("Remote command exceeded its deadline; sandbox cleanup required")
+    finally:
+        if handle is not None and not complete:
+            handle.kill()
+        box.commands.run("rm -rf " + root, user=user, timeout=15)
 
 
 def remote_archive(box, cfg, directory, name="."):
@@ -375,8 +431,12 @@ def main():
     try:
         return dispatch(root, sys.argv[1:], sys.stdin.buffer, sys.stdout.buffer, sys.stderr.buffer)
     except Exception as exc:
-        audit(root, "error", error_type=type(exc).__name__)
-        print(f"Vision2Web Tencent transport failed: {type(exc).__name__}; see transport.jsonl", file=sys.stderr)
+        # Expose this actionable provider status without logging arbitrary SDK
+        # messages, which may include authorization or signed request details.
+        preheating = "ResourceUnavailable.ImagePreheating" in str(exc)
+        audit(root, "error", error_type=type(exc).__name__, image_preheating=preheating)
+        hint = "image is preheating; wait before a new attempt" if preheating else "see transport.jsonl"
+        print(f"Vision2Web Tencent transport failed: {type(exc).__name__}; {hint}", file=sys.stderr)
         return 125
 
 

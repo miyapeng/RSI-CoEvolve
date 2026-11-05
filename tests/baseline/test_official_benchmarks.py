@@ -22,6 +22,32 @@ from baseline.benchmarks.official import path_value
 from baseline.records import ROOT, read, write
 
 
+def test_official_dispatch_does_not_require_swe_environment(tmp_path):
+    # The dedicated Vision2Web Conda environment intentionally has no mini-SWE.
+    subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import sys; sys.modules['minisweagent'] = None; from baseline.execution import evaluate",
+        ],
+        cwd=ROOT,
+        check=True,
+    )
+    # Run the actual entry from an unrelated cwd with Python's path isolation.
+    # An unknown fixture adapter stops before native imports or any paid calls.
+    request = tmp_path / "request.json"
+    write(request, {"source": {"repo": str(tmp_path)}, "benchmark": "bootstrap_fixture"})
+    result = subprocess.run(
+        [sys.executable, "-I", str(ROOT / "baseline/benchmarks/official_worker.py"), str(request)],
+        cwd=tmp_path,
+        capture_output=True,
+        text=True,
+    )
+    assert result.returncode != 0
+    assert "Unknown benchmark adapter: bootstrap_fixture" in result.stderr
+    assert "ModuleNotFoundError" not in result.stderr
+
+
 def config(name):
     return yaml.safe_load((ROOT / f"configs/benchmarks/{name}.yaml").read_text())
 

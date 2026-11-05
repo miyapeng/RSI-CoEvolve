@@ -14,7 +14,7 @@ from pathlib import Path
 def main():
     request = json.loads(Path(sys.argv[1]).read_text())
     repo = Path(request["source"]["repo"]).resolve()
-    sys.path[:0] = [str(repo), str(Path(__file__).resolve().parents[2].parent)]
+    sys.path[:0] = [str(repo), str(Path(__file__).resolve().parents[2])]
     os.umask(0o077)
     logging.basicConfig(level=logging.INFO)
     from baseline.benchmarks import get_benchmark

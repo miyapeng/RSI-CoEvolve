@@ -39,6 +39,15 @@ and actual configured resource values are recorded. This is a bounded transport
 validation configuration, not an assertion of equal resource budgets to the
 paper. Native prompts, actions, grader and VS/FS aggregation are unchanged.
 
+Foreground commands run in the sandbox with private stdout/stderr/exit files
+and short status polls. A real Claude invocation hit a streaming timeout after
+150 seconds; increasing `request_timeout` did not fix it (E2B 2.62 ignores that
+argument for streaming commands). `timeout -k 5` enforces `command_timeout` on
+the remote process. There are no command retries. The official caller still
+receives the original stdout, stderr and exit status; any transport failure ends
+the episode and its sandbox is cleaned up. Detached website startup retains
+the SDK's background path.
+
 Model credentials are forwarded only as the native CLI's command environment.
 The E2B control-plane key stays on the host. Transport audit logs contain
 operations, sandbox IDs, resources and error types, not argv/prompts/secret
@@ -110,6 +119,58 @@ are **not bit-reproducible**; preserve the resulting registry digest and probe's
 tool versions. The company `code-agent-cfs2-new` template injects `/mnt/envd`;
 this path has been verified with existing task images. Compatibility with the
 new official Web image must pass the probe before any model calls.
+
+## Build inside a disposable Tencent sandbox
+
+When the development container cannot run Docker builds, the existing Tencent
+sandbox can itself act as a temporary CPU builder. This helper uses the pinned
+upstream Dockerfile unchanged with the maintained
+[Kaniko builder](https://github.com/osscontainertools/kaniko) in its own disposable
+container, and pushes to the explicitly named TCR destination. It must never be
+run by copying the executor into the development host's root filesystem.
+Registry credentials are uploaded to `/kaniko/.docker`, outside the build
+context and excluded from snapshots. The injected `/mnt` control plane is also
+excluded. No inference key is needed for image building.
+
+```bash
+conda activate self-hpo-baseline
+export BASELINE_SECRET_ENV_FILE=/user/miyapeng/.secrets/rsi-coevolve.env
+python scripts/benchmarks/build_vision2web_e2b.py \
+  --builder-image 'modelbest.tencentcloudcr.com/code-interpreter/kaniko:v1.29.0-debug@sha256:b2ac9f31876a3176e8d1a8be6d03a455f79bdd026ca41a67aeac0af63cf88321' \
+  --image modelbest.tencentcloudcr.com/code-interpreter/vision2web:official-d80a4a3-UNIQUE_TAG \
+  --registry-auth-file /user/miyapeng/.secrets/rsi-registry-auth.json \
+  --output /tmp/vision2web-build-UNIQUE_RUN
+```
+
+The helper requests 4 CPU / 16 GiB, zero GPUs, a 7200-second sandbox TTL and a
+5400-second build deadline. It records `build.json`, `build.log`, `build.sh` and
+the pushed digest, and attempts sandbox cleanup on either success or
+failure. Use local temporary storage when the shared filesystem is full; copy
+successful build records into the project when space permits. A build success
+is separate from a browser probe and a real benchmark run.
+
+The builder mirror above was uploaded and its registry digest checked. When
+mirroring it elsewhere, first download to local disk through the cluster's
+public-network proxy, then upload to TCR directly. Streaming GHCR to TCR without
+the proxy hit an upload EOF after approximately ten minutes on this host.
+
+```bash
+skopeo copy \
+  docker://ghcr.io/osscontainertools/kaniko@sha256:b2ac9f31876a3176e8d1a8be6d03a455f79bdd026ca41a67aeac0af63cf88321 \
+  dir:/tmp/vision2web-kaniko
+env -u http_proxy -u https_proxy -u HTTP_PROXY -u HTTPS_PROXY \
+  REGISTRY_AUTH_FILE=/path/to/private/registry-auth.json \
+  skopeo copy dir:/tmp/vision2web-kaniko \
+  docker://modelbest.tencentcloudcr.com/code-interpreter/kaniko:v1.29.0-debug
+```
+
+A nested Docker/VFS attempt reached Chrome installation but exhausted the
+roughly 20-GiB sandbox disk at the next layer. Overlay mounts were unsupported.
+Kaniko avoids the VFS copies; it does not change the official Dockerfile. Its
+debug-image shell and root-user bootstrap only allow the E2B command API to
+start the builder; the Ubuntu base supplies the resulting runtime filesystem.
+The helper explicitly restores Kaniko's certificate-path environment for E2B
+commands. TLS verification remains enabled.
 
 ## Probe and run
 
@@ -189,6 +250,113 @@ no hash check is bypassed.
 - Browser screenshot, generated benchmark website, official VS/FS and multimodal
   model inference: **NOT RUN**. GPU / RL / formal benchmark sweeps: **NOT RUN**.
 
-The remaining prerequisite is a reachable, compatible Web image in TCR, built
-on a build-capable machine or supplied from an existing mirror. Once available,
-the browser probe and one-task command above exercise the implemented path.
+The image prerequisite above was resolved on 2026-11-05; see the new validation below.
+
+
+## Image upload and live validation, 2026-11-05 UTC
+
+The **unmodified official Dockerfile** was built with Kaniko and pushed to:
+
+```text
+modelbest.tencentcloudcr.com/code-interpreter/vision2web:official-d80a4a3-20261105@sha256:9a45ff15a7812250ecf20da6d19215974b38197785ade0c02b31363db686c194
+```
+
+TCR independently returned that digest. The successful build/push took
+844.06 seconds, 4 CPU / 16 GiB, zero GPUs; the builder was destroyed.
+The registry manifest contains eight layers, linux/amd64. Failed Docker/VFS,
+Kaniko bootstrap and idle-stream attempts are retained under
+`runs/vision2web-build-20261105/`; no failed attempt is counted as success.
+
+The first two runtime requests encountered image preparation; the next request
+passed in 7.66 seconds and was cleaned up. AGS performs
+[on-demand image preheating](https://cloud.tencent.com/document/product/1814/139916).
+A new image may return `ResourceUnavailable.ImagePreheating`; wait before a
+new attempt instead of treating it as a model failure. The adapter reports this
+specific status without dumping arbitrary SDK request details or retrying calls.
+
+The official SandboxManager browser probe passed in **26.23 seconds**, including
+real Chrome screenshot, detached HTTP serving, binary file/stdin round trip,
+absence of the builder credential files and sandbox cleanup. Runtime versions:
+Node 20.20.2, Claude Code 2.1.221, playwright-cli 0.1.23, Chrome 157.0.8103.38.
+The official Node 20 recipe was retained despite npm's Claude engine warning;
+the actual CLI version command passed. Evidence:
+`runs/vision2web-browser-20261105/report.json`.
+
+LLMCenter's current gateway access IDs used for this smoke are `CLAUDE_ruivhq`
+(Sonnet 4.5) and `GEMINI_ooyf06` (Gemini 3 Pro Preview). Separate tiny real PNG
+requests returned HTTP 200 from both endpoints; those calls only establish image
+input/connectivity, not task completion. The ignored `configs/vision2web.local.yaml`
+contains these aliases, endpoint URLs, the existing dataset path, the dedicated
+Conda interpreter and the pinned image. It contains credential variable names only.
+
+The first task launches exposed two import issues before model execution:
+`official_worker.py` went one parent directory too high, and the generic dispatch
+imported mini-SWE's action schema. Both are corrected. SWE serving exports still
+point to the original functions; their identity regression was retained. The
+next attempt reached Claude but its foreground stream timed out after 150 seconds.
+That failed task and all its sandbox cleanup records are retained, without scores.
+The replacement short-poll transport passed a separate **208.64-second** browser
+probe, including a **160-second silent command**, exact file round trips and
+cleanup (`runs/vision2web-browser-idle-20261105/report.json`). Its exit marker is
+written atomically; CPU tests also verify nonzero exits and real process timeout.
+
+The final single-task attempt (`runs/vision2web-real-20261105-04/`) entered the
+unchanged official Claude Code harness and remained at its system-init event;
+no website or `start.sh` was produced. Separate bounded CLI diagnostics in that
+same sandbox returned:
+
+- `CLAUDE_ruivhq`: upstream HTTP 404, model nonexistent or not accessible.
+- `CLAUDE_2vgats` (Opus 4.8): upstream 503, no available model channel; the CLI's
+  own retries also encountered the project's aggregate RPM limit (429).
+
+A small Node HTTPS request from that sandbox returned HTTP 200, so basic network,
+TLS and bearer authentication worked. This does **not** establish that full CLI
+requests are supported. After those diagnostics, the idle task's Claude process
+was explicitly terminated to avoid continued retries. Upstream recorded failure
+(exit 143, 884.91 seconds), downloaded its workspace and destroyed the sandbox.
+The stop reason, CLI diagnostics and all failed attempts are retained; the
+adapter has no automatic retry or model fallback.
+
+**Website generation: BLOCKED. Official visual/functional scoring: NOT RUN.**
+There are no benchmark scores to report. `webpage/abc` has three prototype
+viewports and zero functional cases, so even a future successful run of this
+task would not validate functional scoring. GPU training and multimodal RL were
+not run. Total model requests/cost are unknown because native CLI retries did
+not yield complete usage records; they are not recorded as zero.
+
+CPU baseline suite: **49 passed, 1 skipped**; the final atomic-marker change also
+passed all **5** focused Tencent bridge tests. Ruff, formatting, compile checks,
+`git diff --check` and the Vision2Web Conda environment's `pip check` passed.
+The official tracked checkout remains clean. The portable result record is
+[`validation/vision2web_tencent_20261105.json`](validation/vision2web_tencent_20261105.json).
+
+### Resume the live test after model routing is fixed
+
+The image is already in TCR; rebuilding or uploading it again is unnecessary.
+Obtain an access ID that supports the actual Claude Code Messages/tool/image
+requests, then edit the ignored `configs/vision2web.local.yaml` model and
+functional-model aliases. The visual judge route is configured separately.
+Keep the same official source and digest. Load credentials without displaying
+them and launch one new output directory:
+
+```bash
+conda activate self-hpo-baseline
+export BASELINE_SECRET_ENV_FILE=/user/miyapeng/.secrets/rsi-coevolve.env
+python - <<'PY'
+import os
+import subprocess
+from baseline.credentials import load_credentials
+
+load_credentials(["E2B_API_KEY", "LLM_CENTER_API_KEY"])
+os.umask(0o077)
+raise SystemExit(subprocess.run([
+    "/user/miyapeng/miniconda3/envs/vision2web/bin/python", "-m", "baseline.benchmarks",
+    "run", "--config", "configs/vision2web.local.yaml",
+    "--task-id", "webpage/abc", "--limit", "1",
+    "--output", "runs/vision2web-real-NEW_RUN",
+]).returncode)
+PY
+```
+
+This is a fresh evaluation attempt, not a resume override. Historical code-hash
+checks remain intact; do not force H/P runs made before these changes to resume.

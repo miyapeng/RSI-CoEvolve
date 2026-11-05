@@ -19,7 +19,7 @@ from .vision2web import Vision2Web
 from .vision2web_e2b import transport, validate
 
 
-async def probe(request, transport_only):
+async def probe(request, transport_only, silent_seconds=0):
     from vision2web.core.sandbox import SandboxManager
 
     out = Path(request["output"])
@@ -37,6 +37,10 @@ async def probe(request, transport_only):
         code, stdout, _ = await manager.exec_command(workspace, "printf VISION2WEB_TRANSPORT_OK")
         assert code == 0 and stdout == "VISION2WEB_TRANSPORT_OK"
         checks["official_exec"] = True
+        if silent_seconds:
+            code, stdout, _ = await manager.exec_command(workspace, f"sleep {silent_seconds}; printf SILENT_OK")
+            assert code == 0 and stdout == "SILENT_OK"
+            checks["silent_command_seconds"] = silent_seconds
         # Test the official Claude adapter's stdin protocol, without invoking a model.
         process = await asyncio.create_subprocess_exec(
             "docker",
@@ -83,6 +87,12 @@ assert response == open('binary.dat', 'rb').read()
         checks["detached_website"] = True
         browser = "NOT_RUN"
         if not transport_only:
+            code, _, _ = await manager.exec_command(
+                workspace, "test ! -e /kaniko/.docker/config.json && test ! -e /tmp/v2w-auth/config.json"
+            )
+            if code:
+                raise RuntimeError("Temporary builder credentials are present in the runtime image")
+            checks["builder_credentials_absent"] = True
             code, stdout, _ = await manager.exec_command(
                 workspace, "node --version && claude --version && playwright-cli --version && google-chrome --version"
             )
@@ -113,16 +123,19 @@ def main():
     parser.add_argument("--config", default="configs/benchmarks/vision2web_tencent.yaml")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--execute", action="store_true")
+    parser.add_argument("--silent-seconds", type=int, default=0, help="Optional bounded idle-transport check (0–300)")
     parser.add_argument(
         "--transport-only", action="store_true", help="No browser/tools check; never counts as benchmark readiness"
     )
     args = parser.parse_args()
+    if not 0 <= args.silent_seconds <= 300:
+        parser.error("--silent-seconds must be between 0 and 300")
     config = yaml.safe_load(Path(args.config).read_text())
     options = config["official"]
     options["sandbox_image"] = os.path.expandvars(options["sandbox_image"])
     cfg = validate(options)
     cfg["sandbox_timeout"] = 600
-    cfg["command_timeout"] = 90
+    cfg["command_timeout"] = max(90, args.silent_seconds + 30)
     if args.transport_only:
         cfg.update(cpu=1, memory="1Gi")
     source = Vision2Web().source(config)
@@ -157,7 +170,9 @@ def main():
     started = time.monotonic()
     try:
         with transport({"options": options, "output": str(out)}):
-            report.update(asyncio.run(probe({"options": options, "output": str(out)}, args.transport_only)))
+            report.update(
+                asyncio.run(probe({"options": options, "output": str(out)}, args.transport_only, args.silent_seconds))
+            )
         report["status"] = "PASS"
     except Exception as exc:
         report.update(status="FAIL", error_type=type(exc).__name__)

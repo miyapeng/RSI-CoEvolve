@@ -198,3 +198,29 @@ private configuration and historical results were neither changed nor copied.
 Its existing upstream archive has a different pin, so the worker explicitly
 loads the newly pinned official checkout. See [OFFICIAL_BENCHMARKS.md](OFFICIAL_BENCHMARKS.md)
 for exact asset paths, licenses, tests, environment requirements and NOT RUN items.
+
+
+## Vision2Web image builder (2026-11-05 UTC)
+
+The disposable Tencent build uses the maintained [osscontainertools/kaniko](https://github.com/osscontainertools/kaniko)
+**v1.29.0-debug**, Apache-2.0. No builder source is copied into this repository.
+The published multi-platform manifest is
+`sha256:350929376b8a69afb1d8b362086c809e4ef6799fa1bcb317c2806ae1447b3845`;
+its linux/amd64 manifest is
+`sha256:b2ac9f31876a3176e8d1a8be6d03a455f79bdd026ca41a67aeac0af63cf88321`.
+The publisher's manifest labels source revision
+`632acb69ab000ddb12f99bf080e8f14dc7f2aa81`; this is image metadata, not a newly
+cloned or audited builder-source checkout. The TCR mirror digest is independently
+checked before use. The official Vision2Web Dockerfile is unchanged; its SHA256
+is `ccfdef90c0f2cfaa79bbe5d976edbc56ebf3abea147e9e450e6fdb2ed58bf433`.
+Credentials and the Tencent control plane are excluded from build snapshots.
+
+
+The long-command transport diagnosis also inspected the user's existing
+`minicpm-v5-agentic-rl/v5-2p6b-dual-harness/eval-code-text/ClawGym-Bench-e2b/`
+`evaluation/localclawbench/internalbench/e2b_openclaw.py::_run_openclaw_agent`.
+Its detached-process/status-file pattern informed the small foreground protocol;
+no source, prompt, retry framework or agent loop was copied. E2B 2.62's installed
+`commands/command.py` documents that `request_timeout` is ignored for streaming
+commands; command timeout alone did not prevent the observed 150-second stream
+failure. Model algorithms, prompts and grading remain upstream implementations.

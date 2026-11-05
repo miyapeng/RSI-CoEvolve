@@ -3,7 +3,9 @@
 import io
 import json
 import os
+import subprocess
 import tarfile
+from pathlib import Path
 from types import SimpleNamespace as NS
 
 import pytest
@@ -49,6 +51,12 @@ def test_official_command_surface_and_secret_boundary(monkeypatch, tmp_path):
     )
     monkeypatch.setattr(e2b.Sandbox, "create", lambda **kw: created.append(kw) or box)
     monkeypatch.setattr(e2b.Sandbox, "connect", lambda *a, **kw: box)
+    # Dispatch contract only; the real foreground file protocol is exercised below.
+    monkeypatch.setattr(
+        bridge,
+        "run_foreground",
+        lambda b, c, cmd, env, cwd, user: b.commands.run(cmd, envs=env, cwd=cwd, user=user),
+    )
     monkeypatch.setenv("E2B_API_KEY", "HOST_SANDBOX_KEY_SENTINEL")
     monkeypatch.setenv("http_proxy", "http://host-only-proxy")
     c = options()
@@ -109,6 +117,7 @@ def test_official_command_surface_and_secret_boundary(monkeypatch, tmp_path):
         assert invoke("exec", "fixture123", "false")[0] == 7
         assert invoke("exec", "-d", "fixture123", "bash", "start.sh")[0] == 0
         assert calls[-1][1]["background"]
+        assert calls[-1][1]["request_timeout"] == c["tencent"]["request_timeout"]
         assert invoke("exec", "fixture123", "tar", "-C", "/workspace", "-cf", "-", ".")[1] == archive
         assert invoke("cp", "fixture123:/workspace/site", str(tmp_path / "download"))[0] == 0
         assert (tmp_path / "download/site/screenshot.png").read_bytes() == pixels
@@ -125,6 +134,40 @@ def test_official_command_surface_and_secret_boundary(monkeypatch, tmp_path):
     assert read(root / "sandbox-fixture123.json")["stopped"]
     assert "POLICY_SECRET" not in (root / "transport.jsonl").read_text()
     assert "HOST_SANDBOX_KEY_SENTINEL" not in (root / "settings.json").read_text()
+
+
+def test_foreground_preserves_outputs_stdin_exit_and_process_deadline(tmp_path):
+    # Exercise the shell/file protocol with real local processes, no remote/API.
+    def command(cmd, background=False, **kw):
+        args = dict(shell=True, cwd=kw.get("cwd", tmp_path), env={**os.environ, **kw.get("envs", {})})
+        if background:
+            process = subprocess.Popen(cmd, **args)
+            return NS(disconnect=lambda: None, kill=process.kill)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=kw["timeout"], **args)
+        return NS(stdout=result.stdout, stderr=result.stderr, exit_code=result.returncode)
+
+    box = NS(
+        commands=NS(run=command),
+        files=NS(
+            write=lambda path, value, **kw: (
+                Path(path).write_bytes(value) if isinstance(value, bytes) else Path(path).write_text(value)
+            ),
+            read=lambda path, **kw: Path(path).read_text(),
+        ),
+    )
+    cfg = options()["tencent"]
+    result = bridge.run_command(
+        box,
+        cfg,
+        ["bash", "-c", 'cat; printf "%s" "$FIXTURE" >&2; exit 7'],
+        env={"FIXTURE": "exact stderr"},
+        cwd=str(tmp_path),
+        stdin=b"exact stdin\n",
+    )
+    assert (result.exit_code, result.stdout, result.stderr) == (7, "exact stdin\n", "exact stderr")
+    cfg["command_timeout"] = 0.2
+    result = bridge.run_command(box, cfg, ["sleep", "5"], cwd=str(tmp_path))
+    assert result.exit_code == 124  # GNU timeout actually ended the process.
 
 
 def test_cleanup_on_native_failure_and_archive_validation(monkeypatch, tmp_path):

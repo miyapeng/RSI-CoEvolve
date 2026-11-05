@@ -10,7 +10,6 @@ import time
 from pathlib import Path
 
 import httpx
-from minisweagent.models.utils.actions_toolcall import TOOLS
 from openai import OpenAI
 
 from .records import write
@@ -46,6 +45,10 @@ def serve_command(checkpoint, config):
 
 
 def tool_smoke(client, checkpoint, output):
+    # Official benchmark dispatch can import this module in its own Conda
+    # environment; only the SWE serving smoke needs mini-SWE's action schema.
+    from minisweagent.models.utils.actions_toolcall import TOOLS
+
     r = client.chat.completions.create(
         model=checkpoint,
         messages=[{"role": "user", "content": "Call bash with command exactly: printf baseline_tool_smoke"}],

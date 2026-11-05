@@ -1,0 +1,137 @@
+{
+  "date_utc": "2026-11-05",
+  "simulated": false,
+  "scope": "Build/upload official Vision2Web image; live Tencent transport/browser and bounded inference attempt",
+  "upstream_commit": "d80a4a3d0ea7326541ad87314294269a633789e4",
+  "dockerfile_sha256": "ccfdef90c0f2cfaa79bbe5d976edbc56ebf3abea147e9e450e6fdb2ed58bf433",
+  "image_build": {
+    "status": "PASS",
+    "image": "modelbest.tencentcloudcr.com/code-interpreter/vision2web:official-d80a4a3-20261105",
+    "pinned_image": "modelbest.tencentcloudcr.com/code-interpreter/vision2web:official-d80a4a3-20261105@sha256:9a45ff15a7812250ecf20da6d19215974b38197785ade0c02b31363db686c194",
+    "builder_image": "modelbest.tencentcloudcr.com/code-interpreter/kaniko:v1.29.0-debug@sha256:b2ac9f31876a3176e8d1a8be6d03a455f79bdd026ca41a67aeac0af63cf88321",
+    "image_digest": "sha256:9a45ff15a7812250ecf20da6d19215974b38197785ade0c02b31363db686c194",
+    "cpu": 4,
+    "memory": "16Gi",
+    "gpu": 0,
+    "elapsed_seconds": 844.06,
+    "cleanup": true
+  },
+  "registry_verification": {
+    "status": "PASS",
+    "os": "linux",
+    "architecture": "amd64",
+    "layers": 8,
+    "evidence": "runs/vision2web-build-20261105/vision2web-registry.json"
+  },
+  "browser_probes": [
+    {
+      "simulated": false,
+      "source": {
+        "url": "https://github.com/zai-org/Vision2Web",
+        "commit": "d80a4a3d0ea7326541ad87314294269a633789e4",
+        "repo": "/user/miyapeng/rsi_evolve/references/Vision2Web"
+      },
+      "adapter_code_hash": "7e4e9786fe2a907cfd01662c2544eaddc3d7f58ecd829043f0093282446a2678",
+      "image": "modelbest.tencentcloudcr.com/code-interpreter/vision2web:official-d80a4a3-20261105@sha256:9a45ff15a7812250ecf20da6d19215974b38197785ade0c02b31363db686c194",
+      "model_calls": 0,
+      "benchmark": "NOT_RUN",
+      "official_scoring": "NOT_RUN",
+      "browser": "PASS",
+      "checks": {
+        "sandbox_id": "zlrc4dxeyaippq75bari754vzvvfrapvxh6o5wzn",
+        "official_exec": true,
+        "detached_website": true,
+        "builder_credentials_absent": true,
+        "tool_versions": "v20.20.2\n2.1.221 (Claude Code)\n0.1.23\nGoogle Chrome 157.0.8103.38 \n",
+        "binary_upload_stdin_download": true
+      },
+      "status": "PASS",
+      "cleanup": true,
+      "elapsed_seconds": 26.23,
+      "evidence": "runs/vision2web-browser-20261105/report.json"
+    },
+    {
+      "simulated": false,
+      "source": {
+        "url": "https://github.com/zai-org/Vision2Web",
+        "commit": "d80a4a3d0ea7326541ad87314294269a633789e4",
+        "repo": "/user/miyapeng/rsi_evolve/references/Vision2Web"
+      },
+      "adapter_code_hash": "a4314991a95b4ae947efeecde2b061f03529375b1acec037dde3657ac0c0280f",
+      "image": "modelbest.tencentcloudcr.com/code-interpreter/vision2web:official-d80a4a3-20261105@sha256:9a45ff15a7812250ecf20da6d19215974b38197785ade0c02b31363db686c194",
+      "model_calls": 0,
+      "benchmark": "NOT_RUN",
+      "official_scoring": "NOT_RUN",
+      "browser": "PASS",
+      "checks": {
+        "sandbox_id": "72kqsigty642fsqucwz3bnpquae35kbdqbquk4bg",
+        "official_exec": true,
+        "silent_command_seconds": 160,
+        "detached_website": true,
+        "builder_credentials_absent": true,
+        "tool_versions": "v20.20.2\n2.1.221 (Claude Code)\n0.1.23\nGoogle Chrome 157.0.8103.38 \n",
+        "binary_upload_stdin_download": true
+      },
+      "status": "PASS",
+      "cleanup": true,
+      "elapsed_seconds": 208.64,
+      "evidence": "runs/vision2web-browser-idle-20261105/report.json"
+    }
+  ],
+  "native_task": {
+    "task_id": "webpage/abc",
+    "status": "BLOCKED",
+    "upstream_status": "failed",
+    "exit_code": 143,
+    "elapsed_seconds": 884.913251,
+    "reason": "Stalled after CLI system init; explicitly stopped after bounded gateway diagnostics failed",
+    "website_generated": false,
+    "official_scoring": "NOT_RUN",
+    "visual_score": null,
+    "functional_score": null,
+    "functional_cases": 0,
+    "prototype_viewports": 3,
+    "cleanup": true,
+    "adapter_code_hash": "267bb331f28ff195ef82ad001dd8b2d4eb19120be34c78d59b8474fee9e25024",
+    "evidence": "runs/vision2web-real-20261105-04/episodes/r0/webpage/abc"
+  },
+  "model_diagnostics": {
+    "small_png_claude_http_status": 200,
+    "small_png_visual_http_status": 200,
+    "sandbox_node_messages_http_status": 200,
+    "cli_sonnet": {
+      "model": "CLAUDE_ruivhq",
+      "status": 404,
+      "error": "model nonexistent or inaccessible"
+    },
+    "cli_opus": {
+      "model": "CLAUDE_2vgats",
+      "upstream_status": 503,
+      "error": "no available model channel",
+      "additional_status": 429
+    },
+    "evidence": "runs/vision2web-build-20261105/model-diagnostics",
+    "total_requests": null,
+    "total_cost_usd": null
+  },
+  "cpu_tests": {
+    "baseline_passed": 49,
+    "baseline_skipped": 1,
+    "final_focused_bridge_passed": 5,
+    "ruff": "PASS",
+    "format": "PASS",
+    "compile": "PASS",
+    "vision2web_pip_check": "PASS",
+    "git_diff_check": "PASS"
+  },
+  "gpu_training": "NOT_RUN",
+  "multimodal_rl": "NOT_RUN",
+  "git_remote_push": "NOT_RUN",
+  "limitations": [
+    "Image and transport success do not establish benchmark completion",
+    "Need a working model route for actual official Claude Code requests",
+    "Task webpage/abc does not exercise functional scoring",
+    "Native CLI automatic retries prevent complete request/cost accounting",
+    "Changing adapter code may invalidate historical H/P resume hashes; no checks bypassed"
+  ]
+}
